@@ -120,7 +120,7 @@ export default function StaffProfile() {
               </Link>
             </div>
           </div>
-          
+
           {/* Profile Section - Full Width at Top */}
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
             <div className="bg-gradient-to-r from-blue-500 to-blue-400 h-28 sm:h-32 relative">
@@ -150,7 +150,7 @@ export default function StaffProfile() {
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Experience badge positioned on the profile image */}
                   {staffMember.experience && (
                     <span className={`absolute -right-1 bottom-3 inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium shadow-sm border border-white ${experienceBadgeColor}`}>
@@ -162,8 +162,8 @@ export default function StaffProfile() {
                 
                 <div className="pt-1 sm:pt-4 text-center md:text-left flex-1 flex flex-col justify-center">
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-secondary-900">
-                    {name}
-                  </h2>
+                      {name}
+                    </h2>
                   
                   {staffMember.college && (
                     <div className="mt-0.5 sm:mt-1 flex items-center justify-center md:justify-start">
@@ -175,8 +175,8 @@ export default function StaffProfile() {
                   {/* Contact information - Redesigned as buttons */}
                   <div className="mt-3 sm:mt-4 flex flex-wrap gap-2 sm:gap-3 justify-center md:justify-start">
                     {staffMember.email && (
-                      <a
-                        href={`mailto:${staffMember.email}`}
+                        <a
+                          href={`mailto:${staffMember.email}`}
                         className="flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:from-primary-600 hover:to-primary-700 transition-all shadow-md hover:shadow-lg text-xs sm:text-sm font-medium"
                       >
                         <EnvelopeIcon className="h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1 sm:mr-2" />
@@ -186,8 +186,8 @@ export default function StaffProfile() {
                     )}
                     
                     {staffMember.phone && (
-                      <a
-                        href={`tel:${staffMember.phone}`}
+                        <a
+                          href={`tel:${staffMember.phone}`}
                         className="flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 transition-all shadow-md hover:shadow-lg text-xs sm:text-sm font-medium"
                       >
                         <PhoneIcon className="h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1 sm:mr-2" />
@@ -196,11 +196,11 @@ export default function StaffProfile() {
                       </a>
                     )}
                     
-                    {staffMember.instagram && (
-                      <a
-                        href={`https://instagram.com/${staffMember.instagram.replace('@', '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      {staffMember.instagram && (
+                          <a
+                            href={`https://instagram.com/${staffMember.instagram.replace('@', '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
                         className="flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-pink-500 to-pink-600 text-white hover:from-pink-600 hover:to-pink-700 transition-all shadow-md hover:shadow-lg text-xs sm:text-sm font-medium"
                       >
                         <svg className="h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1 sm:mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -219,7 +219,7 @@ export default function StaffProfile() {
                     <div className="bg-gradient-to-br from-blue-50 to-white rounded-lg p-3 sm:p-4 text-center shadow-md border border-blue-100 flex-1 md:flex-initial min-w-[90px] sm:min-w-[100px]">
                       <div className="text-2xl sm:text-3xl font-bold text-blue-600">{totalDaysWorked}</div>
                       <div className="text-2xs sm:text-xs text-blue-500 uppercase tracking-wider font-medium">Days Worked</div>
-                    </div>
+                        </div>
                     
                     <div className="bg-gradient-to-br from-purple-50 to-white rounded-lg p-3 sm:p-4 text-center shadow-md border border-purple-100 flex-1 md:flex-initial min-w-[90px] sm:min-w-[100px]">
                       <div className="text-2xl sm:text-3xl font-bold text-purple-600">{bookings.length}</div>
@@ -465,8 +465,8 @@ export default function StaffProfile() {
                     </div>
                   )}
                 </div>
-              </div>
-            ) : (
+                  </div>
+                ) : (
               <div className="p-4 sm:p-6 text-center">
                 <p className="text-xs sm:text-sm text-secondary-500">No physical details provided</p>
               </div>

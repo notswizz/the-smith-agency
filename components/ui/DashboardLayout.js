@@ -10,9 +10,9 @@ import {
   ClipboardDocumentListIcon, 
   Bars3Icon,
   XMarkIcon,
-  ClockIcon
+  ClockIcon,
+  ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline';
-import ChatModal from './ChatModal';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon, shortName: 'Home' },
@@ -21,6 +21,7 @@ const navigation = [
   { name: 'Clients', href: '/clients', icon: BuildingOffice2Icon, shortName: 'Clients' },
   { name: 'Shows', href: '/shows', icon: CalendarIcon, shortName: 'Shows' },
   { name: 'Bookings', href: '/bookings', icon: ClipboardDocumentListIcon, shortName: 'Bookings' },
+  { name: 'Chat', href: '/chat', icon: ChatBubbleLeftRightIcon, shortName: 'Chat' },
 ];
 
 export default function DashboardLayout({ children }) {
@@ -206,14 +207,15 @@ export default function DashboardLayout({ children }) {
         
         {/* Bottom mobile navigation */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-secondary-100 shadow-lg">
-          <div className="grid grid-cols-4 h-16">
-            {/* Filter to only show Home, Staff, Clients, and Bookings */}
+          <div className="grid grid-cols-5 h-16">
+            {/* Include Home, Staff, Clients, Bookings and Chat */}
             {navigation
               .filter(item => 
                 item.href === '/' || 
                 item.href === '/staff' || 
                 item.href === '/clients' || 
-                item.href === '/bookings'
+                item.href === '/bookings' ||
+                item.href === '/chat'
               )
               .map((item) => (
                 <Link
@@ -239,9 +241,6 @@ export default function DashboardLayout({ children }) {
               ))}
           </div>
         </div>
-        
-        {/* Chat Modal */}
-        <ChatModal />
       </div>
     </div>
   );

@@ -83,6 +83,47 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Gradient animations */
+  .animate-gradient-x {
+    background-size: 200% 200%;
+    animation: gradientX 15s ease infinite;
+  }
+  
+  .animate-gradient-xy {
+    background-size: 400% 400%;
+    animation: gradientXY 15s ease infinite;
+  }
+  
+  @keyframes gradientX {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  
+  @keyframes gradientXY {
+    0% {
+      background-position: 0% 0%;
+    }
+    25% {
+      background-position: 100% 0%;
+    }
+    50% {
+      background-position: 100% 100%;
+    }
+    75% {
+      background-position: 0% 100%;
+    }
+    100% {
+      background-position: 0% 0%;
+    }
+  }
 }
 
 /* Fix for icon sizing if needed */
