@@ -206,29 +206,37 @@ export default function DashboardLayout({ children }) {
         
         {/* Bottom mobile navigation */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-secondary-100 shadow-lg">
-          <div className="grid grid-cols-5 h-16">
-            {navigation.slice(0, 5).map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={classNames(
-                  'flex flex-col items-center justify-center py-1',
-                  router.pathname === item.href
-                    ? 'text-primary-600'
-                    : 'text-secondary-500 hover:text-secondary-900'
-                )}
-              >
-                <item.icon
+          <div className="grid grid-cols-4 h-16">
+            {/* Filter to only show Home, Staff, Clients, and Bookings */}
+            {navigation
+              .filter(item => 
+                item.href === '/' || 
+                item.href === '/staff' || 
+                item.href === '/clients' || 
+                item.href === '/bookings'
+              )
+              .map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
                   className={classNames(
-                    'h-5 w-5 mb-1',
+                    'flex flex-col items-center justify-center py-1',
                     router.pathname === item.href
                       ? 'text-primary-600'
-                      : 'text-secondary-400'
+                      : 'text-secondary-500 hover:text-secondary-900'
                   )}
-                />
-                <span className="text-xs font-medium">{item.shortName}</span>
-              </Link>
-            ))}
+                >
+                  <item.icon
+                    className={classNames(
+                      'h-5 w-5 mb-1',
+                      router.pathname === item.href
+                        ? 'text-primary-600'
+                        : 'text-secondary-400'
+                    )}
+                  />
+                  <span className="text-xs font-medium">{item.shortName}</span>
+                </Link>
+              ))}
           </div>
         </div>
         
