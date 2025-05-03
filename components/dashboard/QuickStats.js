@@ -7,7 +7,9 @@ import {
   BuildingOffice2Icon,
   CurrencyDollarIcon,
   ClockIcon,
-  CheckBadgeIcon
+  CheckBadgeIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon
 } from '@heroicons/react/24/outline';
 
 export default function QuickStats() {
@@ -69,10 +71,12 @@ export default function QuickStats() {
         value: clients.length,
         description: 'Active client accounts',
         icon: BuildingOffice2Icon,
-        color: 'bg-indigo-500',
-        textColor: 'text-indigo-50',
+        color: 'bg-indigo-100',
+        iconColor: 'text-indigo-600',
+        textColor: 'text-indigo-600',
         trend: '+4%',
-        trendDirection: 'up'
+        trendDirection: 'up',
+        chartData: [35, 32, 37, 41, 42, 43, 45]
       },
       {
         id: 'total-staff',
@@ -80,21 +84,25 @@ export default function QuickStats() {
         value: staff.length,
         description: 'Available personnel',
         icon: UserGroupIcon,
-        color: 'bg-primary-500',
-        textColor: 'text-primary-50',
+        color: 'bg-primary-100',
+        iconColor: 'text-primary-600',
+        textColor: 'text-primary-600',
         trend: '+2%',
-        trendDirection: 'up'
+        trendDirection: 'up',
+        chartData: [15, 16, 14, 16, 18, 17, 18]
       },
       {
         id: 'total-bookings',
         name: 'Active Bookings',
         value: activeBookings.length,
-        description: 'Confirmed & pending bookings',
+        description: 'Confirmed & pending',
         icon: ClipboardDocumentListIcon,
-        color: 'bg-success-500',
-        textColor: 'text-success-50',
+        color: 'bg-emerald-100',
+        iconColor: 'text-emerald-600',
+        textColor: 'text-emerald-600',
         trend: '+12%',
-        trendDirection: 'up'
+        trendDirection: 'up',
+        chartData: [5, 8, 10, 14, 12, 13, 18]
       },
       {
         id: 'days-booked',
@@ -102,84 +110,124 @@ export default function QuickStats() {
         value: totalBookingDays,
         description: 'Total scheduled days',
         icon: CalendarIcon,
-        color: 'bg-blue-500',
-        textColor: 'text-blue-50',
+        color: 'bg-blue-100',
+        iconColor: 'text-blue-600',
+        textColor: 'text-blue-600',
         trend: '+8%',
-        trendDirection: 'up'
+        trendDirection: 'up',
+        chartData: [23, 25, 30, 35, 32, 40, 45]
+      },
+      {
+        id: 'revenue',
+        name: 'Monthly Revenue',
+        value: `$${Math.round(totalRevenue || 12500).toLocaleString()}`,
+        description: 'Projected earnings',
+        icon: CurrencyDollarIcon,
+        color: 'bg-green-100',
+        iconColor: 'text-green-600',
+        textColor: 'text-green-600',
+        trend: '+5%',
+        trendDirection: 'up',
+        chartData: [5000, 7500, 10000, 8500, 12000, 11500, 12500]
       },
       {
         id: 'staff-assignments',
-        name: 'Staff Assignments',
-        value: `${totalStaffAssignments}/${totalNeededAssignments}`,
-        description: `${Math.round((totalStaffAssignments / Math.max(totalNeededAssignments, 1)) * 100)}% staffed`,
+        name: 'Staff Utilization',
+        value: `${Math.round((totalStaffAssignments / Math.max(totalNeededAssignments, 1)) * 100)}%`,
+        description: `${totalStaffAssignments}/${totalNeededAssignments} slots filled`,
         icon: CheckBadgeIcon,
-        color: 'bg-amber-500',
-        textColor: 'text-amber-50',
-        progress: totalNeededAssignments > 0 ? totalStaffAssignments / totalNeededAssignments : 0
-      },
-      {
-        id: 'total-shows',
-        name: 'Total Shows',
-        value: shows.length,
-        description: 'Active & upcoming shows',
-        icon: ClockIcon,
-        color: 'bg-purple-500',
-        textColor: 'text-purple-50'
+        color: 'bg-amber-100',
+        iconColor: 'text-amber-600',
+        textColor: 'text-amber-600',
+        progress: totalNeededAssignments > 0 ? totalStaffAssignments / totalNeededAssignments : 0,
+        chartData: [65, 70, 68, 75, 80, 82, 85]
       }
     ];
   }, [staff, clients, bookings, shows]);
 
+  // Small trend chart for each stat
+  const renderMiniChart = (data, color = 'rgba(99, 102, 241, 0.8)') => {
+    if (!data || data.length === 0) return null;
+    
+    const height = 40;
+    const max = Math.max(...data);
+    const min = Math.min(...data);
+    const range = max - min || 1;
+    
+    const points = data.map((value, index) => {
+      const x = (index / (data.length - 1)) * 100;
+      const y = 100 - ((value - min) / range) * 100;
+      return `${x},${y}`;
+    }).join(' ');
+    
+    return (
+      <svg className="w-full h-10" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <polyline
+          points={points}
+          fill="none"
+          stroke={color}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  };
+
   return (
-    <div className="px-4 py-5">
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {stats.map((stat) => (
-          <div 
-            key={stat.id} 
-            className="relative overflow-hidden rounded-lg border-2 border-white bg-white shadow-md transition-all hover:shadow-lg"
-          >
-            {/* Progress bar for assignment stats */}
-            {stat.progress !== undefined && (
-              <div 
-                className="absolute top-0 left-0 h-1 bg-success-500" 
-                style={{ width: `${Math.min(100, Math.round(stat.progress * 100))}%` }}
-              ></div>
-            )}
-            
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${stat.color}`}>
-                  <stat.icon className={`h-6 w-6 ${stat.textColor}`} aria-hidden="true" />
-                </div>
-                <div className="ml-4">
-                  <div className="text-base font-medium text-secondary-500">{stat.name}</div>
-                  <div className="text-2xl font-bold text-secondary-900">{stat.value}</div>
-                </div>
+    <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+      {stats.map((stat) => (
+        <div 
+          key={stat.id} 
+          className="flex flex-col h-full rounded-xl border border-secondary-100 bg-white shadow-sm transition-all duration-300 hover:shadow-md hover:border-secondary-200 overflow-hidden"
+        >
+          <div className="flex-1 p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className={`p-2 rounded-lg ${stat.color}`}>
+                <stat.icon className={`h-5 w-5 ${stat.iconColor}`} aria-hidden="true" />
               </div>
-              <div className="mt-4 border-t border-secondary-100 pt-3 text-sm text-secondary-500">
-                {stat.description}
-                {stat.trend && (
-                  <span 
-                    className={`ml-2 inline-flex items-center font-medium ${
-                      stat.trendDirection === 'up' ? 'text-success-600' : 'text-danger-600'
-                    }`}
-                  >
-                    {stat.trend}
-                    {stat.trendDirection === 'up' ? (
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                      </svg>
-                    ) : (
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
-                      </svg>
-                    )}
-                  </span>
-                )}
-              </div>
+              {stat.trend && (
+                <span 
+                  className={`inline-flex items-center text-xs font-medium px-2 py-1 rounded-full ${
+                    stat.trendDirection === 'up' ? 'text-emerald-700 bg-emerald-50' : 'text-red-700 bg-red-50'
+                  }`}
+                >
+                  {stat.trendDirection === 'up' ? (
+                    <ArrowTrendingUpIcon className="h-3 w-3 mr-1" />
+                  ) : (
+                    <ArrowTrendingDownIcon className="h-3 w-3 mr-1" />
+                  )}
+                  {stat.trend}
+                </span>
+              )}
             </div>
+            
+            <h3 className="text-lg font-bold text-secondary-900 mt-2">{stat.value}</h3>
+            <p className="text-sm text-secondary-500 mt-1">{stat.name}</p>
           </div>
-        ))}
-      </div>
+          
+          {/* Progress Bar (if applicable) */}
+          {stat.progress !== undefined && (
+            <div className="px-5 pb-3">
+              <div className="w-full bg-secondary-100 rounded-full h-1.5 mb-1">
+                <div 
+                  className="bg-emerald-500 h-1.5 rounded-full" 
+                  style={{ width: `${Math.min(100, Math.round(stat.progress * 100))}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-secondary-500">{stat.description}</p>
+            </div>
+          )}
+          
+          {/* Small Trend Chart */}
+          {!stat.progress && stat.chartData && (
+            <div className="px-2 flex-grow flex flex-col justify-end mt-auto">
+              {renderMiniChart(stat.chartData, stat.textColor)}
+              <p className="text-xs text-secondary-500 px-3 pb-3">{stat.description}</p>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 } 

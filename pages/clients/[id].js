@@ -19,6 +19,7 @@ import {
   EnvelopeIcon,
   PhoneIcon,
   StarIcon,
+  UserGroupIcon
 } from '@heroicons/react/24/outline';
 
 export default function ClientProfile() {
@@ -38,6 +39,26 @@ export default function ClientProfile() {
   const [bookings, setBookings] = useState([]);
   const [formData, setFormData] = useState({});
 
+  // Generate a unique gradient based on the first letter of the name
+  const getGradient = (letter) => {
+    const gradients = [
+      'from-pink-500 to-purple-600',
+      'from-blue-500 to-teal-400',
+      'from-green-400 to-emerald-600',
+      'from-orange-400 to-pink-500',
+      'from-indigo-500 to-blue-400',
+      'from-red-500 to-orange-400',
+      'from-amber-400 to-yellow-300',
+      'from-violet-500 to-purple-500',
+      'from-teal-400 to-cyan-400',
+      'from-fuchsia-500 to-pink-500',
+    ];
+    
+    // Use character code to generate a consistent index
+    const index = letter ? (letter.charCodeAt(0) % gradients.length) : 0;
+    return gradients[index];
+  };
+
   useEffect(() => {
     if (id) {
       const clientData = getClientById(id);
@@ -46,6 +67,11 @@ export default function ClientProfile() {
         setFormData(clientData);
         const clientBookings = getBookingsForClient(id);
         setBookings(clientBookings || []);
+        
+        // Enable editing mode if edit=true is in the URL
+        if (router.query.edit === 'true') {
+          setIsEditing(true);
+        }
       } else {
         router.push('/clients');
       }
@@ -131,6 +157,12 @@ export default function ClientProfile() {
     setIsEditing(false);
   };
 
+  // Get the gradient for this client
+  const gradient = getGradient(client.name?.charAt(0));
+  const clientLogo = client.logoUrl || null;
+  const initials = client.name?.substring(0, 2).toUpperCase() || '??';
+  const activeShowsCount = client.shows?.filter(s => s.status === 'active')?.length || 0;
+
   return (
     <>
       <Head>
@@ -140,51 +172,130 @@ export default function ClientProfile() {
 
       <DashboardLayout>
         <div className="space-y-6">
-          {/* Header with title and actions */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.push('/clients')}
-                className="flex items-center"
-              >
-                <ArrowLeftIcon className="h-4 w-4 mr-1" />
-                Back to Clients
-              </Button>
-              <h1 className="text-2xl font-bold text-secondary-900">{client.name}</h1>
-            </div>
-            <div className="flex space-x-3">
-              {isEditing ? (
-                <>
-                  <Button variant="secondary" size="sm" onClick={() => setIsEditing(false)}>
-                    Cancel
-                  </Button>
-                  <Button variant="primary" size="sm" onClick={handleSubmit}>
-                    Save Changes
-                  </Button>
-                  <Button variant="danger" size="sm" onClick={async () => {
-                    if (confirm('Are you sure you want to delete this client?')) {
-                      await deleteClient(id);
-                      router.push('/clients');
-                    }
-                  }}>
-                    Delete
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Link href={`/bookings/new?client=${client.id}`}>
-                    <Button variant="outline" size="sm" className="flex items-center">
-                      <PlusIcon className="h-4 w-4 mr-1" />
-                      New Booking
+          {/* Client Header with banner */}
+          <div className="relative overflow-hidden rounded-xl shadow-md">
+            <div className={`bg-gradient-to-r ${gradient} h-32 w-full relative`}>
+              {/* Decorative elements */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
+              
+              {/* Back button */}
+              <div className="absolute top-4 left-4">
+                <Button
+                  variant="white"
+                  size="sm"
+                  onClick={() => router.push('/clients')}
+                  className="flex items-center shadow-sm"
+                >
+                  <ArrowLeftIcon className="h-4 w-4 mr-1" />
+                  Back to Clients
+                </Button>
+              </div>
+              
+              {/* Action buttons */}
+              <div className="absolute top-4 right-4 flex space-x-2">
+                {isEditing ? (
+                  <>
+                    <Button variant="white" size="sm" onClick={() => setIsEditing(false)}>
+                      Cancel
                     </Button>
-                  </Link>
-                  <Button variant="primary" size="sm" onClick={() => setIsEditing(true)}>
-                    Edit Client
-                  </Button>
-                </>
+                    <Button variant="success" size="sm" onClick={handleSubmit} className="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      Save
+                    </Button>
+                    <Button variant="danger" size="sm" onClick={async () => {
+                      if (confirm('Are you sure you want to delete this client?')) {
+                        await deleteClient(id);
+                        router.push('/clients');
+                      }
+                    }} className="flex items-center">
+                      <TrashIcon className="h-4 w-4 mr-1" />
+                      Delete
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link href={`/bookings/new?client=${client.id}`}>
+                      <Button variant="white" size="sm" className="flex items-center">
+                        <PlusIcon className="h-4 w-4 mr-1" />
+                        New Booking
+                      </Button>
+                    </Link>
+                    <Button variant="primary" size="sm" onClick={() => setIsEditing(true)} className="flex items-center">
+                      <PencilSquareIcon className="h-4 w-4 mr-1" />
+                      Edit Client
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+            
+            <div className="bg-white px-6 pb-6 pt-16 flex flex-col items-center">
+              {/* Client logo/avatar */}
+              <div className="relative -mt-24 mb-4">
+                {clientLogo ? (
+                  <div className="h-24 w-24 rounded-full bg-white flex items-center justify-center shadow-lg border-4 border-white overflow-hidden">
+                    <img
+                      src={clientLogo}
+                      alt={client.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="h-24 w-24 rounded-full bg-white flex items-center justify-center text-3xl font-semibold shadow-lg border-4 border-white">
+                    <span className={`text-transparent bg-clip-text bg-gradient-to-br ${gradient}`}>{initials}</span>
+                  </div>
+                )}
+                
+                {/* Active shows badge */}
+                {activeShowsCount > 0 && (
+                  <div className="absolute top-0 right-0">
+                    <div className="bg-primary-100 text-primary-800 text-xs font-bold px-2.5 py-1.5 rounded-full flex items-center shadow-sm">
+                      <UserGroupIcon className="h-3.5 w-3.5 mr-1" /> 
+                      {activeShowsCount}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Client name and category */}
+              <h1 className="text-2xl font-bold text-secondary-900">{client.name}</h1>
+              {client.category && (
+                <div className="mt-1 inline-flex items-center px-3 py-1 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium">
+                  <BuildingOffice2Icon className="h-3.5 w-3.5 mr-1" />
+                  {client.category}
+                </div>
               )}
+              
+              {/* Basic info */}
+              <div className="flex flex-wrap justify-center gap-4 mt-4">
+                {client.location && (
+                  <div className="flex items-center text-sm text-secondary-700">
+                    <div className="bg-secondary-50 p-1.5 rounded-full mr-2 text-secondary-500">
+                      <MapPinIcon className="h-4 w-4" />
+                    </div>
+                    <span>{client.location}</span>
+                  </div>
+                )}
+                
+                {client.website && (
+                  <div className="flex items-center text-sm text-secondary-700">
+                    <div className="bg-secondary-50 p-1.5 rounded-full mr-2 text-secondary-500">
+                      <GlobeAltIcon className="h-4 w-4" />
+                    </div>
+                    <a
+                      href={client.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary-600 hover:text-primary-800"
+                    >
+                      {client.website.replace(/(^\w+:|^)\/\//, '')}
+                    </a>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -229,61 +340,96 @@ export default function ClientProfile() {
             <div>
               <Card>
                 {isEditing ? (
-                  <form className="space-y-4">
+                  <form className="space-y-6">
                     <div>
                       <label htmlFor="name" className="block text-sm font-medium text-secondary-700">
                         Client Name
                       </label>
-                      <input
-                        type="text"
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full border border-secondary-200 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                      />
+                      <div className="mt-1 relative rounded-md shadow-sm">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <BuildingOffice2Icon className="h-5 w-5 text-secondary-400" />
+                        </div>
+                        <input
+                          type="text"
+                          id="name"
+                          name="name"
+                          value={formData.name}
+                          onChange={handleInputChange}
+                          className="block w-full pl-10 border border-secondary-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                        />
+                      </div>
                     </div>
                     
                     <div>
                       <label htmlFor="category" className="block text-sm font-medium text-secondary-700">
                         Category
                       </label>
-                      <input
-                        type="text"
-                        id="category"
-                        name="category"
-                        value={formData.category}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full border border-secondary-200 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                      />
+                      <div className="mt-1 relative rounded-md shadow-sm">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-secondary-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M5 3a2 2 0 012-2h6a2 2 0 012 2v1h2a2 2 0 012 2v2.5a1 1 0 01-1 1H2a1 1 0 01-1-1V6a2 2 0 012-2h2V3zm1 1h8V3a1 1 0 00-1-1H7a1 1 0 00-1 1v1zm9 5.5V6a1 1 0 00-1-1H2a1 1 0 00-1 1v2.5h14zm0 1H2v6a1 1 0 001 1h12a1 1 0 001-1v-6z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <input
+                          type="text"
+                          id="category"
+                          name="category"
+                          value={formData.category}
+                          onChange={handleInputChange}
+                          className="block w-full pl-10 border border-secondary-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                        />
+                      </div>
                     </div>
                     
                     <div>
                       <label htmlFor="location" className="block text-sm font-medium text-secondary-700">
                         Location
                       </label>
-                      <input
-                        type="text"
-                        id="location"
-                        name="location"
-                        value={formData.location}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full border border-secondary-200 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                      />
+                      <div className="mt-1 relative rounded-md shadow-sm">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <MapPinIcon className="h-5 w-5 text-secondary-400" />
+                        </div>
+                        <input
+                          type="text"
+                          id="location"
+                          name="location"
+                          value={formData.location}
+                          onChange={handleInputChange}
+                          className="block w-full pl-10 border border-secondary-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                        />
+                      </div>
                     </div>
                     
                     <div>
                       <label htmlFor="website" className="block text-sm font-medium text-secondary-700">
                         Website
                       </label>
-                      <input
-                        type="url"
-                        id="website"
-                        name="website"
-                        value={formData.website || ''}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full border border-secondary-200 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                      />
+                      <div className="mt-1 relative rounded-md shadow-sm">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <GlobeAltIcon className="h-5 w-5 text-secondary-400" />
+                        </div>
+                        <input
+                          type="url"
+                          id="website"
+                          name="website"
+                          value={formData.website || ''}
+                          onChange={handleInputChange}
+                          className="block w-full pl-10 border border-secondary-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                          placeholder="https://"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="pt-4 flex justify-end space-x-3">
+                      <Button variant="secondary" size="sm" onClick={() => setIsEditing(false)}>
+                        Cancel
+                      </Button>
+                      <Button variant="primary" size="sm" onClick={handleSubmit} className="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        Save Changes
+                      </Button>
                     </div>
                   </form>
                 ) : (

@@ -25,6 +25,7 @@ export default function StaffAvailabilityEntry() {
     if (!staffQuery) return staff;
     const q = staffQuery.toLowerCase();
     return staff.filter(s => {
+      // For backwards compatibility with old data
       if (s.firstName && s.lastName) {
         return (`${s.firstName} ${s.lastName}`.toLowerCase().includes(q));
       }
@@ -85,10 +86,8 @@ export default function StaffAvailabilityEntry() {
     e.preventDefault();
     if (!selectedStaff || !selectedShowId) return;
 
-    // Get staff name in correct format
-    const staffName = selectedStaff.firstName && selectedStaff.lastName 
-      ? `${selectedStaff.firstName} ${selectedStaff.lastName}`
-      : selectedStaff.name;
+    // Simply use the name field directly
+    const staffName = selectedStaff.name || 'Unknown Staff';
 
     if (!staffName) {
       alert('Staff name is missing');
@@ -128,10 +127,10 @@ export default function StaffAvailabilityEntry() {
                     className="p-2 hover:bg-primary-100 cursor-pointer"
                     onClick={() => {
                       setSelectedStaff(s);
-                      setStaffQuery(s.firstName && s.lastName ? `${s.firstName} ${s.lastName}` : s.name || '');
+                      setStaffQuery(s.name || '');
                     }}
                   >
-                    {s.firstName && s.lastName ? `${s.firstName} ${s.lastName}` : s.name}
+                    {s.name || 'Unknown Staff'}
                   </div>
                 ))}
               </div>

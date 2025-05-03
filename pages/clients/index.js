@@ -10,12 +10,32 @@ import { searchClients, filterClientsByCategory, filterClientsByLocation } from 
 import { PlusIcon } from '@heroicons/react/24/outline';
 
 export default function ClientsDirectory() {
-  const { clients } = useStore();
+  const { clients, getBookingsForClient } = useStore();
   const [filters, setFilters] = useState({
     search: '',
     category: 'all',
     location: 'all',
   });
+
+  // Calculate total booking days for each client
+  const clientsWithBookingData = useMemo(() => {
+    return clients.map(client => {
+      const clientBookings = getBookingsForClient(client.id) || [];
+      
+      // Calculate total days booked
+      const totalDaysBooked = clientBookings.reduce((total, booking) => {
+        if (Array.isArray(booking.datesNeeded)) {
+          return total + booking.datesNeeded.length;
+        }
+        return total;
+      }, 0);
+      
+      return {
+        ...client,
+        totalDaysBooked
+      };
+    });
+  }, [clients, getBookingsForClient]);
 
   // Get unique categories and locations for filters
   const categories = useMemo(() => {
@@ -30,7 +50,7 @@ export default function ClientsDirectory() {
 
   // Apply filters to clients
   const filteredClients = useMemo(() => {
-    let result = clients;
+    let result = clientsWithBookingData;
 
     // Apply search filter
     if (filters.search) {
@@ -46,9 +66,12 @@ export default function ClientsDirectory() {
     if (filters.location !== 'all') {
       result = filterClientsByLocation(result, filters.location);
     }
+    
+    // Sort by total days booked (descending)
+    result = [...result].sort((a, b) => b.totalDaysBooked - a.totalDaysBooked);
 
     return result;
-  }, [clients, filters]);
+  }, [clientsWithBookingData, filters]);
 
   return (
     <>

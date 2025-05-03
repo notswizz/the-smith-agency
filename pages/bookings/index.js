@@ -11,7 +11,8 @@ import {
   ClockIcon, 
   XCircleIcon,
   FunnelIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/router';
 
@@ -155,16 +156,18 @@ export default function BookingsDirectory() {
       </Head>
 
       <DashboardLayout>
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Header with title and actions */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="text-2xl font-bold text-secondary-900">Staff Bookings</h1>
-            <div className="mt-4 sm:mt-0 flex items-center gap-2">
-              <Button variant={viewMode==='table' ? 'primary' : 'outline'} size="sm" onClick={()=>setViewMode('table')}>Table</Button>
-              <Button variant={viewMode==='card' ? 'primary' : 'outline'} size="sm" onClick={()=>setViewMode('card')}>Card</Button>
-              <Link href="/bookings/new">
-                <Button variant="primary" size="sm" className="flex items-center">
-                  <PlusIcon className="h-5 w-5 mr-1" /> New Booking
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h1 className="text-xl sm:text-2xl font-bold text-secondary-900">Staff Bookings</h1>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center rounded-md shadow-sm">
+                <Button variant={viewMode==='table' ? 'primary' : 'outline'} size="sm" onClick={()=>setViewMode('table')} className="rounded-r-none text-xs sm:text-sm">Table</Button>
+                <Button variant={viewMode==='card' ? 'primary' : 'outline'} size="sm" onClick={()=>setViewMode('card')} className="rounded-l-none text-xs sm:text-sm">Card</Button>
+              </div>
+              <Link href="/bookings/new" className="ml-auto sm:ml-2">
+                <Button variant="primary" size="sm" className="flex items-center text-xs sm:text-sm">
+                  <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-1" /> <span className="hidden xs:inline">New</span> Booking
                 </Button>
               </Link>
             </div>
@@ -172,11 +175,11 @@ export default function BookingsDirectory() {
 
           {/* Search and filters */}
           <div className="bg-white shadow-sm rounded-lg">
-            <div className="p-4">
-              <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+            <div className="p-3 sm:p-4">
+              <div className="flex flex-col space-y-3 md:flex-row md:space-y-0 md:space-x-4">
                 <div className="relative flex-grow">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <MagnifyingGlassIcon className="h-5 w-5 text-secondary-400" />
+                    <MagnifyingGlassIcon className="h-4 w-4 sm:h-5 sm:w-5 text-secondary-400" />
                   </div>
                   <input
                     type="text"
@@ -184,7 +187,7 @@ export default function BookingsDirectory() {
                     value={filters.search}
                     onChange={handleSearchChange}
                     placeholder="Search staff, shows, or roles..."
-                    className="pl-10 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                    className="pl-8 sm:pl-10 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-xs sm:text-sm h-9 sm:h-auto"
                   />
                 </div>
                 <div>
@@ -192,12 +195,12 @@ export default function BookingsDirectory() {
                     variant="outline"
                     size="sm"
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className="flex items-center w-full md:w-auto justify-center"
+                    className="flex items-center w-full md:w-auto justify-center text-xs sm:text-sm h-9 sm:h-auto"
                   >
-                    <FunnelIcon className="h-5 w-5 mr-1" />
+                    <FunnelIcon className="h-4 w-4 mr-1" />
                     Filters
                     {hasActiveFilters && (
-                      <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                      <span className="ml-1.5 inline-flex items-center px-1.5 sm:px-2.5 py-0.5 rounded-full text-2xs sm:text-xs font-medium bg-primary-100 text-primary-800">
                         Active
                       </span>
                     )}
@@ -207,9 +210,9 @@ export default function BookingsDirectory() {
 
               {/* Filter options */}
               {isFilterOpen && (
-                <div className="mt-4 border-t border-secondary-200 pt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="mt-3 sm:mt-4 border-t border-secondary-200 pt-3 sm:pt-4 grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-3">
                   <div>
-                    <label htmlFor="status" className="block text-sm font-medium text-secondary-700">
+                    <label htmlFor="status" className="block text-xs sm:text-sm font-medium text-secondary-700">
                       Status
                     </label>
                     <select
@@ -217,7 +220,7 @@ export default function BookingsDirectory() {
                       name="status"
                       value={filters.status}
                       onChange={handleFilterChange}
-                      className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-xs sm:text-sm h-9 sm:h-auto"
                     >
                       <option value="all">All Statuses</option>
                       <option value="confirmed">Confirmed</option>
@@ -226,7 +229,7 @@ export default function BookingsDirectory() {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="show" className="block text-sm font-medium text-secondary-700">
+                    <label htmlFor="show" className="block text-xs sm:text-sm font-medium text-secondary-700">
                       Show
                     </label>
                     <select
@@ -234,7 +237,7 @@ export default function BookingsDirectory() {
                       name="show"
                       value={filters.show}
                       onChange={handleFilterChange}
-                      className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-xs sm:text-sm h-9 sm:h-auto"
                     >
                       <option value="all">All Shows</option>
                       {showOptions.map(show => (
@@ -245,7 +248,7 @@ export default function BookingsDirectory() {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="dateRange" className="block text-sm font-medium text-secondary-700">
+                    <label htmlFor="dateRange" className="block text-xs sm:text-sm font-medium text-secondary-700">
                       Date Range
                     </label>
                     <select
@@ -253,7 +256,7 @@ export default function BookingsDirectory() {
                       name="dateRange"
                       value={filters.dateRange}
                       onChange={handleFilterChange}
-                      className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-xs sm:text-sm h-9 sm:h-auto"
                     >
                       <option value="all">All Dates</option>
                       <option value="upcoming">Upcoming Shows</option>
@@ -267,7 +270,7 @@ export default function BookingsDirectory() {
                       size="sm"
                       onClick={resetFilters}
                       disabled={!hasActiveFilters}
-                      className="flex items-center"
+                      className="flex items-center text-xs sm:text-sm h-9 sm:h-auto"
                     >
                       Reset Filters
                     </Button>
@@ -277,8 +280,8 @@ export default function BookingsDirectory() {
             </div>
 
             {/* Results count */}
-            <div className="border-t border-secondary-200 px-4 py-2">
-              <p className="text-sm text-secondary-500">
+            <div className="border-t border-secondary-200 px-3 sm:px-4 py-1.5 sm:py-2">
+              <p className="text-2xs sm:text-sm text-secondary-500">
                 Showing <span className="font-medium">{filteredBookings.length}</span> of{' '}
                 <span className="font-medium">{bookings.length}</span> bookings
               </p>
@@ -290,22 +293,22 @@ export default function BookingsDirectory() {
                 <table className="min-w-full divide-y divide-secondary-200">
                   <thead className="bg-secondary-50">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
+                      <th scope="col" className="px-3 sm:px-6 py-2 sm:py-3 text-left text-2xs sm:text-xs font-medium text-secondary-500 uppercase tracking-wider">
                         Staff Member
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
+                      <th scope="col" className="px-3 sm:px-6 py-2 sm:py-3 text-left text-2xs sm:text-xs font-medium text-secondary-500 uppercase tracking-wider">
                         Show
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
+                      <th scope="col" className="px-3 sm:px-6 py-2 sm:py-3 text-left text-2xs sm:text-xs font-medium text-secondary-500 uppercase tracking-wider hidden sm:table-cell">
                         Dates
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
+                      <th scope="col" className="px-3 sm:px-6 py-2 sm:py-3 text-left text-2xs sm:text-xs font-medium text-secondary-500 uppercase tracking-wider">
                         Status
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
+                      <th scope="col" className="px-3 sm:px-6 py-2 sm:py-3 text-left text-2xs sm:text-xs font-medium text-secondary-500 uppercase tracking-wider hidden md:table-cell">
                         Assigned
                       </th>
-                      <th scope="col" className="relative px-6 py-3">
+                      <th scope="col" className="relative px-3 sm:px-6 py-2 sm:py-3">
                         <span className="sr-only">Actions</span>
                       </th>
                     </tr>
@@ -316,70 +319,70 @@ export default function BookingsDirectory() {
                       const show = shows.find(s => s.id === booking.showId);
                       
                       return (
-                        <tr key={booking.id}>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                        <tr key={booking.id} className="hover:bg-secondary-50 cursor-pointer" onClick={() => router.push(`/bookings/${booking.id}`)}>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                             {staffMember ? (
                               <div className="flex items-center">
-                                <div className="flex-shrink-0 h-10 w-10">
-                                  <div className="h-10 w-10 rounded-full bg-secondary-200 flex items-center justify-center text-secondary-600">
+                                <div className="flex-shrink-0 h-7 w-7 sm:h-10 sm:w-10 rounded-full">
+                                  <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-full bg-secondary-200 flex items-center justify-center text-2xs sm:text-sm text-secondary-600">
                                     {staffMember.firstName.charAt(0)}{staffMember.lastName.charAt(0)}
                                   </div>
                                 </div>
-                                <div className="ml-4">
-                                  <div className="text-sm font-medium text-secondary-900">
-                                    <Link href={`/staff/${staffMember.id}`} className="hover:underline">
+                                <div className="ml-2 sm:ml-4">
+                                  <div className="text-xs sm:text-sm font-medium text-secondary-900 truncate max-w-[100px] sm:max-w-full">
+                                    <Link href={`/staff/${staffMember.id}`} className="hover:underline" onClick={(e) => e.stopPropagation()}>
                                       {staffMember.firstName} {staffMember.lastName}
                                     </Link>
                                   </div>
-                                  <div className="text-sm text-secondary-500">
+                                  <div className="text-2xs sm:text-sm text-secondary-500 truncate max-w-[100px] sm:max-w-full hidden xs:block">
                                     {staffMember.email}
                                   </div>
                                 </div>
                               </div>
                             ) : (
-                              <span className="text-secondary-500">Staff not found</span>
+                              <span className="text-2xs sm:text-sm text-secondary-500">Staff not found</span>
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                             {show ? (
-                              <div className="text-sm font-medium text-secondary-900">
-                                <Link href={`/shows/${show.id}`} className="hover:underline">
+                              <div className="text-xs sm:text-sm font-medium text-secondary-900 truncate max-w-[120px] sm:max-w-full">
+                                <Link href={`/shows/${show.id}`} className="hover:underline" onClick={(e) => e.stopPropagation()}>
                                   {show.name}
                                 </Link>
                               </div>
                             ) : (
-                              <span className="text-secondary-500">Show not found</span>
+                              <span className="text-2xs sm:text-sm text-secondary-500">Show not found</span>
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden sm:table-cell">
                             {show ? (
-                              <div className="text-sm text-secondary-500">
+                              <div className="text-2xs sm:text-sm text-secondary-500">
                                 {formatDate(show.startDate)} - {formatDate(show.endDate)}
                               </div>
                             ) : (
-                              <span className="text-secondary-500">--</span>
+                              <span className="text-2xs sm:text-sm text-secondary-500">--</span>
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                            <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 inline-flex text-2xs sm:text-xs leading-5 font-semibold rounded-full ${
                               booking.status === 'confirmed' 
                                 ? 'bg-green-100 text-green-800' 
                                 : booking.status === 'pending' 
                                   ? 'bg-yellow-100 text-yellow-800'
                                   : 'bg-red-100 text-red-800'
                             }`}>
-                              {booking.status === 'confirmed' && <CheckCircleIcon className="h-4 w-4 mr-1" />}
-                              {booking.status === 'pending' && <ClockIcon className="h-4 w-4 mr-1" />}
-                              {booking.status === 'cancelled' && <XCircleIcon className="h-4 w-4 mr-1" />}
+                              {booking.status === 'confirmed' && <CheckCircleIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-0.5 sm:mr-1" />}
+                              {booking.status === 'pending' && <ClockIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-0.5 sm:mr-1" />}
+                              {booking.status === 'cancelled' && <XCircleIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-0.5 sm:mr-1" />}
                               {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary-500">
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-2xs sm:text-sm text-secondary-500 hidden md:table-cell">
                             {formatDate(booking.assignedDate)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <Link href={`/bookings/${booking.id}`} className="text-primary-600 hover:text-primary-900">
-                              Details
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-2xs sm:text-sm font-medium">
+                            <Link href={`/bookings/${booking.id}`} className="text-primary-600 hover:text-primary-900" onClick={(e) => e.stopPropagation()}>
+                              Details <ChevronRightIcon className="h-3 w-3 sm:h-4 sm:w-4 inline ml-0.5" />
                             </Link>
                           </td>
                         </tr>
@@ -389,7 +392,7 @@ export default function BookingsDirectory() {
                 </table>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 p-3 sm:p-6">
                 {filteredBookings.map(booking => {
                   const staffMember = staff.find(s => s.id === booking.staffId);
                   const show = shows.find(s => s.id === booking.showId);
@@ -415,53 +418,49 @@ export default function BookingsDirectory() {
                     'cancelled': 'Cancelled'
                   };
                   
+                  // Status color mapping
+                  const statusColors = {
+                    'confirmed': 'success',
+                    'pending': 'warning',
+                    'cancelled': 'danger'
+                  };
+                  
+                  const statusColor = statusColors[booking.status] || 'secondary';
+                  
                   return (
                     <div
                       key={booking.id}
-                      className="group relative overflow-hidden rounded-xl bg-white transition-all duration-200 hover:shadow-lg border border-secondary-200 hover:border-primary-300"
+                      className="group relative overflow-hidden rounded-xl bg-white transition-all duration-200 hover:shadow-lg border border-secondary-200 hover:border-primary-300 flex flex-col"
                       onClick={() => router.push(`/bookings/${booking.id}`)}
                       tabIndex={0}
                       role="button"
                       aria-label={`View booking for ${getClientName(booking.clientId)}`}
                       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') router.push(`/bookings/${booking.id}`); }}
                     >
-                      {/* Decorative header bar */}
-                      <div className={`h-2 w-full ${
+                      {/* Gradient header */}
+                      <div className={`h-2 sm:h-2.5 w-full ${
                         booking.status === 'confirmed' 
-                          ? 'bg-success-500' 
+                          ? 'bg-gradient-to-r from-success-500 to-success-400' 
                           : booking.status === 'pending' 
-                            ? 'bg-warning-500'
-                            : 'bg-danger-500'
+                            ? 'bg-gradient-to-r from-warning-500 to-warning-400'
+                            : 'bg-gradient-to-r from-danger-500 to-danger-400'
                       }`}></div>
                       
-                      <div className="p-5">
+                      <div className="p-3 sm:p-5 flex-grow flex flex-col">
                         {/* Top section with status and edit button */}
-                        <div className="flex justify-between items-start mb-4">
-                          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                        <div className="flex justify-between items-start mb-2 sm:mb-3">
+                          <div className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-2xs sm:text-xs font-semibold ${
                             booking.status === 'confirmed' 
-                              ? 'bg-success-100 text-success-700' 
+                              ? 'bg-success-100 text-success-800' 
                               : booking.status === 'pending' 
-                                ? 'bg-warning-100 text-warning-700'
-                                : 'bg-danger-100 text-danger-700'
+                                ? 'bg-warning-100 text-warning-800'
+                                : 'bg-danger-100 text-danger-800'
                           }`}>
-                            {booking.status === 'confirmed' && (
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            )}
-                            {booking.status === 'pending' && (
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                            )}
-                            {booking.status === 'cancelled' && (
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            )}
-                            {statusLabels[booking.status] || booking.status}
+                            {booking.status === 'confirmed' && <CheckCircleIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 inline mr-0.5 sm:mr-1" />}
+                            {booking.status === 'pending' && <ClockIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 inline mr-0.5 sm:mr-1" />}
+                            {booking.status === 'cancelled' && <XCircleIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 inline mr-0.5 sm:mr-1" />}
+                            {statusLabels[booking.status] || 'Unknown'}
                           </div>
-                          
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -470,72 +469,96 @@ export default function BookingsDirectory() {
                             className="p-1.5 rounded-md text-secondary-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
                             aria-label="Edit booking"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                             </svg>
                           </button>
                         </div>
                         
                         {/* Client and Show Info */}
-                        <div className="mb-4">
-                          <div className="flex items-center gap-2 mb-1">
-                            <svg className="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                            <h3 className="text-lg font-semibold text-secondary-900 group-hover:text-primary-600 transition-colors">
-                              {client?.name || getClientName(booking.clientId)}
-                            </h3>
-                          </div>
-                          <div className="flex items-center gap-2 pl-6">
-                            <h4 className="text-base font-medium text-secondary-700">
-                              {show?.name || getShowName(booking.showId)}
-                            </h4>
+                        <div className="mb-3 sm:mb-4">
+                          <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
+                            <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
+                              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                              </svg>
+                            </div>
+                            <div>
+                              <h3 className="text-sm sm:text-lg font-semibold text-secondary-900 group-hover:text-primary-600 transition-colors leading-tight">
+                                {client?.name || getClientName(booking.clientId)}
+                              </h3>
+                              <h4 className="text-xs sm:text-sm font-medium text-secondary-600">
+                                {show?.name || getShowName(booking.showId)}
+                              </h4>
+                            </div>
                           </div>
                         </div>
                         
-                        {/* Booking Details */}
-                        <div className="bg-secondary-50 rounded-lg p-3 space-y-3">
-                          {/* Date Range */}
-                          <div className="flex items-center">
-                            <svg className="w-5 h-5 text-secondary-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <div>
-                              <div className="text-xs uppercase tracking-wide text-secondary-500 font-medium">Booking Period</div>
-                              <div className="text-sm font-medium text-secondary-800">
-                                {firstDate && lastDate ? (
-                                  sortedDates.length > 1 ? 
-                                    `${formatDate(firstDate)} - ${formatDate(lastDate)}` : 
-                                    formatDate(firstDate)
-                                ) : 'No dates selected'}
-                                <span className="ml-1 text-xs text-secondary-500">({bookingSummary.days} days)</span>
-                              </div>
+                        {/* Compact Staff/Days Stats with Bar Chart */}
+                        <div className="rounded-lg sm:rounded-xl bg-secondary-50 p-2 sm:p-3 border border-secondary-100">
+                          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-base sm:text-xl font-bold text-secondary-900">{bookingSummary.days}</span>
+                              <span className="text-2xs sm:text-xs text-secondary-500 uppercase">days</span>
+                            </div>
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-sm font-medium text-secondary-900">{totalStaffAssigned}/{totalStaffNeeded}</span>
+                              <span className="text-2xs text-secondary-500 uppercase">staff</span>
                             </div>
                           </div>
                           
-                          {/* Staff Status */}
-                          <div className="flex items-center">
-                            <svg className="w-5 h-5 text-secondary-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-3-3h-2m-4 0H9a3 3 0 00-3 3v2m4-10a4 4 0 11-8 0 4 4 0 018 0zm0 0a4 4 0 100-8 4 4 0 000 8z" />
-                            </svg>
-                            <div>
-                              <div className="text-xs uppercase tracking-wide text-secondary-500 font-medium">Staff Requirements</div>
-                              <div className="text-sm font-medium text-secondary-800">
-                                <div className="flex items-center gap-2">
-                                  <span>{totalStaffAssigned}/{totalStaffNeeded} Staff Assigned</span>
-                                  {totalStaffAssigned < totalStaffNeeded && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-warning-100 text-warning-800">
-                                      Need {totalStaffNeeded - totalStaffAssigned} more
-                                    </span>
-                                  )}
-                                  {totalStaffAssigned >= totalStaffNeeded && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-100 text-success-800">
-                                      Complete
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
+                          {/* Enhanced Staff Progress Bar */}
+                          <div className="space-y-1">
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="font-medium text-secondary-700">Staff Filled</span>
+                              <span className="font-medium text-secondary-700">
+                                {Math.round((totalStaffAssigned / Math.max(1, totalStaffNeeded)) * 100)}%
+                              </span>
                             </div>
+                            <div className="relative h-2 bg-secondary-200 rounded-full overflow-hidden">
+                              <div 
+                                className={`absolute top-0 left-0 h-full ${
+                                  totalStaffAssigned >= totalStaffNeeded 
+                                    ? 'bg-gradient-to-r from-success-500 to-success-400' 
+                                    : totalStaffAssigned >= totalStaffNeeded/2
+                                      ? 'bg-gradient-to-r from-warning-500 to-warning-400'
+                                      : 'bg-gradient-to-r from-danger-500 to-danger-400'
+                                }`}
+                                style={{ width: `${Math.min(100, (totalStaffAssigned / Math.max(1, totalStaffNeeded)) * 100)}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                          
+                          {/* Days Bar Chart */}
+                          <div className="mt-3 flex items-end h-10 gap-px overflow-hidden">
+                            {Array.from({ length: Math.min(bookingSummary.days, 15) }).map((_, i) => {
+                              // Calculate day staff fullness (random for visualization)
+                              const dayIndex = Math.min(i, (booking.datesNeeded || []).length - 1);
+                              const dayStaffIds = booking.datesNeeded && dayIndex >= 0 ? 
+                                booking.datesNeeded[dayIndex].staffIds || [] : [];
+                              const dayStaffCount = booking.datesNeeded && dayIndex >= 0 ? 
+                                booking.datesNeeded[dayIndex].staffCount || 1 : 1;
+                              const fullness = Math.min(1, dayStaffIds.length / Math.max(1, dayStaffCount));
+                              
+                              return (
+                                <div 
+                                  key={i} 
+                                  className={`flex-1 rounded-t ${
+                                    fullness >= 1 
+                                      ? 'bg-success-500' 
+                                      : fullness >= 0.5 
+                                        ? 'bg-warning-500' 
+                                        : 'bg-danger-400'
+                                  }`}
+                                  style={{ height: `${50 + fullness * 50}%` }}
+                                ></div>
+                              );
+                            })}
+                            {bookingSummary.days > 15 && (
+                              <div className="flex-1 rounded-t bg-secondary-300 h-1/2 flex items-center justify-center">
+                                <span className="text-[8px] text-white font-bold">+{bookingSummary.days - 15}</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
