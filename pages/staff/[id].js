@@ -82,7 +82,7 @@ export default function StaffProfile() {
     if (levelLower.includes('intermediate')) return 'bg-blue-100 text-blue-800';
     if (levelLower.includes('beginner')) return 'bg-green-100 text-green-800';
     
-    return 'bg-primary-100 text-primary-800';
+    return 'bg-pink-100 text-pink-800';
   };
   
   const experienceBadgeColor = getExperienceBadgeColor(staffMember.experience);
@@ -109,7 +109,7 @@ export default function StaffProfile() {
                 <span className="hidden sm:inline">Back to Staff</span>
                 <span className="sm:hidden">Back</span>
               </Button>
-              <h1 className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-500">{name}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-pink-500">{name}</h1>
             </div>
             <div className="mt-2 sm:mt-0">
               <Link href={`/staff/${id}/edit`}>
@@ -122,8 +122,8 @@ export default function StaffProfile() {
           </div>
 
           {/* Profile Section - Full Width at Top */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-500 via-blue-400 to-primary-500 h-28 sm:h-40 relative">
+          <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-[0_8px_30px_rgb(219,39,119,0.2)] transition-shadow duration-300">
+            <div className="bg-pink-500 h-28 sm:h-40 relative">
               {/* Decorative elements */}
               <div className="absolute top-0 right-0 w-32 sm:w-40 h-32 sm:h-40 bg-white/10 rounded-full -mr-16 sm:-mr-20 -mt-16 sm:-mt-20"></div>
               <div className="absolute bottom-0 left-0 w-20 sm:w-24 h-20 sm:h-24 bg-white/10 rounded-full -ml-10 sm:-ml-12 -mb-10 sm:-mb-12"></div>
@@ -140,7 +140,7 @@ export default function StaffProfile() {
               {/* Profile image and name section */}
               <div className="flex flex-col md:flex-row -mt-14 sm:-mt-24 gap-4 sm:gap-6">
                 <div className="flex-shrink-0 relative mx-auto md:mx-0">
-                  <div className="h-28 w-28 sm:h-40 sm:w-40 rounded-xl border-4 border-white bg-white shadow-xl overflow-hidden transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                  <div className="h-28 w-28 sm:h-40 sm:w-40 rounded-xl border-4 border-pink-500 bg-white shadow-xl overflow-hidden transform rotate-3 hover:rotate-0 transition-transform duration-300">
                     {profileImage ? (
                       <Image
                         src={profileImage}
@@ -150,7 +150,7 @@ export default function StaffProfile() {
                         className="object-cover w-full h-full"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-primary-400 to-primary-600 text-white flex items-center justify-center text-3xl sm:text-5xl font-semibold">
+                      <div className="w-full h-full bg-pink-500 text-white flex items-center justify-center text-3xl sm:text-5xl font-semibold">
                         {initial}
                       </div>
                     )}
@@ -158,7 +158,7 @@ export default function StaffProfile() {
                 </div>
                 
                 <div className="pt-1 sm:pt-4 text-center md:text-left flex-1 flex flex-col justify-center">
-                  <h2 className="text-xl sm:text-3xl md:text-4xl font-bold text-secondary-900 bg-clip-text text-transparent bg-gradient-to-r from-primary-700 to-blue-600">
+                  <h2 className="text-xl sm:text-3xl md:text-4xl font-bold text-secondary-900 bg-clip-text text-transparent bg-gradient-to-r from-pink-700 to-pink-500">
                     {name}
                   </h2>
                   
@@ -174,7 +174,7 @@ export default function StaffProfile() {
                     {staffMember.email && (
                         <a
                           href={`mailto:${staffMember.email}`}
-                          className="flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:from-primary-600 hover:to-primary-700 transition-all shadow-md hover:shadow-lg text-xs sm:text-sm font-medium"
+                          className="flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary-500 text-white hover:bg-primary-600 transition-all shadow-md hover:shadow-lg text-xs sm:text-sm font-medium"
                         >
                           <EnvelopeIcon className="h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1 sm:mr-2" />
                           <span className="hidden sm:inline">{staffMember.email}</span>
@@ -185,7 +185,7 @@ export default function StaffProfile() {
                     {staffMember.phone && (
                         <a
                           href={`tel:${staffMember.phone}`}
-                          className="flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 transition-all shadow-md hover:shadow-lg text-xs sm:text-sm font-medium"
+                          className="flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-green-500 text-white hover:bg-green-600 transition-all shadow-md hover:shadow-lg text-xs sm:text-sm font-medium"
                         >
                           <PhoneIcon className="h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1 sm:mr-2" />
                           <span className="hidden sm:inline">{staffMember.phone}</span>
@@ -213,14 +213,14 @@ export default function StaffProfile() {
                 {/* Stats summary - Full width on mobile, on the right on larger screens */}
                 <div className="md:ml-auto md:self-center mt-4 sm:mt-6 md:mt-0 w-full md:w-auto">
                   <div className="flex gap-4 sm:gap-6 justify-center md:justify-end">
-                    <div className="bg-gradient-to-br from-blue-50 to-white rounded-lg p-3 sm:p-4 text-center shadow-md border border-blue-100 flex-1 md:flex-initial min-w-[90px] sm:min-w-[100px] transform hover:scale-105 transition-transform duration-300">
-                      <div className="text-2xl sm:text-3xl font-bold text-blue-600">{totalDaysWorked}</div>
-                      <div className="text-2xs sm:text-xs text-blue-500 uppercase tracking-wider font-medium">Days</div>
+                    <div className="bg-gradient-to-br from-pink-50 to-white rounded-lg p-3 sm:p-4 text-center shadow-md border border-pink-100 flex-1 md:flex-initial min-w-[90px] sm:min-w-[100px] transform hover:scale-105 transition-transform duration-300">
+                      <div className="text-2xl sm:text-3xl font-bold text-pink-600">{totalDaysWorked}</div>
+                      <div className="text-2xs sm:text-xs text-pink-500 uppercase tracking-wider font-medium">Days</div>
                     </div>
                     
-                    <div className="bg-gradient-to-br from-purple-50 to-white rounded-lg p-3 sm:p-4 text-center shadow-md border border-purple-100 flex-1 md:flex-initial min-w-[90px] sm:min-w-[100px] transform hover:scale-105 transition-transform duration-300">
-                      <div className="text-2xl sm:text-3xl font-bold text-purple-600">{bookings.length}</div>
-                      <div className="text-2xs sm:text-xs text-purple-500 uppercase tracking-wider font-medium">Shows</div>
+                    <div className="bg-gradient-to-br from-pink-50 to-white rounded-lg p-3 sm:p-4 text-center shadow-md border border-pink-100 flex-1 md:flex-initial min-w-[90px] sm:min-w-[100px] transform hover:scale-105 transition-transform duration-300">
+                      <div className="text-2xl sm:text-3xl font-bold text-pink-600">{bookings.length}</div>
+                      <div className="text-2xs sm:text-xs text-pink-500 uppercase tracking-wider font-medium">Shows</div>
                     </div>
                   </div>
                 </div>
@@ -231,7 +231,7 @@ export default function StaffProfile() {
           {/* Bookings and Availability Side by Side */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Left Column: Booking History */}
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-[0_8px_30px_rgb(219,39,119,0.2)] transition-shadow duration-300">
               <div className="bg-gradient-to-r from-emerald-600 to-emerald-400 py-3 sm:py-4 px-4 sm:px-6 flex justify-between items-center">
                 <div className="flex items-center">
                   <BriefcaseIcon className="h-4 sm:h-5 w-4 sm:w-5 text-white mr-1.5 sm:mr-2" />
@@ -325,7 +325,7 @@ export default function StaffProfile() {
             </div>
             
             {/* Right Column: Availability */}
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-[0_8px_30px_rgb(219,39,119,0.2)] transition-shadow duration-300">
               <div className="bg-gradient-to-r from-purple-600 to-purple-400 py-3 sm:py-4 px-4 sm:px-6">
                 <div className="flex items-center">
                   <CalendarIcon className="h-4 sm:h-5 w-4 sm:w-5 text-white mr-1.5 sm:mr-2" />
@@ -394,7 +394,7 @@ export default function StaffProfile() {
           </div>
           
           {/* Physical Details at Bottom - Full Width */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+          <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-[0_8px_30px_rgb(219,39,119,0.2)] transition-shadow duration-300">
             <div className="bg-gradient-to-r from-blue-600 to-blue-400 py-3 sm:py-4 px-4 sm:px-6">
               <div className="flex items-center">
                 <IdentificationIcon className="h-4 sm:h-5 w-4 sm:w-5 text-white mr-1.5 sm:mr-2" />

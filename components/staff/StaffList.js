@@ -53,36 +53,14 @@ function StaffCard({ staffMember }) {
     }
     return total;
   }, 0);
-  
-  // Generate a unique gradient based on the first letter of the name
-  const getGradient = (letter) => {
-    const gradients = [
-      'from-pink-500 to-purple-600',
-      'from-blue-500 to-teal-400',
-      'from-green-400 to-emerald-600',
-      'from-orange-400 to-pink-500',
-      'from-indigo-500 to-blue-400',
-      'from-red-500 to-orange-400',
-      'from-amber-400 to-yellow-300',
-      'from-violet-500 to-purple-500',
-      'from-teal-400 to-cyan-400',
-      'from-fuchsia-500 to-pink-500',
-    ];
-    
-    // Use character code to generate a consistent index
-    const index = letter ? (letter.charCodeAt(0) % gradients.length) : 0;
-    return gradients[index];
-  };
-
-  const gradient = getGradient(name.charAt(0));
 
   return (
     <Link href={`/staff/${staffMember.id}`} className="block transform transition-transform duration-300 hover:scale-[1.02]">
-      <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl relative transition-all duration-300 border-b-4 border-primary-500 h-full">
+      <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl relative transition-all duration-300 border-b-4 border-pink-500 h-full hover:shadow-[0_8px_30px_rgb(219,39,119,0.2)]">
         {/* Floating edit button */}
         <div className="absolute top-2 sm:top-3 right-2 sm:right-3 z-10">
           <Link href={`/staff/${staffMember.id}/edit`} onClick={(e) => e.stopPropagation()}>
-            <button className="bg-white/90 backdrop-blur-sm p-1.5 sm:p-2 rounded-full text-secondary-600 hover:text-primary-600 hover:bg-white transition-colors shadow-sm">
+            <button className="bg-white/90 backdrop-blur-sm p-1.5 sm:p-2 rounded-full text-secondary-600 hover:text-pink-600 hover:bg-white transition-colors shadow-sm">
               <PencilSquareIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </button>
           </Link>
@@ -91,24 +69,18 @@ function StaffCard({ staffMember }) {
         {/* Days Worked Badge - Show only if days worked > 0 */}
         {totalDaysWorked > 0 && (
           <div className="absolute top-2 sm:top-3 left-2 sm:left-3 z-10">
-            <div className="bg-primary-100 text-primary-800 text-2xs sm:text-xs font-bold px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-full flex items-center">
+            <div className="bg-pink-100 text-pink-800 text-2xs sm:text-xs font-bold px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-full flex items-center">
               <CalendarIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1" /> 
               {totalDaysWorked}
             </div>
           </div>
         )}
         
-        {/* Card header with gradient */}
-        <div className={`bg-gradient-to-r ${gradient} pt-4 sm:pt-5 px-4 sm:px-6 pb-20 sm:pb-24 relative`}>
-          {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-12 sm:w-16 h-12 sm:h-16 bg-white/10 rounded-full -mr-6 sm:-mr-8 -mt-6 sm:-mt-8"></div>
-          <div className="absolute bottom-0 left-0 w-10 sm:w-12 h-10 sm:h-12 bg-white/10 rounded-full -ml-5 sm:-ml-6 -mb-5 sm:-mb-6"></div>
-        </div>
-        
-        <div className="px-4 sm:px-6 pb-5 sm:pb-6 relative">
-          {/* Profile circle with image or initials */}
-          <div className="flex flex-col items-center -mt-14 sm:-mt-16 mb-3 sm:mb-4">
-            <div className="h-28 w-28 sm:h-32 sm:w-32 rounded-full bg-white flex items-center justify-center text-2xl sm:text-3xl font-semibold shadow-md border-4 border-white overflow-hidden">
+        {/* Card content with profile picture highlight */}
+        <div className="px-4 sm:px-6 pt-6 pb-5 sm:pb-6 relative">
+          {/* Profile circle with image or initials - now with pink border */}
+          <div className="flex flex-col items-center mb-4 sm:mb-5">
+            <div className="h-36 w-36 sm:h-40 sm:w-40 rounded-full bg-white flex items-center justify-center text-2xl sm:text-3xl font-semibold overflow-hidden border-4 border-pink-500 shadow-lg">
               {profileImage ? (
                 <img 
                   src={profileImage} 
@@ -117,11 +89,11 @@ function StaffCard({ staffMember }) {
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.style.display = 'none';
-                    e.target.parentNode.innerHTML = `<span class="text-transparent bg-clip-text bg-gradient-to-br ${gradient}">${initials}</span>`;
+                    e.target.parentNode.innerHTML = `<span class="text-pink-500">${initials}</span>`;
                   }}
                 />
               ) : (
-                <span className={`text-transparent bg-clip-text bg-gradient-to-br ${gradient}`}>{initials}</span>
+                <span className="text-pink-500">{initials}</span>
               )}
             </div>
           </div>
@@ -147,7 +119,7 @@ function StaffCard({ staffMember }) {
               <Link 
                 href={`mailto:${staffMember.email}`}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-primary-500 text-white p-2.5 sm:p-3 rounded-full hover:bg-primary-600 transition-colors shadow-md"
+                className="bg-pink-500 text-white p-2.5 sm:p-3 rounded-full hover:bg-pink-600 transition-colors shadow-md"
                 title={`Email ${name}`}
               >
                 <EnvelopeIcon className="h-4 w-4 sm:h-5 sm:w-5" />
