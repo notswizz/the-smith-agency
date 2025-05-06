@@ -83,18 +83,16 @@ export default function ClientsDirectory() {
       <DashboardLayout>
         <div className="flex flex-col h-full">
           {/* Sticky header section */}
-          <div className="sticky top-0 z-10 bg-secondary-50 px-4 py-4 border-b border-secondary-200">
-            {/* Header with title and actions */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-              <h1 className="text-2xl font-bold text-secondary-900">Client Directory</h1>
-              <div className="mt-4 sm:mt-0">
-                <Link href="/clients/new">
-                  <Button variant="primary" size="sm" className="flex items-center">
-                    <PlusIcon className="h-5 w-5 mr-1" />
-                    Add Client
-                  </Button>
-                </Link>
-              </div>
+          <div className="sticky top-0 z-10 bg-secondary-50 px-3 sm:px-4 py-3 sm:py-4 border-b border-secondary-200">
+            {/* Header with title and actions - more compact layout */}
+            <div className="flex items-center justify-between mb-3">
+              <h1 className="text-xl sm:text-2xl font-bold text-secondary-900">Client Directory</h1>
+              <Link href="/clients/new">
+                <Button variant="primary" size="sm" className="flex items-center">
+                  <PlusIcon className="h-4 w-4 mr-1" />
+                  Add Client
+                </Button>
+              </Link>
             </div>
 
             {/* Filters */}
@@ -109,7 +107,7 @@ export default function ClientsDirectory() {
           </div>
 
           {/* Scrollable content area */}
-          <div className="flex-1 overflow-auto pb-6 pt-4 px-4">
+          <div className="flex-1 overflow-auto pb-4 pt-3 px-3 sm:px-4">
             {/* Client list */}
             {filteredClients.length > 0 ? (
               <ClientList clients={filteredClients} />

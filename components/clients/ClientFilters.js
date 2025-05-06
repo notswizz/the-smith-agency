@@ -26,12 +26,12 @@ export default function ClientFilters({
     filters.location !== 'all';
 
   return (
-    <div className="bg-white shadow-sm rounded-lg p-4 mb-6">
-      {/* Search bar */}
-      <div className="flex items-center mb-4">
+    <div className="bg-white shadow-sm rounded-lg p-3">
+      {/* Search and filter bar - combined into a single row */}
+      <div className="flex items-center gap-2">
         <div className="relative flex-grow">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <MagnifyingGlassIcon className="h-5 w-5 text-secondary-400" aria-hidden="true" />
+          <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+            <MagnifyingGlassIcon className="h-4 w-4 text-secondary-400" aria-hidden="true" />
           </div>
           <input
             type="text"
@@ -39,34 +39,38 @@ export default function ClientFilters({
             id="search"
             value={filters.search}
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            className="block w-full pl-10 pr-3 py-2 border border-secondary-200 rounded-md leading-5 bg-white placeholder-secondary-500 focus:outline-none focus:placeholder-secondary-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            className="block w-full pl-8 pr-3 py-1.5 border border-secondary-200 rounded-md bg-white placeholder-secondary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-sm"
             placeholder="Search clients by name, contact, or location"
           />
         </div>
-        <div className="ml-4 flex-shrink-0">
-          <Button 
-            variant="outline" 
-            onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-            className="flex items-center"
-          >
-            <FunnelIcon className="h-5 w-5 mr-2" />
-            Filters
-            {hasActiveFilters && (
-              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                Active
-              </span>
-            )}
-          </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+          className="flex-shrink-0 flex items-center h-9"
+        >
+          <FunnelIcon className="h-4 w-4 mr-1" />
+          Filters
+          {hasActiveFilters && (
+            <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-medium bg-primary-100 text-primary-800">
+              Active
+            </span>
+          )}
+        </Button>
+
+        <div className="flex-shrink-0 text-2xs text-secondary-500 hidden sm:block">
+          <span className="font-medium">{showCount}</span>/<span className="font-medium">{totalCount}</span> clients
         </div>
       </div>
 
       {/* Filter options */}
       {isFiltersOpen && (
-        <div className="mt-4 border-t border-secondary-200 pt-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="mt-3 pt-3 border-t border-secondary-100">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {/* Category Filter */}
             <div>
-              <label htmlFor="category" className="block text-sm font-medium text-secondary-700">
+              <label htmlFor="category" className="block text-xs font-medium text-secondary-700 mb-1">
                 Category
               </label>
               <select
@@ -74,7 +78,7 @@ export default function ClientFilters({
                 name="category"
                 value={filters.category}
                 onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-secondary-200 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+                className="block w-full pl-3 pr-8 py-1.5 text-sm border-secondary-200 focus:outline-none focus:ring-primary-500 focus:border-primary-500 rounded-md"
               >
                 <option value="all">All Categories</option>
                 {categories.map((category) => (
@@ -87,7 +91,7 @@ export default function ClientFilters({
 
             {/* Location Filter */}
             <div>
-              <label htmlFor="location" className="block text-sm font-medium text-secondary-700">
+              <label htmlFor="location" className="block text-xs font-medium text-secondary-700 mb-1">
                 Location
               </label>
               <select
@@ -95,7 +99,7 @@ export default function ClientFilters({
                 name="location"
                 value={filters.location}
                 onChange={(e) => setFilters({ ...filters, location: e.target.value })}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-secondary-200 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+                className="block w-full pl-3 pr-8 py-1.5 text-sm border-secondary-200 focus:outline-none focus:ring-primary-500 focus:border-primary-500 rounded-md"
               >
                 <option value="all">All Locations</option>
                 {locations.map((location) => (
@@ -110,22 +114,22 @@ export default function ClientFilters({
             <div className="flex items-end">
               <Button 
                 variant="secondary" 
+                size="sm"
                 onClick={resetFilters} 
                 disabled={!hasActiveFilters}
-                className="w-full flex items-center justify-center"
+                className="w-full flex items-center justify-center py-1.5"
               >
-                <XMarkIcon className="h-5 w-5 mr-2" />
-                Reset Filters
+                <XMarkIcon className="h-4 w-4 mr-1" />
+                Reset
               </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Results count */}
-      <div className="mt-4 text-sm text-secondary-500">
-        Showing <span className="font-medium">{showCount}</span> of{' '}
-        <span className="font-medium">{totalCount}</span> clients
+      {/* Mobile results count */}
+      <div className="mt-2 text-2xs text-secondary-500 sm:hidden">
+        <span className="font-medium">{showCount}</span>/<span className="font-medium">{totalCount}</span> clients
       </div>
     </div>
   );

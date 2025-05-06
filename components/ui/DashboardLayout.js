@@ -10,18 +10,15 @@ import {
   ClipboardDocumentListIcon, 
   Bars3Icon,
   XMarkIcon,
-  ClockIcon,
-  ChatBubbleLeftRightIcon
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon, shortName: 'Home' },
   { name: 'Staff', href: '/staff', icon: UserGroupIcon, shortName: 'Staff' },
-  { name: 'Staff Availability', href: '/staff/availability', icon: ClockIcon, shortName: 'Availability' },
   { name: 'Clients', href: '/clients', icon: BuildingOffice2Icon, shortName: 'Clients' },
   { name: 'Shows', href: '/shows', icon: CalendarIcon, shortName: 'Shows' },
   { name: 'Bookings', href: '/bookings', icon: ClipboardDocumentListIcon, shortName: 'Bookings' },
-  { name: 'Chat', href: '/chat', icon: ChatBubbleLeftRightIcon, shortName: 'Chat' },
 ];
 
 export default function DashboardLayout({ children }) {
@@ -111,14 +108,20 @@ export default function DashboardLayout({ children }) {
           </div>
           
           {/* Footer in mobile sidebar */}
-          <div className="flex-shrink-0 flex border-t border-secondary-100 p-4">
-            <div className="flex items-center">
-              <div>
-                <p className="text-xs text-secondary-500">
-                  &copy; {new Date().getFullYear()} The Smith Agency
-                </p>
-              </div>
-            </div>
+          <div className="flex-shrink-0 flex flex-col border-t border-secondary-100 p-4">
+            {/* Refresh button */}
+            <button 
+              onClick={() => window.location.reload()}
+              className="mb-2 flex items-center justify-center p-1.5 rounded-md bg-secondary-50 hover:bg-secondary-100 transition-colors text-secondary-500 hover:text-secondary-700"
+              aria-label="Refresh page"
+            >
+              <ArrowPathIcon className="h-4 w-4 mr-1.5" />
+              <span className="text-xs font-medium">Refresh</span>
+            </button>
+            
+            <p className="text-xs text-secondary-500">
+              &copy; {new Date().getFullYear()} The Smith Agency
+            </p>
           </div>
         </div>
       </div>
@@ -162,12 +165,20 @@ export default function DashboardLayout({ children }) {
             </div>
             
             {/* Footer element on sidebar */}
-            <div className="flex-shrink-0 flex border-t border-secondary-100 p-4">
-              <div className="flex items-center">
-                <p className="text-xs text-secondary-500">
-                  &copy; {new Date().getFullYear()} The Smith Agency
-                </p>
-              </div>
+            <div className="flex-shrink-0 flex flex-col border-t border-secondary-100 p-4">
+              {/* Refresh button */}
+              <button 
+                onClick={() => window.location.reload()}
+                className="mb-2 flex items-center justify-center p-1.5 rounded-md bg-secondary-50 hover:bg-secondary-100 transition-colors text-secondary-500 hover:text-secondary-700"
+                aria-label="Refresh page"
+              >
+                <ArrowPathIcon className="h-4 w-4 mr-1.5" />
+                <span className="text-xs font-medium">Refresh</span>
+              </button>
+              
+              <p className="text-xs text-secondary-500">
+                &copy; {new Date().getFullYear()} The Smith Agency
+              </p>
             </div>
           </div>
         </div>
@@ -207,15 +218,14 @@ export default function DashboardLayout({ children }) {
         
         {/* Bottom mobile navigation */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-secondary-100 shadow-lg">
-          <div className="grid grid-cols-5 h-16">
-            {/* Include Home, Staff, Clients, Bookings and Chat */}
+          <div className="grid grid-cols-4 h-16">
+            {/* Include Home, Staff, Clients, Bookings */}
             {navigation
               .filter(item => 
                 item.href === '/' || 
                 item.href === '/staff' || 
                 item.href === '/clients' || 
-                item.href === '/bookings' ||
-                item.href === '/chat'
+                item.href === '/bookings'
               )
               .map((item) => (
                 <Link
