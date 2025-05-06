@@ -5,7 +5,10 @@ import {
   CheckCircleIcon, 
   ClockIcon, 
   XCircleIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  CalendarIcon,
+  UserGroupIcon,
+  BuildingOffice2Icon
 } from '@heroicons/react/24/outline';
 
 const BookingCard = ({ 
@@ -58,16 +61,62 @@ const BookingCard = ({
   };
   
   const statusColors = {
-    'confirmed': 'success',
-    'pending': 'warning',
-    'cancelled': 'danger'
+    'confirmed': {
+      bg: 'bg-emerald-100',
+      text: 'text-emerald-800',
+      border: 'border-emerald-200',
+      icon: <CheckCircleIcon className="h-3.5 w-3.5 mr-1" />,
+      gradient: 'from-emerald-500 to-green-400'
+    },
+    'pending': {
+      bg: 'bg-amber-100',
+      text: 'text-amber-800',
+      border: 'border-amber-200',
+      icon: <ClockIcon className="h-3.5 w-3.5 mr-1" />,
+      gradient: 'from-amber-500 to-yellow-400'
+    },
+    'cancelled': {
+      bg: 'bg-red-100',
+      text: 'text-red-800',
+      border: 'border-red-200',
+      icon: <XCircleIcon className="h-3.5 w-3.5 mr-1" />,
+      gradient: 'from-red-500 to-rose-400'
+    }
   };
   
-  const statusColor = statusColors[booking.status] || 'secondary';
+  const statusStyle = statusColors[booking.status] || statusColors['pending'];
+  
+  // Format date range
+  const formatDateRange = () => {
+    if (!firstDate || !lastDate) return 'No dates';
+    
+    const start = new Date(firstDate);
+    const end = new Date(lastDate);
+    
+    // Adjust for timezone offset
+    const adjustedStart = new Date(start.getTime() + start.getTimezoneOffset() * 60000);
+    const adjustedEnd = new Date(end.getTime() + end.getTimezoneOffset() * 60000);
+    
+    const startMonth = adjustedStart.toLocaleDateString('en-US', { month: 'short' });
+    const endMonth = adjustedEnd.toLocaleDateString('en-US', { month: 'short' });
+    
+    if (startMonth === endMonth) {
+      return `${startMonth} ${adjustedStart.getDate()}-${adjustedEnd.getDate()}, ${adjustedEnd.getFullYear()}`;
+    } else {
+      return `${startMonth} ${adjustedStart.getDate()} - ${endMonth} ${adjustedEnd.getDate()}, ${adjustedEnd.getFullYear()}`;
+    }
+  };
+
+  // Get color based on fill percentage
+  const getFillColor = (percentage) => {
+    if (percentage >= 1) return 'bg-gradient-to-r from-emerald-500 to-emerald-400';
+    if (percentage >= 0.5) return 'bg-gradient-to-r from-amber-500 to-amber-400';
+    return 'bg-gradient-to-r from-red-500 to-red-400';
+  };
 
   return (
     <div
-      className="group relative overflow-hidden rounded-xl bg-white transition-all duration-200 hover:shadow-lg border border-secondary-200 hover:border-primary-300 flex flex-col"
+      className="group relative overflow-hidden rounded-xl bg-white transition-all duration-300 hover:shadow-lg border border-secondary-200 hover:border-primary-300 flex flex-col cursor-pointer transform hover:-translate-y-1"
       onClick={() => router.push(`/bookings/${booking.id}`)}
       tabIndex={0}
       role="button"
@@ -75,27 +124,13 @@ const BookingCard = ({
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') router.push(`/bookings/${booking.id}`); }}
     >
       {/* Gradient header */}
-      <div className={`h-2 sm:h-2.5 w-full ${
-        booking.status === 'confirmed' 
-          ? 'bg-gradient-to-r from-success-500 to-success-400' 
-          : booking.status === 'pending' 
-            ? 'bg-gradient-to-r from-warning-500 to-warning-400'
-            : 'bg-gradient-to-r from-danger-500 to-danger-400'
-      }`}></div>
+      <div className={`h-3 w-full bg-gradient-to-r ${statusStyle.gradient}`}></div>
       
-      <div className="p-3 sm:p-5 flex-grow flex flex-col">
+      <div className="p-4 flex-grow flex flex-col">
         {/* Top section with status and edit button */}
-        <div className="flex justify-between items-start mb-2 sm:mb-3">
-          <div className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-2xs sm:text-xs font-semibold ${
-            booking.status === 'confirmed' 
-              ? 'bg-success-100 text-success-800' 
-              : booking.status === 'pending' 
-                ? 'bg-warning-100 text-warning-800'
-                : 'bg-danger-100 text-danger-800'
-          }`}>
-            {booking.status === 'confirmed' && <CheckCircleIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 inline mr-0.5 sm:mr-1" />}
-            {booking.status === 'pending' && <ClockIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 inline mr-0.5 sm:mr-1" />}
-            {booking.status === 'cancelled' && <XCircleIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 inline mr-0.5 sm:mr-1" />}
+        <div className="flex justify-between items-start mb-4">
+          <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border} border`}>
+            {statusStyle.icon}
             {statusLabels[booking.status] || 'Unknown'}
           </div>
           <button
@@ -103,71 +138,88 @@ const BookingCard = ({
               e.stopPropagation();
               router.push(`/bookings/${booking.id}/edit`);
             }}
-            className="p-1.5 rounded-md text-secondary-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+            className="p-1.5 rounded-md text-secondary-500 hover:text-primary-600 hover:bg-primary-50 transition-colors"
             aria-label="Edit booking"
           >
-            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
           </button>
         </div>
         
         {/* Client and Show Info */}
-        <div className="mb-3 sm:mb-4">
-          <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
-            <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
-              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
+        <div className="mb-4">
+          <div className="flex items-center gap-3 mb-1.5">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center text-primary-600 shadow-sm border border-primary-100">
+              <BuildingOffice2Icon className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm sm:text-lg font-semibold text-secondary-900 group-hover:text-primary-600 transition-colors leading-tight">
+              <h3 className="text-lg font-semibold text-secondary-900 group-hover:text-primary-600 transition-colors leading-tight">
                 {client?.name || '[Unknown Client]'}
               </h3>
-              <h4 className="text-xs sm:text-sm font-medium text-secondary-600">
+              <h4 className="text-sm text-secondary-600">
                 {show?.name || '[Unknown Show]'}
               </h4>
             </div>
           </div>
+          
+          {/* Date Range */}
+          <div className="flex items-center text-xs text-secondary-500 ml-13 mt-1">
+            <CalendarIcon className="w-3 h-3 mr-1 flex-shrink-0" />
+            <span>{formatDateRange()}</span>
+          </div>
         </div>
         
-        {/* Compact Staff/Days Stats with Bar Chart */}
-        <div className="rounded-lg sm:rounded-xl bg-secondary-50 p-2 sm:p-3 border border-secondary-100">
-          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-            <div className="flex items-baseline gap-1">
-              <span className="text-base sm:text-xl font-bold text-secondary-900">{bookingSummary.days}</span>
-              <span className="text-2xs sm:text-xs text-secondary-500 uppercase">days</span>
+        {/* Staff/Days Stats with Bar Chart */}
+        <div className="rounded-xl bg-secondary-50 p-4 border border-secondary-100 shadow-inner">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                <CalendarIcon className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-xl font-bold text-secondary-900">{bookingSummary.days}</span>
+                  <span className="text-xs text-secondary-500 uppercase">days</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-sm font-medium text-secondary-900">{totalStaffAssigned}/{totalStaffNeeded}</span>
-              <span className="text-2xs text-secondary-500 uppercase">staff</span>
+            
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                <UserGroupIcon className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-lg font-bold text-secondary-900">{totalStaffAssigned}/{totalStaffNeeded}</span>
+                  <span className="text-xs text-secondary-500 uppercase">staff</span>
+                </div>
+              </div>
             </div>
           </div>
           
           {/* Enhanced Staff Progress Bar */}
-          <div className="space-y-1">
+          <div className="space-y-2">
             <div className="flex justify-between items-center text-xs">
               <span className="font-medium text-secondary-700">Staff Filled</span>
-              <span className="font-medium text-secondary-700">
+              <span className={`font-medium ${
+                totalStaffAssigned >= totalStaffNeeded ? 'text-emerald-600' :
+                totalStaffAssigned >= totalStaffNeeded/2 ? 'text-amber-600' :
+                'text-red-600'
+              }`}>
                 {Math.round((totalStaffAssigned / Math.max(1, totalStaffNeeded)) * 100)}%
               </span>
             </div>
-            <div className="relative h-2 bg-secondary-200 rounded-full overflow-hidden">
+            <div className="relative h-3 bg-secondary-200 rounded-full overflow-hidden shadow-inner">
               <div 
-                className={`absolute top-0 left-0 h-full ${
-                  totalStaffAssigned >= totalStaffNeeded 
-                    ? 'bg-gradient-to-r from-success-500 to-success-400' 
-                    : totalStaffAssigned >= totalStaffNeeded/2
-                      ? 'bg-gradient-to-r from-warning-500 to-warning-400'
-                      : 'bg-gradient-to-r from-danger-500 to-danger-400'
-                }`}
+                className={`absolute top-0 left-0 h-full ${getFillColor(totalStaffAssigned / Math.max(1, totalStaffNeeded))}`}
                 style={{ width: `${Math.min(100, (totalStaffAssigned / Math.max(1, totalStaffNeeded)) * 100)}%` }}
               ></div>
             </div>
           </div>
           
           {/* Days Bar Chart */}
-          <div className="mt-3 flex items-end h-10 gap-px overflow-hidden relative">
+          <div className="mt-4 flex items-end h-12 gap-1 overflow-hidden relative">
             {Array.from({ length: Math.min(bookingSummary.days, 15) }).map((_, i) => {
               // Calculate day staff fullness
               const dayIndex = Math.min(i, (booking.datesNeeded || []).length - 1);
@@ -181,17 +233,18 @@ const BookingCard = ({
               const dayDate = booking.datesNeeded && dayIndex >= 0 
                 ? booking.datesNeeded[dayIndex].date 
                 : null;
+                
+              // Get bar color based on fullness
+              const barColor = fullness >= 1 
+                ? 'bg-emerald-500 hover:bg-emerald-600' 
+                : fullness >= 0.5 
+                  ? 'bg-amber-500 hover:bg-amber-600' 
+                  : 'bg-red-500 hover:bg-red-600';
               
               return (
                 <div 
                   key={i} 
-                  className={`flex-1 rounded-t ${
-                    fullness >= 1 
-                      ? 'bg-success-500 hover:bg-success-600' 
-                      : fullness >= 0.5 
-                        ? 'bg-warning-500 hover:bg-warning-600' 
-                        : 'bg-danger-400 hover:bg-danger-500'
-                  } cursor-pointer transition-colors relative`}
+                  className={`flex-1 rounded-md ${barColor} cursor-pointer transition-all shadow-sm hover:shadow transform hover:-translate-y-1`}
                   style={{ height: `${50 + fullness * 50}%` }}
                   onClick={(e) => showTooltip(e, dayIndex, booking.id)}
                   onMouseEnter={(e) => showTooltip(e, dayIndex, booking.id)}
@@ -201,10 +254,17 @@ const BookingCard = ({
               );
             })}
             {bookingSummary.days > 15 && (
-              <div className="flex-1 rounded-t bg-secondary-300 hover:bg-secondary-400 h-1/2 flex items-center justify-center cursor-pointer transition-colors">
-                <span className="text-[8px] text-white font-bold">+{bookingSummary.days - 15}</span>
+              <div className="flex-1 rounded-md bg-secondary-300 hover:bg-secondary-400 h-1/2 flex items-center justify-center cursor-pointer transition-colors">
+                <span className="text-xs text-white font-bold">+{bookingSummary.days - 15}</span>
               </div>
             )}
+          </div>
+        </div>
+        
+        {/* Arrow indicator for clickable card */}
+        <div className="flex justify-end mt-3">
+          <div className="text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity">
+            <ArrowRightIcon className="h-5 w-5" />
           </div>
         </div>
       </div>

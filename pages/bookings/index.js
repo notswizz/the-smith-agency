@@ -219,27 +219,58 @@ export default function BookingsDirectory() {
 
           {/* Scrollable content area */}
           <div className="flex-1 overflow-auto pb-6">
-            {/* Bookings list - card view */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 p-3 sm:p-6">
+            {/* Bookings list - card view with snap scrolling on mobile */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 p-3 sm:p-6 md:grid-flow-row-dense">
+              {/* For mobile: Horizontal snap scroll container */}
+              <div className="sm:hidden w-full overflow-x-auto pb-4 snap-x snap-mandatory scroll-p-4 scroll-smooth flex gap-3">
+                {filteredBookings.length > 0 ? (
+                  filteredBookings.map(booking => {
+                    const client = clients.find(c => c.id === booking.clientId);
+                    const show = shows.find(s => s.id === booking.showId);
+                    
+                    return (
+                      <div key={booking.id} className="snap-center min-w-[85%] first:ml-3 last:mr-3">
+                        <BookingCard
+                          booking={booking}
+                          staff={staff}
+                          client={client}
+                          show={show}
+                          showTooltip={showTooltip}
+                          hideTooltip={hideTooltip}
+                        />
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="snap-center min-w-[85%]">
+                    <EmptyBookings resetFilters={resetFilters} />
+                  </div>
+                )}
+              </div>
+              
+              {/* For tablet/desktop: Regular grid layout */}
               {filteredBookings.length > 0 ? (
                 filteredBookings.map(booking => {
                   const client = clients.find(c => c.id === booking.clientId);
                   const show = shows.find(s => s.id === booking.showId);
                   
                   return (
-                    <BookingCard
-                      key={booking.id}
-                      booking={booking}
-                      staff={staff}
-                      client={client}
-                      show={show}
-                      showTooltip={showTooltip}
-                      hideTooltip={hideTooltip}
-                    />
+                    <div key={booking.id} className="hidden sm:block">
+                      <BookingCard
+                        booking={booking}
+                        staff={staff}
+                        client={client}
+                        show={show}
+                        showTooltip={showTooltip}
+                        hideTooltip={hideTooltip}
+                      />
+                    </div>
                   );
                 })
               ) : (
-                <EmptyBookings resetFilters={resetFilters} />
+                <div className="hidden sm:block">
+                  <EmptyBookings resetFilters={resetFilters} />
+                </div>
               )}
             </div>
           </div>

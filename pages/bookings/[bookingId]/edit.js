@@ -4,7 +4,6 @@ import DashboardLayout from '@/components/ui/DashboardLayout';
 import Button from '@/components/ui/Button';
 import useStore from '@/lib/hooks/useStore';
 import { formatDate } from '@/utils/dateUtils';
-import StaffDatePicker from '@/components/StaffDatePicker';
 import { 
   ArrowLeftIcon, 
   CalendarIcon, 
@@ -198,12 +197,13 @@ export default function EditBooking() {
             <Button
               type="submit"
               form="booking-form"
-              variant="gradient"
+              variant="primary"
               size="sm"
               disabled={!isFormValid || saving}
+              className="flex items-center"
             >
               {saving ? (
-                <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-1" />
+                <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-1.5" />
               ) : (
                 <CheckCircleIcon className="h-4 w-4 mr-1.5" />
               )}
@@ -381,22 +381,6 @@ export default function EditBooking() {
                 ></textarea>
               </div>
               
-              {/* Date Selection */}
-              {formData.showId && showDateRange.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-medium text-secondary-800 mb-4">Select Dates</h3>
-                  <StaffDatePicker
-                    dateRange={showDateRange}
-                    value={formData.datesNeeded || []}
-                    onChange={datesNeeded => setFormData({ ...formData, datesNeeded })}
-                  />
-                  
-                  {formErrors.dates && (
-                    <p className="mt-2 text-sm text-red-600">{formErrors.dates}</p>
-                  )}
-                </div>
-              )}
-              
               {/* Validation issues for shows */}
               {formData.showId && showDateRange.length === 0 && (
                 <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-4 rounded-md">
@@ -443,12 +427,17 @@ export default function EditBooking() {
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center">
                             <ClockIcon className="h-4 w-4 text-primary-600 mr-1.5" />
-                            <span className="font-medium text-sm">
-                              {new Date(date).toLocaleDateString('en-US', {
-                                weekday: 'short',
-                                month: 'short',
-                                day: 'numeric',
-                              })}
+                            <span className="text-xs sm:text-sm font-medium line-clamp-1">
+                              {(() => {
+                                const dateObj = new Date(date);
+                                // Adjust for timezone offset to fix date being behind by 1 day
+                                const adjustedDate = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000);
+                                return adjustedDate.toLocaleDateString('en-US', { 
+                                  weekday: 'short',
+                                  month: 'short',
+                                  day: 'numeric',
+                                });
+                              })()}
                             </span>
                           </div>
                           <span className="text-xs bg-primary-100 text-primary-800 px-2 py-0.5 rounded-full">
@@ -516,7 +505,7 @@ export default function EditBooking() {
                 <div className="p-8 text-center">
                   <CalendarIcon className="w-12 h-12 mx-auto text-secondary-300 mb-3" />
                   <p className="text-secondary-500">No dates selected</p>
-                  <p className="text-secondary-400 text-sm">Select dates from the calendar to assign staff</p>
+                  <p className="text-secondary-400 text-sm">Use the schedule to adjust booking days</p>
                 </div>
               )}
             </div>

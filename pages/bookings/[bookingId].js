@@ -143,7 +143,9 @@ export default function BookingDetail() {
   const lastDate = sortedDatesNeeded.length > 0 ? new Date(sortedDatesNeeded[sortedDatesNeeded.length - 1].date) : null;
   const formatShortDate = (date) => {
     if (!date) return '--';
-    return date.toLocaleDateString('en-US', { 
+    // Adjust for timezone offset to fix date being behind by 1 day
+    const adjustedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+    return adjustedDate.toLocaleDateString('en-US', { 
       month: 'short',
       day: 'numeric',
       year: 'numeric'
@@ -283,11 +285,16 @@ export default function BookingDetail() {
                     <div className="flex items-center">
                       <ClockIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary-600 mr-1.5 flex-shrink-0" />
                       <span className="font-medium text-xs sm:text-sm line-clamp-1">
-                        {new Date(date).toLocaleDateString('en-US', { 
-                          weekday: 'short',
-                          month: 'short',
-                          day: 'numeric',
-                        })}
+                        {(() => {
+                          const dateObj = new Date(date);
+                          // Adjust for timezone offset to fix date being behind by 1 day
+                          const adjustedDate = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000);
+                          return adjustedDate.toLocaleDateString('en-US', { 
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric',
+                          });
+                        })()}
                       </span>
                     </div>
                     <span className={`text-2xs sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full flex-shrink-0
