@@ -81,47 +81,53 @@ export default function ClientsDirectory() {
       </Head>
 
       <DashboardLayout>
-        <div className="space-y-6">
-          {/* Header with title and actions */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="text-2xl font-bold text-secondary-900">Client Directory</h1>
-            <div className="mt-4 sm:mt-0">
-              <Link href="/clients/new">
-                <Button variant="primary" size="sm" className="flex items-center">
-                  <PlusIcon className="h-5 w-5 mr-1" />
-                  Add Client
-                </Button>
-              </Link>
+        <div className="flex flex-col h-full">
+          {/* Sticky header section */}
+          <div className="sticky top-0 z-10 bg-secondary-50 px-4 py-4 border-b border-secondary-200">
+            {/* Header with title and actions */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+              <h1 className="text-2xl font-bold text-secondary-900">Client Directory</h1>
+              <div className="mt-4 sm:mt-0">
+                <Link href="/clients/new">
+                  <Button variant="primary" size="sm" className="flex items-center">
+                    <PlusIcon className="h-5 w-5 mr-1" />
+                    Add Client
+                  </Button>
+                </Link>
+              </div>
             </div>
+
+            {/* Filters */}
+            <ClientFilters
+              filters={filters}
+              setFilters={setFilters}
+              showCount={filteredClients.length}
+              totalCount={clients.length}
+              categories={categories}
+              locations={locations}
+            />
           </div>
 
-          {/* Filters */}
-          <ClientFilters
-            filters={filters}
-            setFilters={setFilters}
-            showCount={filteredClients.length}
-            totalCount={clients.length}
-            categories={categories}
-            locations={locations}
-          />
-
-          {/* Client list */}
-          {filteredClients.length > 0 ? (
-            <ClientList clients={filteredClients} />
-          ) : (
-            <div className="bg-white shadow-sm rounded-lg p-6 text-center">
-              <p className="text-secondary-500">No clients found matching your filters.</p>
-              <p className="mt-2">
-                <Button variant="outline" size="sm" onClick={() => setFilters({
-                  search: '',
-                  category: 'all',
-                  location: 'all',
-                })}>
-                  Reset Filters
-                </Button>
-              </p>
-            </div>
-          )}
+          {/* Scrollable content area */}
+          <div className="flex-1 overflow-auto pb-6 pt-4 px-4">
+            {/* Client list */}
+            {filteredClients.length > 0 ? (
+              <ClientList clients={filteredClients} />
+            ) : (
+              <div className="bg-white shadow-sm rounded-lg p-6 text-center">
+                <p className="text-secondary-500">No clients found matching your filters.</p>
+                <p className="mt-2">
+                  <Button variant="outline" size="sm" onClick={() => setFilters({
+                    search: '',
+                    category: 'all',
+                    location: 'all',
+                  })}>
+                    Reset Filters
+                  </Button>
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </DashboardLayout>
     </>

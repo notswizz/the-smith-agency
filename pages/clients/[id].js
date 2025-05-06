@@ -611,74 +611,65 @@ export default function ClientProfile() {
                 }
               >
                 {bookings.length > 0 ? (
-                  <div className="overflow-hidden bg-white shadow-sm rounded-md">
-                    <table className="min-w-full divide-y divide-secondary-200">
-                      <thead>
-                        <tr>
-                          <th className="px-6 py-3 bg-secondary-50 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
-                            Show
-                          </th>
-                          <th className="px-6 py-3 bg-secondary-50 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
-                            Dates
-                          </th>
-                          <th className="px-6 py-3 bg-secondary-50 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 bg-secondary-50 text-right text-xs font-medium text-secondary-500 uppercase tracking-wider">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-secondary-200">
-                        {bookings.map((booking) => {
-                          const show = getShowById(booking.showId);
-                          const firstDate = booking.datesNeeded?.[0]?.date;
-                          const lastDate = booking.datesNeeded?.[booking.datesNeeded.length - 1]?.date;
-                          
-                          return (
-                            <tr key={booking.id}>
-                              <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {bookings.map((booking) => {
+                      const show = getShowById(booking.showId);
+                      const firstDate = booking.datesNeeded?.[0]?.date;
+                      const lastDate = booking.datesNeeded?.[booking.datesNeeded.length - 1]?.date;
+                      
+                      return (
+                        <div key={booking.id} className="bg-white rounded-lg shadow border border-secondary-200 overflow-hidden hover:shadow-md transition-shadow">
+                          <div className={`h-1.5 w-full ${
+                            booking.status === 'confirmed' 
+                              ? 'bg-green-500' 
+                              : booking.status === 'pending' 
+                                ? 'bg-yellow-500'
+                                : 'bg-secondary-500'
+                          }`}></div>
+                          <div className="p-4">
+                            <div className="flex items-start justify-between">
+                              <div>
                                 <div className="text-sm font-medium text-secondary-900">
                                   {show?.name || 'Unknown Show'}
                                 </div>
                                 <div className="text-xs text-secondary-500">
                                   {show?.location || ''}
                                 </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary-500">
-                                <div className="flex items-center">
-                                  <CalendarIcon className="h-4 w-4 mr-1 text-secondary-400" />
-                                  {firstDate && formatDate(firstDate)}
-                                  {lastDate && firstDate !== lastDate && (
-                                    <span> - {formatDate(lastDate)}</span>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span
-                                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                    booking.status === 'confirmed'
-                                      ? 'bg-green-100 text-green-800'
-                                      : booking.status === 'pending'
-                                      ? 'bg-yellow-100 text-yellow-800'
-                                      : 'bg-secondary-100 text-secondary-800'
-                                  }`}
-                                >
-                                  {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <Link href={`/bookings/${booking.id}`}>
-                                  <Button size="sm" variant="ghost">
-                                    View
-                                  </Button>
-                                </Link>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                              </div>
+                              <span
+                                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                  booking.status === 'confirmed'
+                                    ? 'bg-green-100 text-green-800'
+                                    : booking.status === 'pending'
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : 'bg-secondary-100 text-secondary-800'
+                                }`}
+                              >
+                                {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                              </span>
+                            </div>
+                            
+                            <div className="mt-3">
+                              <div className="flex items-center text-xs text-secondary-500">
+                                <CalendarIcon className="h-4 w-4 mr-1 text-secondary-400" />
+                                {firstDate && formatDate(firstDate)}
+                                {lastDate && firstDate !== lastDate && (
+                                  <span> - {formatDate(lastDate)}</span>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="mt-4 flex justify-end">
+                              <Link href={`/bookings/${booking.id}`}>
+                                <Button size="sm" variant="ghost">
+                                  View
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-secondary-500 text-sm">No bookings yet for this client.</p>

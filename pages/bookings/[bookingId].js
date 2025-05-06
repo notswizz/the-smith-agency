@@ -222,6 +222,11 @@ export default function BookingDetail() {
                         {show?.name || 'Unknown Show'}
                       </p>
                     </div>
+                    {/* Subtle date range */}
+                    <div className="flex items-center gap-1 ml-7 mt-1 text-xs text-secondary-500">
+                      <CalendarIcon className="h-3.5 w-3.5" />
+                      <span>{formatShortDate(firstDate)} - {formatShortDate(lastDate)} • {sortedDatesNeeded.length} day{sortedDatesNeeded.length !== 1 ? 's' : ''}</span>
+                    </div>
                   </div>
 
                   <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium 
@@ -271,85 +276,6 @@ export default function BookingDetail() {
                       <span className="text-2xl font-bold">{staffingSummary.assigned}</span>
                     </div>
                   </div>
-                </div>
-
-                {/* Key stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  {/* Date information */}
-                  <div className="bg-white rounded-lg p-4 border border-secondary-200 shadow-sm">
-                    <div className="flex items-center mb-3">
-                      <CalendarIcon className="h-5 w-5 text-primary-600 mr-2" />
-                      <h3 className="text-sm font-medium text-secondary-900">Booking Period</h3>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-xs text-secondary-500">Start Date:</span>
-                        <span className="text-sm font-medium text-secondary-900">{formatShortDate(firstDate)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-xs text-secondary-500">End Date:</span>
-                        <span className="text-sm font-medium text-secondary-900">{formatShortDate(lastDate)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-xs text-secondary-500">Total Days:</span>
-                        <span className="text-sm font-medium text-secondary-900">{sortedDatesNeeded.length}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Staff information */}
-                  <div className="bg-white rounded-lg p-4 border border-secondary-200 shadow-sm">
-                    <div className="flex items-center mb-3">
-                      <UserGroupIcon className="h-5 w-5 text-primary-600 mr-2" />
-                      <h3 className="text-sm font-medium text-secondary-900">Staff</h3>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-xs text-secondary-500">Required:</span>
-                        <span className="text-sm font-medium text-secondary-900">{staffingSummary.needed}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-xs text-secondary-500">Assigned:</span>
-                        <span className="text-sm font-medium text-secondary-900">{staffingSummary.assigned}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-xs text-secondary-500">Status:</span>
-                        <span className={`text-xs font-medium rounded-full px-2 py-0.5 ${
-                          staffingSummary.complete 
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
-                            : 'bg-amber-100 text-amber-800 border border-amber-200'
-                        }`}>
-                          {staffingSummary.complete ? 'Complete' : 'Needs Staff'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Show information */}
-                  {show && (
-                    <div className="bg-white rounded-lg p-4 border border-secondary-200 shadow-sm">
-                      <div className="flex items-center mb-3">
-                        <svg className="h-5 w-5 text-primary-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                        </svg>
-                        <h3 className="text-sm font-medium text-secondary-900">Show Info</h3>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-xs text-secondary-500">Type:</span>
-                          <span className="text-sm font-medium text-secondary-900">{show.type || 'N/A'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-xs text-secondary-500">Location:</span>
-                          <span className="text-sm font-medium text-secondary-900">{show.location || 'N/A'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-xs text-secondary-500">Season:</span>
-                          <span className="text-sm font-medium text-secondary-900">{show.season || 'N/A'}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 {/* Notes section */}

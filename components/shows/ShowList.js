@@ -13,18 +13,14 @@ import useStore from '@/lib/hooks/useStore';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 
-export default function ShowList({ shows, view = 'grid' }) {
+export default function ShowList({ shows }) {
   return (
     <div className="space-y-6">
-      {view === 'grid' ? (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {shows.map((show) => (
-            <ShowCard key={show.id} show={show} />
-          ))}
-        </div>
-      ) : (
-        <ShowTable shows={shows} />
-      )}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {shows.map((show) => (
+          <ShowCard key={show.id} show={show} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -96,76 +92,5 @@ function ShowCard({ show }) {
         </div>
       </div>
     </Card>
-  );
-}
-
-function ShowTable({ shows }) {
-  const { getClientById } = useStore();
-  
-  return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-secondary-200 bg-white shadow-sm rounded-lg">
-        <thead>
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
-              Show Name
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
-              Client
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
-              Dates
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
-              Location
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
-              Type
-            </th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-secondary-500 uppercase tracking-wider">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-secondary-200">
-          {shows.map((show) => {
-            const client = getClientById(show.client);
-            return (
-              <tr key={show.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <Link 
-                    href={`/shows/${show.id}`}
-                    className="text-sm font-medium text-secondary-900 hover:text-primary-600"
-                  >
-                    {show.name}
-                  </Link>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-secondary-900">
-                    {client ? client.name : 'Unknown Client'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary-500">
-                  {formatDate(show.startDate, 'MMM d')} - {formatDate(show.endDate, 'MMM d, yyyy')}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary-500">
-                  {show.location}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary-500">
-                  {show.type}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <Link href={`/shows/${show.id}`}>
-                    <Button size="sm" variant="ghost">
-                      View
-                    </Button>
-                  </Link>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
   );
 } 

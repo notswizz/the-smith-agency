@@ -347,82 +347,72 @@ export default function ShowProfile() {
                       </p>
                     </div>
                   ) : (
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-secondary-200">
-                        <thead className="bg-secondary-50">
-                          <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
-                              Staff Member
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
-                              Role
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
-                              Status
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
-                              Assigned Date
-                            </th>
-                            <th scope="col" className="relative px-6 py-3">
-                              <span className="sr-only">Actions</span>
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-secondary-200">
-                          {showBookings.map((booking) => {
-                            const staffMember = staff.find(s => s.id === booking.staffId);
-                            return (
-                              <tr key={booking.id}>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  {staffMember ? (
-                                    <div className="flex items-center">
-                                      <div className="flex-shrink-0 h-10 w-10">
-                                        <div className="h-10 w-10 rounded-full bg-secondary-200 flex items-center justify-center text-secondary-600">
-                                          {staffMember.firstName.charAt(0)}{staffMember.lastName.charAt(0)}
-                                        </div>
-                                      </div>
-                                      <div className="ml-4">
-                                        <div className="text-sm font-medium text-secondary-900">
-                                          <Link href={`/staff/${staffMember.id}`} className="hover:underline">
-                                            {staffMember.firstName} {staffMember.lastName}
-                                          </Link>
-                                        </div>
-                                        <div className="text-sm text-secondary-500">
-                                          {staffMember.email}
-                                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {showBookings.map((booking) => {
+                        const staffMember = staff.find(s => s.id === booking.staffId);
+                        return (
+                          <div key={booking.id} className="bg-white rounded-lg shadow border border-secondary-200 overflow-hidden hover:shadow-md transition-shadow">
+                            <div className={`h-1.5 w-full ${
+                              booking.status === 'confirmed' 
+                                ? 'bg-green-500' 
+                                : booking.status === 'pending' 
+                                  ? 'bg-yellow-500'
+                                  : 'bg-red-500'
+                            }`}></div>
+                            <div className="p-4">
+                              <div className="flex items-start justify-between">
+                                {staffMember ? (
+                                  <div className="flex items-center">
+                                    <div className="flex-shrink-0 h-10 w-10">
+                                      <div className="h-10 w-10 rounded-full bg-secondary-200 flex items-center justify-center text-secondary-600">
+                                        {staffMember.firstName.charAt(0)}{staffMember.lastName.charAt(0)}
                                       </div>
                                     </div>
-                                  ) : (
-                                    <span className="text-secondary-500">Staff not found</span>
-                                  )}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm text-secondary-900">{booking.role}</div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                    booking.status === 'confirmed' 
-                                      ? 'bg-green-100 text-green-800' 
-                                      : booking.status === 'pending' 
-                                        ? 'bg-yellow-100 text-yellow-800'
-                                        : 'bg-red-100 text-red-800'
-                                  }`}>
-                                    {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary-500">
-                                  {formatDate(booking.assignedDate)}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                  <Link href={`/bookings/${booking.id}`} className="text-primary-600 hover:text-primary-900">
-                                    Details
-                                  </Link>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                                    <div className="ml-3">
+                                      <div className="text-sm font-medium text-secondary-900">
+                                        <Link href={`/staff/${staffMember.id}`} className="hover:underline">
+                                          {staffMember.firstName} {staffMember.lastName}
+                                        </Link>
+                                      </div>
+                                      <div className="text-xs text-secondary-500">
+                                        {staffMember.email}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <span className="text-secondary-500">Staff not found</span>
+                                )}
+                                <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                  booking.status === 'confirmed' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : booking.status === 'pending' 
+                                      ? 'bg-yellow-100 text-yellow-800'
+                                      : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                                </span>
+                              </div>
+                              
+                              <div className="mt-3 space-y-2">
+                                <div className="text-sm">
+                                  <span className="text-secondary-500">Role:</span> 
+                                  <span className="font-medium text-secondary-900 ml-1">{booking.role}</span>
+                                </div>
+                                <div className="text-sm">
+                                  <span className="text-secondary-500">Assigned:</span>
+                                  <span className="text-secondary-900 ml-1">{formatDate(booking.assignedDate)}</span>
+                                </div>
+                              </div>
+                              
+                              <div className="mt-4 flex justify-end">
+                                <Link href={`/bookings/${booking.id}`} className="text-primary-600 hover:text-primary-900 text-sm">
+                                  View Details
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

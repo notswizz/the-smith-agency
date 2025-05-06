@@ -11,11 +11,10 @@ import {
   filterShowsBySeason, 
   filterShowsByLocation 
 } from '@/utils/filterUtils';
-import { PlusIcon, ViewColumnsIcon, TableCellsIcon } from '@heroicons/react/24/outline';
+import { PlusIcon } from '@heroicons/react/24/outline';
 
 export default function ShowsDirectory() {
   const { shows, clients } = useStore();
-  const [view, setView] = useState('grid'); // 'grid' or 'table'
   const [filters, setFilters] = useState({
     search: '',
     season: 'all',
@@ -104,26 +103,6 @@ export default function ShowsDirectory() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <h1 className="text-2xl font-bold text-secondary-900">Shows Directory</h1>
             <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row sm:space-x-3 space-y-3 sm:space-y-0">
-              <div className="flex space-x-3">
-                <Button
-                  variant={view === 'grid' ? 'primary' : 'secondary'}
-                  size="sm"
-                  onClick={() => setView('grid')}
-                  className="flex items-center"
-                >
-                  <TableCellsIcon className="h-5 w-5 mr-1" />
-                  Grid
-                </Button>
-                <Button
-                  variant={view === 'table' ? 'primary' : 'secondary'}
-                  size="sm"
-                  onClick={() => setView('table')}
-                  className="flex items-center"
-                >
-                  <ViewColumnsIcon className="h-5 w-5 mr-1" />
-                  Table
-                </Button>
-              </div>
               <Link href="/shows/new">
                 <Button variant="primary" size="sm" className="flex items-center">
                   <PlusIcon className="h-5 w-5 mr-1" />
@@ -147,7 +126,7 @@ export default function ShowsDirectory() {
 
           {/* Shows list */}
           {filteredShows.length > 0 ? (
-            <ShowList shows={filteredShows} view={view} />
+            <ShowList shows={filteredShows} />
           ) : (
             <div className="bg-white shadow-sm rounded-lg p-6 text-center">
               <p className="text-secondary-500">No shows found matching your filters.</p>
