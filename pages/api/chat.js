@@ -1,6 +1,7 @@
 import { createChatCompletion } from '@/lib/chatbot/openai';
 import { systemMessage } from '@/lib/chatbot/config';
 import functionSchemas from '@/lib/chatbot/functions/schemas';
+import { executeFunctionCall } from '@/lib/chatbot/functions/executor';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -29,12 +30,19 @@ export default async function handler(req, res) {
         arguments: JSON.parse(responseMessage.function_call.arguments),
       };
 
-      // Return both the message and the function call
+      // Execute the function call to get the data
+      const functionResponse = await executeFunctionCall(functionCall.name, functionCall.arguments);
+      
+      // Get data from the function response
+      const data = functionResponse.data;
+
+      // Return both the message, data, and the function call
       return res.status(200).json({
         message: {
           role: 'assistant',
-          content: responseMessage.content || "I'll help you with that right away.",
+          content: functionResponse.message || responseMessage.content || "I'll help you with that right away.",
         },
+        data: data,
         functionCall,
       });
     }
@@ -47,9 +55,13 @@ export default async function handler(req, res) {
       },
     });
   } catch (error) {
-    console.error('Error calling OpenAI:', error);
+    console.error('Error in chat API:', error);
     return res.status(500).json({
       error: 'Error processing your request',
+      message: {
+        role: 'assistant',
+        content: 'I encountered an error while processing your request. Please try again.',
+      },
       details: error.message,
     });
   }
