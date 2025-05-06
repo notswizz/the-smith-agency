@@ -6,6 +6,7 @@ import BookingFilters from '@/components/bookings/BookingFilters';
 import BookingCard from '@/components/bookings/BookingCard';
 import EmptyBookings from '@/components/bookings/EmptyBookings';
 import StaffTooltip from '@/components/bookings/StaffTooltip';
+import { ClockIcon, CheckCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 export default function BookingsDirectory() {
   const { bookings, shows, staff, clients } = useStore();
@@ -225,8 +226,14 @@ export default function BookingsDirectory() {
               <div className="sm:hidden w-full space-y-6">
                 {/* Pending bookings section */}
                 {filteredBookings.some(booking => booking.status === 'pending') && (
-                  <div className="space-y-3">
-                    <h2 className="text-lg font-semibold text-secondary-900 px-3">Pending Bookings</h2>
+                  <div className="space-y-2">
+                    <div className="flex items-center px-3">
+                      <ClockIcon className="h-3.5 w-3.5 text-amber-500 mr-1.5" />
+                      <h2 className="text-sm font-medium text-secondary-600 uppercase tracking-wide">Pending</h2>
+                      <span className="ml-1.5 text-xs text-secondary-500 bg-secondary-50 px-1.5 py-0.5 rounded-full">
+                        {filteredBookings.filter(booking => booking.status === 'pending').length}
+                      </span>
+                    </div>
                     <div className="overflow-x-auto pb-4 snap-x snap-mandatory scroll-p-4 scroll-smooth flex gap-3">
                       {filteredBookings
                         .filter(booking => booking.status === 'pending')
@@ -253,8 +260,14 @@ export default function BookingsDirectory() {
                 
                 {/* Confirmed bookings section */}
                 {filteredBookings.some(booking => booking.status === 'confirmed') && (
-                  <div className="space-y-3">
-                    <h2 className="text-lg font-semibold text-secondary-900 px-3">Confirmed Bookings</h2>
+                  <div className="space-y-2">
+                    <div className="flex items-center px-3">
+                      <CheckCircleIcon className="h-3.5 w-3.5 text-emerald-500 mr-1.5" />
+                      <h2 className="text-sm font-medium text-secondary-600 uppercase tracking-wide">Confirmed</h2>
+                      <span className="ml-1.5 text-xs text-secondary-500 bg-secondary-50 px-1.5 py-0.5 rounded-full">
+                        {filteredBookings.filter(booking => booking.status === 'confirmed').length}
+                      </span>
+                    </div>
                     <div className="overflow-x-auto pb-4 snap-x snap-mandatory scroll-p-4 scroll-smooth flex gap-3">
                       {filteredBookings
                         .filter(booking => booking.status === 'confirmed')
@@ -281,8 +294,14 @@ export default function BookingsDirectory() {
                 
                 {/* Cancelled bookings section */}
                 {filteredBookings.some(booking => booking.status === 'cancelled') && (
-                  <div className="space-y-3">
-                    <h2 className="text-lg font-semibold text-secondary-900 px-3">Cancelled Bookings</h2>
+                  <div className="space-y-2">
+                    <div className="flex items-center px-3">
+                      <XMarkIcon className="h-3.5 w-3.5 text-red-500 mr-1.5" />
+                      <h2 className="text-sm font-medium text-secondary-600 uppercase tracking-wide">Cancelled</h2>
+                      <span className="ml-1.5 text-xs text-secondary-500 bg-secondary-50 px-1.5 py-0.5 rounded-full">
+                        {filteredBookings.filter(booking => booking.status === 'cancelled').length}
+                      </span>
+                    </div>
                     <div className="overflow-x-auto pb-4 snap-x snap-mandatory scroll-p-4 scroll-smooth flex gap-3">
                       {filteredBookings
                         .filter(booking => booking.status === 'cancelled')

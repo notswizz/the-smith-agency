@@ -50,8 +50,8 @@ export default function KeyStats() {
     },
     {
       id: 'bookings',
-      name: 'Active Bookings',
-      value: activeBookings.length,
+      name: 'Total Bookings',
+      value: bookings.length,
       icon: ClipboardDocumentListIcon,
       color: 'from-emerald-500 to-green-500',
       link: '/bookings'
@@ -64,7 +64,7 @@ export default function KeyStats() {
         <a 
           href={stat.link}
           key={stat.id}
-          className="relative bg-white rounded-xl sm:rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 group overflow-hidden"
+          className="relative bg-white rounded-xl sm:rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 group overflow-hidden z-10"
         >
           {/* Gradient top border */}
           <div className={`h-1.5 w-full bg-gradient-to-r ${stat.color}`}></div>

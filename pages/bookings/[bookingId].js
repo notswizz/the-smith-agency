@@ -170,10 +170,10 @@ export default function BookingDetail() {
       {/* Status header */}
       <div className={`h-2 w-full bg-gradient-to-r from-${statusColor}-500 to-${statusColor}-400`} />
 
-      <div className="p-4 sm:p-6">
+      <div className="p-4 sm:p-5">
         {/* Booking header with client, show and status */}
-        <div className="flex flex-col mb-4 sm:mb-6">
-          <div className="mb-3">
+        <div className="flex flex-col mb-3 sm:mb-5">
+          <div className="mb-2">
             <div className="flex items-center gap-2 mb-1">
               <BuildingOffice2Icon className="h-5 w-5 text-primary-500 flex-shrink-0" />
               <h2 className="text-lg sm:text-xl font-semibold text-secondary-900 line-clamp-1">
@@ -192,8 +192,8 @@ export default function BookingDetail() {
             </div>
           </div>
 
-          {/* Status badge for tablet/desktop */}
-          <div className="hidden sm:flex">
+          {/* Status badge for tablet/desktop with edit button */}
+          <div className="hidden sm:flex sm:items-center sm:justify-between">
             <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium 
               ${booking.status === 'confirmed' 
                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
@@ -212,6 +212,13 @@ export default function BookingDetail() {
               )}
               {statusLabels[booking.status] || booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
             </div>
+            
+            <Link href={`/bookings/${bookingId}/edit`}>
+              <Button variant="text" size="sm" className="flex items-center text-secondary-500 hover:text-primary-600 transition-colors">
+                <PencilIcon className="h-4 w-4 mr-1" />
+                <span className="text-sm">Edit</span>
+              </Button>
+            </Link>
           </div>
         </div>
 
@@ -348,12 +355,12 @@ export default function BookingDetail() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4">
+      <div className="max-w-7xl mx-auto py-3 sm:py-5 px-3 sm:px-4">
         {/* Header with back button and actions - improved for mobile */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2 sm:gap-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <Link href="/bookings" className="mr-3">
+              <Link href="/bookings" className="mr-2 sm:mr-3">
                 <Button variant="ghost" size="sm" className="flex items-center text-secondary-600 p-1 sm:p-2">
                   <ArrowLeftIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                   <span className="hidden sm:inline ml-1">Back</span>
@@ -364,8 +371,8 @@ export default function BookingDetail() {
               </h1>
             </div>
             
-            {/* Status badge - moved to header for mobile visibility */}
-            <div className="sm:hidden">
+            {/* Status badge and edit button for mobile */}
+            <div className="sm:hidden flex items-center gap-2">
               <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium 
                 ${booking.status === 'confirmed' 
                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
@@ -384,39 +391,21 @@ export default function BookingDetail() {
                 )}
                 {statusLabels[booking.status]}
               </div>
+              
+              <Link href={`/bookings/${bookingId}/edit`}>
+                <Button variant="text" size="sm" className="flex items-center text-secondary-500 hover:text-primary-600 transition-colors p-1">
+                  <PencilIcon className="h-4 w-4" />
+                </Button>
+              </Link>
             </div>
-          </div>
-          
-          {/* Action buttons - stacked on mobile, side by side on desktop */}
-          <div className="flex items-center gap-2 mt-2 sm:mt-0">
-            <Link href={`/bookings/${bookingId}/edit`} className="flex-1 sm:flex-auto">
-              <Button variant="outline" size="sm" className="flex items-center justify-center gap-1 w-full">
-                <PencilIcon className="h-4 w-4" />
-                Edit
-              </Button>
-            </Link>
-            <Button 
-              variant="danger" 
-              size="sm" 
-              className="flex items-center justify-center gap-1 flex-1 sm:flex-auto"
-              onClick={handleDelete}
-              disabled={deleting}
-            >
-              {deleting ? (
-                <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-              ) : (
-                <TrashIcon className="h-4 w-4" />
-              )}
-              Delete
-            </Button>
           </div>
         </div>
 
         {/* Mobile Tab Navigation */}
-        <div className="lg:hidden flex border-b border-secondary-200 mb-4">
+        <div className="lg:hidden flex border-b border-secondary-200 mb-2">
           <button
             onClick={() => setActiveTab('details')}
-            className={`flex-1 py-2.5 px-2 text-sm font-medium flex justify-center items-center gap-2 ${
+            className={`flex-1 py-2 px-2 text-sm font-medium flex justify-center items-center gap-1.5 ${
               activeTab === 'details'
                 ? 'text-primary-600 border-b-2 border-primary-500'
                 : 'text-secondary-600 hover:text-secondary-900'
@@ -427,7 +416,7 @@ export default function BookingDetail() {
           </button>
           <button
             onClick={() => setActiveTab('schedule')}
-            className={`flex-1 py-2.5 px-2 text-sm font-medium flex justify-center items-center gap-2 ${
+            className={`flex-1 py-2 px-2 text-sm font-medium flex justify-center items-center gap-1.5 ${
               activeTab === 'schedule'
                 ? 'text-primary-600 border-b-2 border-primary-500'
                 : 'text-secondary-600 hover:text-secondary-900'
@@ -442,9 +431,9 @@ export default function BookingDetail() {
         </div>
 
         {/* Main content - Single column with tabs on mobile, two columns on desktop */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-5">
           {/* Left column - Booking details */}
-          <div className={`lg:col-span-2 space-y-4 sm:space-y-6 ${activeTab !== 'details' && 'hidden lg:block'}`}>
+          <div className={`lg:col-span-2 space-y-3 sm:space-y-5 ${activeTab !== 'details' && 'hidden lg:block'}`}>
             {renderDetailsContent()}
           </div>
 
@@ -453,6 +442,9 @@ export default function BookingDetail() {
             {renderScheduleContent()}
           </div>
         </div>
+        
+        {/* Bottom buffer to ensure content is fully visible - especially on mobile */}
+        <div className="h-20 sm:h-12 lg:h-8"></div>
       </div>
     </DashboardLayout>
   );

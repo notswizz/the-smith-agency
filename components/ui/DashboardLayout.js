@@ -187,7 +187,7 @@ export default function DashboardLayout({ children }) {
       {/* Main content */}
       <div className="flex flex-col w-0 flex-1 overflow-hidden">
         {/* Mobile header */}
-        <div className="sticky top-0 z-10 flex-shrink-0 flex h-14 sm:h-16 bg-white bg-opacity-90 backdrop-filter backdrop-blur-sm shadow-sm">
+        <div className="sticky top-0 z-50 flex-shrink-0 flex h-14 sm:h-16 bg-white bg-opacity-90 backdrop-filter backdrop-blur-sm shadow-sm">
           <button
             type="button"
             className="px-3 sm:px-4 border-r border-secondary-100 text-secondary-500 focus:outline-none md:hidden"
@@ -217,7 +217,7 @@ export default function DashboardLayout({ children }) {
         </main>
         
         {/* Bottom mobile navigation */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-secondary-100 shadow-lg">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-secondary-100 shadow-lg">
           <div className="grid grid-cols-4 h-16">
             {/* Include Home, Staff, Clients, Bookings */}
             {navigation

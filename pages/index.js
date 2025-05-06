@@ -3,7 +3,7 @@ import Head from 'next/head';
 import DashboardLayout from '@/components/ui/DashboardLayout';
 import DateHeader from '@/components/dashboard/DateHeader';
 import KeyStats from '@/components/dashboard/KeyStats';
-import QuickActions from '@/components/dashboard/QuickActions';
+import GlobalSearch from '@/components/dashboard/GlobalSearch';
 
 export default function Dashboard() {
   return (
@@ -15,15 +15,22 @@ export default function Dashboard() {
       </Head>
 
       <DashboardLayout>
-        <div className="max-w-5xl mx-auto px-2 sm:px-0">
-          {/* Date Header */}
+        <div className="max-w-4xl mx-auto px-2 sm:px-4">
+          {/* Date Header with Quick Actions */}
           <DateHeader />
+          
+          {/* Global Search Section */}
+          <div className="mb-6 mt-3 sm:mt-4 w-full mx-auto relative overflow-visible">
+            <div className="bg-white/80 backdrop-blur-sm p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-md overflow-visible relative">
+              <GlobalSearch />
+            </div>
+          </div>
 
           {/* Key Stats */}
           <KeyStats />
-
-          {/* Quick Actions */}
-          <QuickActions />
+          
+          {/* Bottom padding to account for mobile navigation */}
+          <div className="h-20 md:h-0"></div>
         </div>
       </DashboardLayout>
     </>
