@@ -221,28 +221,95 @@ export default function BookingsDirectory() {
           <div className="flex-1 overflow-auto pb-6">
             {/* Bookings list - card view with snap scrolling on mobile */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 p-3 sm:p-6 md:grid-flow-row-dense">
-              {/* For mobile: Horizontal snap scroll container */}
-              <div className="sm:hidden w-full overflow-x-auto pb-4 snap-x snap-mandatory scroll-p-4 scroll-smooth flex gap-3">
-                {filteredBookings.length > 0 ? (
-                  filteredBookings.map(booking => {
-                    const client = clients.find(c => c.id === booking.clientId);
-                    const show = shows.find(s => s.id === booking.showId);
-                    
-                    return (
-                      <div key={booking.id} className="snap-center min-w-[85%] first:ml-3 last:mr-3">
-                        <BookingCard
-                          booking={booking}
-                          staff={staff}
-                          client={client}
-                          show={show}
-                          showTooltip={showTooltip}
-                          hideTooltip={hideTooltip}
-                        />
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="snap-center min-w-[85%]">
+              {/* For mobile: Separate sections for pending and confirmed */}
+              <div className="sm:hidden w-full space-y-6">
+                {/* Pending bookings section */}
+                {filteredBookings.some(booking => booking.status === 'pending') && (
+                  <div className="space-y-3">
+                    <h2 className="text-lg font-semibold text-secondary-900 px-3">Pending Bookings</h2>
+                    <div className="overflow-x-auto pb-4 snap-x snap-mandatory scroll-p-4 scroll-smooth flex gap-3">
+                      {filteredBookings
+                        .filter(booking => booking.status === 'pending')
+                        .map(booking => {
+                          const client = clients.find(c => c.id === booking.clientId);
+                          const show = shows.find(s => s.id === booking.showId);
+                          
+                          return (
+                            <div key={booking.id} className="snap-center min-w-[85%] first:ml-3 last:mr-3">
+                              <BookingCard
+                                booking={booking}
+                                staff={staff}
+                                client={client}
+                                show={show}
+                                showTooltip={showTooltip}
+                                hideTooltip={hideTooltip}
+                              />
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Confirmed bookings section */}
+                {filteredBookings.some(booking => booking.status === 'confirmed') && (
+                  <div className="space-y-3">
+                    <h2 className="text-lg font-semibold text-secondary-900 px-3">Confirmed Bookings</h2>
+                    <div className="overflow-x-auto pb-4 snap-x snap-mandatory scroll-p-4 scroll-smooth flex gap-3">
+                      {filteredBookings
+                        .filter(booking => booking.status === 'confirmed')
+                        .map(booking => {
+                          const client = clients.find(c => c.id === booking.clientId);
+                          const show = shows.find(s => s.id === booking.showId);
+                          
+                          return (
+                            <div key={booking.id} className="snap-center min-w-[85%] first:ml-3 last:mr-3">
+                              <BookingCard
+                                booking={booking}
+                                staff={staff}
+                                client={client}
+                                show={show}
+                                showTooltip={showTooltip}
+                                hideTooltip={hideTooltip}
+                              />
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Cancelled bookings section */}
+                {filteredBookings.some(booking => booking.status === 'cancelled') && (
+                  <div className="space-y-3">
+                    <h2 className="text-lg font-semibold text-secondary-900 px-3">Cancelled Bookings</h2>
+                    <div className="overflow-x-auto pb-4 snap-x snap-mandatory scroll-p-4 scroll-smooth flex gap-3">
+                      {filteredBookings
+                        .filter(booking => booking.status === 'cancelled')
+                        .map(booking => {
+                          const client = clients.find(c => c.id === booking.clientId);
+                          const show = shows.find(s => s.id === booking.showId);
+                          
+                          return (
+                            <div key={booking.id} className="snap-center min-w-[85%] first:ml-3 last:mr-3">
+                              <BookingCard
+                                booking={booking}
+                                staff={staff}
+                                client={client}
+                                show={show}
+                                showTooltip={showTooltip}
+                                hideTooltip={hideTooltip}
+                              />
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Empty state */}
+                {filteredBookings.length === 0 && (
+                  <div className="px-3">
                     <EmptyBookings resetFilters={resetFilters} />
                   </div>
                 )}
