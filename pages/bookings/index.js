@@ -25,7 +25,7 @@ export default function BookingsDirectory() {
     show: 'all',
     dateRange: 'all'
   });
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isShowsOpen, setIsShowsOpen] = useState(false);
   const router = useRouter();
   
   // State for tracking active tooltip
@@ -237,21 +237,9 @@ export default function BookingsDirectory() {
       <DashboardLayout>
         <div className="flex flex-col h-full">
           {/* Sticky header section */}
-          <div className="sticky top-0 z-10 bg-secondary-50 px-4 py-4 border-b border-secondary-200">
-            {/* Header with title and actions */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-              <h1 className="text-xl sm:text-2xl font-bold text-secondary-900">Staff Bookings</h1>
-              <div className="flex items-center gap-2">
-                <Link href="/bookings/new" className="ml-auto sm:ml-2">
-                  <Button variant="primary" size="sm" className="flex items-center text-xs sm:text-sm">
-                    <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-1" /> <span className="hidden xs:inline">New</span> Booking
-                  </Button>
-                </Link>
-              </div>
-            </div>
-
+          <div className="sticky top-0 z-10 bg-secondary-50 px-3 sm:px-4 py-3 sm:py-4 border-b border-secondary-200">
             {/* Search and filters */}
-            <div className="bg-white shadow-sm rounded-lg mb-3">
+            <div className="bg-white shadow-sm rounded-lg">
               <div className="p-3 sm:p-4">
                 <div className="flex flex-col space-y-3 md:flex-row md:space-y-0 md:space-x-4">
                   <div className="relative flex-grow">
@@ -267,101 +255,70 @@ export default function BookingsDirectory() {
                       className="pl-8 sm:pl-10 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-xs sm:text-sm h-9 sm:h-auto"
                     />
                   </div>
-                  <div>
+                  <div className="flex items-center justify-between space-x-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setIsFilterOpen(!isFilterOpen)}
-                      className="flex items-center w-full md:w-auto justify-center text-xs sm:text-sm h-9 sm:h-auto"
+                      onClick={() => {
+                        setIsShowsOpen(!isShowsOpen);
+                      }}
+                      className="flex items-center justify-center text-xs sm:text-sm h-9 sm:h-auto"
                     >
-                      <FunnelIcon className="h-4 w-4 mr-1" />
-                      Filters
-                      {hasActiveFilters && (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-1">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
+                      </svg>
+                      Shows
+                      {filters.show !== 'all' && (
                         <span className="ml-1.5 inline-flex items-center px-1.5 sm:px-2.5 py-0.5 rounded-full text-2xs sm:text-xs font-medium bg-primary-100 text-primary-800">
-                          Active
+                          1
                         </span>
                       )}
                     </Button>
+                    <p className="text-xs text-secondary-600 font-medium flex items-center bg-secondary-100 px-2 py-1 rounded-md">
+                      {filteredBookings.length}
+                    </p>
+                    <Link href="/bookings/new">
+                      <Button variant="primary" size="sm" className="flex items-center text-xs sm:text-sm h-9 sm:h-auto">
+                        <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-1" /> <span className="hidden xs:inline">New</span> Booking
+                      </Button>
+                    </Link>
                   </div>
                 </div>
 
-                {/* Filter options */}
-                {isFilterOpen && (
-                  <div className="mt-3 sm:mt-4 border-t border-secondary-200 pt-3 sm:pt-4 grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-3">
-                    <div>
-                      <label htmlFor="status" className="block text-xs sm:text-sm font-medium text-secondary-700">
-                        Status
-                      </label>
-                      <select
-                        id="status"
-                        name="status"
-                        value={filters.status}
-                        onChange={handleFilterChange}
-                        className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-xs sm:text-sm h-9 sm:h-auto"
+                {/* Shows horizontal scroll */}
+                {isShowsOpen && (
+                  <div className="mt-3 pt-3 border-t border-secondary-200 overflow-x-auto pb-1">
+                    <div className="flex space-x-2 min-w-max">
+                      <button
+                        onClick={() => {
+                          setFilters({...filters, show: 'all'});
+                          setIsShowsOpen(false);
+                        }}
+                        className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap
+                          ${filters.show === 'all' 
+                            ? 'bg-primary-100 text-primary-800 border border-primary-200' 
+                            : 'bg-secondary-50 text-secondary-700 border border-secondary-200 hover:bg-secondary-100'}`}
                       >
-                        <option value="all">All Statuses</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="pending">Pending</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label htmlFor="show" className="block text-xs sm:text-sm font-medium text-secondary-700">
-                        Show
-                      </label>
-                      <select
-                        id="show"
-                        name="show"
-                        value={filters.show}
-                        onChange={handleFilterChange}
-                        className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-xs sm:text-sm h-9 sm:h-auto"
-                      >
-                        <option value="all">All Shows</option>
-                        {showOptions.map(show => (
-                          <option key={show.id} value={show.id}>
-                            {show.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label htmlFor="dateRange" className="block text-xs sm:text-sm font-medium text-secondary-700">
-                        Date Range
-                      </label>
-                      <select
-                        id="dateRange"
-                        name="dateRange"
-                        value={filters.dateRange}
-                        onChange={handleFilterChange}
-                        className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-xs sm:text-sm h-9 sm:h-auto"
-                      >
-                        <option value="all">All Dates</option>
-                        <option value="upcoming">Upcoming Shows</option>
-                        <option value="active">Currently Active</option>
-                        <option value="past">Past Shows</option>
-                      </select>
-                    </div>
-                    <div className="sm:col-span-3 flex justify-end">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={resetFilters}
-                        disabled={!hasActiveFilters}
-                        className="flex items-center text-xs sm:text-sm h-9 sm:h-auto"
-                      >
-                        Reset Filters
-                      </Button>
+                        All Shows
+                      </button>
+                      {showOptions.map(show => (
+                        <button
+                          key={show.id}
+                          onClick={() => {
+                            setFilters({...filters, show: show.id});
+                            setIsShowsOpen(false);
+                          }}
+                          className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap
+                            ${filters.show === show.id 
+                              ? 'bg-primary-100 text-primary-800 border border-primary-200' 
+                              : 'bg-secondary-50 text-secondary-700 border border-secondary-200 hover:bg-secondary-100'}`}
+                        >
+                          {show.name}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 )}
-              </div>
-
-              {/* Results count */}
-              <div className="border-t border-secondary-200 px-3 sm:px-4 py-1.5 sm:py-2">
-                <p className="text-2xs sm:text-sm text-secondary-500">
-                  Showing <span className="font-medium">{filteredBookings.length}</span> of{' '}
-                  <span className="font-medium">{bookings.length}</span> bookings
-                </p>
               </div>
             </div>
           </div>
