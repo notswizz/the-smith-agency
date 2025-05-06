@@ -215,12 +215,12 @@ export default function StaffProfile() {
                   <div className="flex gap-4 sm:gap-6 justify-center md:justify-end">
                     <div className="bg-gradient-to-br from-blue-50 to-white rounded-lg p-3 sm:p-4 text-center shadow-md border border-blue-100 flex-1 md:flex-initial min-w-[90px] sm:min-w-[100px] transform hover:scale-105 transition-transform duration-300">
                       <div className="text-2xl sm:text-3xl font-bold text-blue-600">{totalDaysWorked}</div>
-                      <div className="text-2xs sm:text-xs text-blue-500 uppercase tracking-wider font-medium">Days Worked</div>
+                      <div className="text-2xs sm:text-xs text-blue-500 uppercase tracking-wider font-medium">Days</div>
                     </div>
                     
                     <div className="bg-gradient-to-br from-purple-50 to-white rounded-lg p-3 sm:p-4 text-center shadow-md border border-purple-100 flex-1 md:flex-initial min-w-[90px] sm:min-w-[100px] transform hover:scale-105 transition-transform duration-300">
                       <div className="text-2xl sm:text-3xl font-bold text-purple-600">{bookings.length}</div>
-                      <div className="text-2xs sm:text-xs text-purple-500 uppercase tracking-wider font-medium">Bookings</div>
+                      <div className="text-2xs sm:text-xs text-purple-500 uppercase tracking-wider font-medium">Shows</div>
                     </div>
                   </div>
                 </div>
