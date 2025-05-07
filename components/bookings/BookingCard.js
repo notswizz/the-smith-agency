@@ -8,7 +8,8 @@ import {
   ArrowRightIcon,
   CalendarIcon,
   UserGroupIcon,
-  BuildingOffice2Icon
+  BuildingOffice2Icon,
+  PencilSquareIcon
 } from '@heroicons/react/24/outline';
 
 const BookingCard = ({ 
@@ -60,31 +61,34 @@ const BookingCard = ({
     'cancelled': 'Cancelled'
   };
   
-  const statusColors = {
+  const statusStyles = {
     'confirmed': {
-      bg: 'bg-emerald-100',
-      text: 'text-emerald-800',
-      border: 'border-emerald-200',
-      icon: <CheckCircleIcon className="h-3.5 w-3.5 mr-1" />,
-      gradient: 'from-emerald-500 to-green-400'
+      bg: 'bg-emerald-50',
+      text: 'text-emerald-700',
+      border: 'border-emerald-300',
+      icon: <CheckCircleIcon className="h-4 w-4 mr-1.5" />,
+      gradient: 'from-emerald-500 to-green-400',
+      fillColor: 'bg-emerald-500'
     },
     'pending': {
-      bg: 'bg-amber-100',
-      text: 'text-amber-800',
-      border: 'border-amber-200',
-      icon: <ClockIcon className="h-3.5 w-3.5 mr-1" />,
-      gradient: 'from-amber-500 to-yellow-400'
+      bg: 'bg-amber-50',
+      text: 'text-amber-700',
+      border: 'border-amber-300',
+      icon: <ClockIcon className="h-4 w-4 mr-1.5" />,
+      gradient: 'from-amber-500 to-yellow-400',
+      fillColor: 'bg-amber-500'
     },
     'cancelled': {
-      bg: 'bg-red-100',
-      text: 'text-red-800',
-      border: 'border-red-200',
-      icon: <XCircleIcon className="h-3.5 w-3.5 mr-1" />,
-      gradient: 'from-red-500 to-rose-400'
+      bg: 'bg-red-50',
+      text: 'text-red-700',
+      border: 'border-red-300',
+      icon: <XCircleIcon className="h-4 w-4 mr-1.5" />,
+      gradient: 'from-red-500 to-rose-400',
+      fillColor: 'bg-red-500'
     }
   };
   
-  const statusStyle = statusColors[booking.status] || statusColors['pending'];
+  const currentStatusStyle = statusStyles[booking.status] || statusStyles['pending'];
   
   // Format date range
   const formatDateRange = () => {
@@ -100,172 +104,151 @@ const BookingCard = ({
     const startMonth = adjustedStart.toLocaleDateString('en-US', { month: 'short' });
     const endMonth = adjustedEnd.toLocaleDateString('en-US', { month: 'short' });
     
-    if (startMonth === endMonth) {
+    if (startMonth === endMonth && adjustedStart.getFullYear() === adjustedEnd.getFullYear()) {
+      if (adjustedStart.getDate() === adjustedEnd.getDate()) {
+        return `${startMonth} ${adjustedStart.getDate()}, ${adjustedEnd.getFullYear()}`;
+      }
       return `${startMonth} ${adjustedStart.getDate()}-${adjustedEnd.getDate()}, ${adjustedEnd.getFullYear()}`;
     } else {
-      return `${startMonth} ${adjustedStart.getDate()} - ${endMonth} ${adjustedEnd.getDate()}, ${adjustedEnd.getFullYear()}`;
+      return `${startMonth} ${adjustedStart.getDate()}, ${adjustedStart.getFullYear()} - ${endMonth} ${adjustedEnd.getDate()}, ${adjustedEnd.getFullYear()}`;
     }
   };
 
+  const staffCompletionPercentage = Math.max(1, totalStaffNeeded) > 0 ? (totalStaffAssigned / Math.max(1, totalStaffNeeded)) * 100 : 0;
+
   // Get color based on fill percentage
-  const getFillColor = (percentage) => {
-    if (percentage >= 1) return 'bg-gradient-to-r from-emerald-500 to-emerald-400';
-    if (percentage >= 0.5) return 'bg-gradient-to-r from-amber-500 to-amber-400';
-    return 'bg-gradient-to-r from-red-500 to-red-400';
+  const getFillColorClass = (percentage) => {
+    if (percentage >= 100) return currentStatusStyle.fillColor; // Use status color for complete
+    if (percentage >= 50) return 'bg-yellow-500';
+    return 'bg-red-500';
   };
+  
+  const getDayBarFillColor = (fullness) => {
+    if (fullness >= 1) return 'bg-emerald-400 group-hover:bg-emerald-500';
+    if (fullness > 0) return 'bg-amber-400 group-hover:bg-amber-500';
+    return 'bg-red-400 group-hover:bg-red-500';
+  }
 
   return (
     <div
-      className="group relative overflow-hidden rounded-xl bg-white transition-all duration-300 hover:shadow-lg border border-secondary-200 hover:border-primary-300 flex flex-col cursor-pointer transform hover:-translate-y-1"
+      className="group relative overflow-hidden rounded-lg bg-white transition-all duration-300 hover:shadow-xl border border-secondary-200 hover:border-primary-300 flex flex-col cursor-pointer transform hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2"
       onClick={() => router.push(`/bookings/${booking.id}`)}
       tabIndex={0}
       role="button"
       aria-label={`View booking for ${client?.name || 'Unknown Client'}`}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') router.push(`/bookings/${booking.id}`); }}
     >
-      {/* Gradient header */}
-      <div className={`h-3 w-full bg-gradient-to-r ${statusStyle.gradient}`}></div>
+      {/* Gradient header based on status */}
+      <div className={`h-2 w-full bg-gradient-to-r ${currentStatusStyle.gradient}`}></div>
       
-      <div className="p-4 flex-grow flex flex-col">
+      <div className="p-5 flex-grow flex flex-col space-y-4">
         {/* Top section with status and edit button */}
-        <div className="flex justify-between items-start mb-4">
-          <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border} border`}>
-            {statusStyle.icon}
-            {statusLabels[booking.status] || 'Unknown'}
+        <div className="flex justify-between items-start">
+          <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold ${currentStatusStyle.bg} ${currentStatusStyle.text} border ${currentStatusStyle.border}`}>
+            {currentStatusStyle.icon}
+            {statusLabels[booking.status] || booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
           </div>
           <button
             onClick={(e) => {
               e.stopPropagation();
               router.push(`/bookings/${booking.id}/edit`);
             }}
-            className="p-1.5 rounded-md text-secondary-500 hover:text-primary-600 hover:bg-primary-50 transition-colors"
-            aria-label="Edit booking"
+            className="p-1.5 rounded-md text-secondary-400 hover:text-primary-600 hover:bg-primary-50 transition-colors opacity-50 group-hover:opacity-100 focus:opacity-100"
+            aria-label="Edit staff assignments"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
+            <PencilSquareIcon className="w-5 h-5" />
           </button>
         </div>
         
         {/* Client and Show Info */}
-        <div className="mb-4">
-          <div className="flex items-center gap-3 mb-1.5">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center text-primary-600 shadow-sm border border-primary-100">
-              <BuildingOffice2Icon className="w-5 h-5" />
+        <div>
+          <div className="flex items-start gap-3 mb-1">
+            <div className="flex-shrink-0 mt-1 w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center text-primary-500 shadow-sm border border-primary-100">
+              <BuildingOffice2Icon className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-secondary-900 group-hover:text-primary-600 transition-colors leading-tight">
+              <h3 className="text-base font-bold text-secondary-800 group-hover:text-primary-600 transition-colors leading-tight">
                 {client?.name || '[Unknown Client]'}
               </h3>
-              <h4 className="text-sm text-secondary-600">
+              <h4 className="text-sm text-secondary-500">
                 {show?.name || '[Unknown Show]'}
               </h4>
             </div>
           </div>
           
-          {/* Date Range */}
-          <div className="flex items-center text-xs text-secondary-500 ml-13 mt-1">
-            <CalendarIcon className="w-3 h-3 mr-1 flex-shrink-0" />
+          <div className="flex items-center text-xs text-secondary-500 ml-11 mt-0.5">
+            <CalendarIcon className="w-3.5 h-3.5 mr-1.5 flex-shrink-0 text-secondary-400" />
             <span>{formatDateRange()}</span>
           </div>
         </div>
         
-        {/* Staff/Days Stats with Bar Chart */}
-        <div className="rounded-xl bg-secondary-50 p-4 border border-secondary-100 shadow-inner">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                <CalendarIcon className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-bold text-secondary-900">{bookingSummary.days}</span>
-                  <span className="text-xs text-secondary-500 uppercase">days</span>
-                </div>
-              </div>
+        {/* Staff/Days Stats and Progress */}
+        <div className="rounded-lg bg-secondary-50 p-3 border border-secondary-100 shadow-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm">
+              <CalendarIcon className="w-4 h-4 text-indigo-500" />
+              <span className="font-medium text-secondary-700">{bookingSummary.days} Day{bookingSummary.days !== 1 ? 's' : ''}</span>
             </div>
-            
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                <UserGroupIcon className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-bold text-secondary-900">{totalStaffAssigned}/{totalStaffNeeded}</span>
-                  <span className="text-xs text-secondary-500 uppercase">staff</span>
-                </div>
-              </div>
+            <div className="flex items-center gap-2 text-sm">
+              <UserGroupIcon className="w-4 h-4 text-indigo-500" />
+              <span className="font-medium text-secondary-700">{totalStaffAssigned}/{totalStaffNeeded} Staff</span>
             </div>
           </div>
           
-          {/* Enhanced Staff Progress Bar */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center text-xs">
-              <span className="font-medium text-secondary-700">Staff Filled</span>
-              <span className={`font-medium ${
-                totalStaffAssigned >= totalStaffNeeded ? 'text-emerald-600' :
-                totalStaffAssigned >= totalStaffNeeded/2 ? 'text-amber-600' :
+          <div>
+            <div className="flex justify-between items-center text-xs mb-0.5">
+              <span className="font-medium text-secondary-600">Staff Filled</span>
+              <span className={`font-semibold ${
+                staffCompletionPercentage >= 100 ? 'text-emerald-600' :
+                staffCompletionPercentage >= 50 ? 'text-yellow-600' :
                 'text-red-600'
               }`}>
-                {Math.round((totalStaffAssigned / Math.max(1, totalStaffNeeded)) * 100)}%
+                {Math.round(staffCompletionPercentage)}%
               </span>
             </div>
-            <div className="relative h-3 bg-secondary-200 rounded-full overflow-hidden shadow-inner">
+            <div className="relative h-2.5 bg-secondary-200 rounded-full overflow-hidden shadow-inner">
               <div 
-                className={`absolute top-0 left-0 h-full ${getFillColor(totalStaffAssigned / Math.max(1, totalStaffNeeded))}`}
-                style={{ width: `${Math.min(100, (totalStaffAssigned / Math.max(1, totalStaffNeeded)) * 100)}%` }}
+                className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 ease-out ${getFillColorClass(staffCompletionPercentage)}`}
+                style={{ width: `${staffCompletionPercentage}%` }}
               ></div>
             </div>
           </div>
-          
-          {/* Days Bar Chart */}
-          <div className="mt-4 flex items-end h-12 gap-1 overflow-hidden relative">
-            {Array.from({ length: Math.min(bookingSummary.days, 15) }).map((_, i) => {
-              // Calculate day staff fullness
-              const dayIndex = Math.min(i, (booking.datesNeeded || []).length - 1);
-              const dayStaffIds = booking.datesNeeded && dayIndex >= 0 ? 
-                booking.datesNeeded[dayIndex].staffIds || [] : [];
-              const dayStaffCount = booking.datesNeeded && dayIndex >= 0 ? 
-                booking.datesNeeded[dayIndex].staffCount || 1 : 1;
+        </div>
+
+        {/* Daily Staffing Micro-Bars */}
+        {bookingSummary.days > 0 && (
+          <div className="mt-1 flex items-end h-8 gap-0.5 overflow-hidden relative group/microbars">
+            {Array.from({ length: Math.min(bookingSummary.days, 30) }).map((_, i) => {
+              const day = sortedDates[i];
+              if (!day) return null;
+              const dayStaffIds = day.staffIds || [];
+              const dayStaffCount = day.staffCount || 1;
               const fullness = Math.min(1, dayStaffIds.length / Math.max(1, dayStaffCount));
-              
-              // Get date for this bar
-              const dayDate = booking.datesNeeded && dayIndex >= 0 
-                ? booking.datesNeeded[dayIndex].date 
-                : null;
-                
-              // Get bar color based on fullness
-              const barColor = fullness >= 1 
-                ? 'bg-emerald-500 hover:bg-emerald-600' 
-                : fullness >= 0.5 
-                  ? 'bg-amber-500 hover:bg-amber-600' 
-                  : 'bg-red-500 hover:bg-red-600';
               
               return (
                 <div 
                   key={i} 
-                  className={`flex-1 rounded-md ${barColor} cursor-pointer transition-all shadow-sm hover:shadow transform hover:-translate-y-1`}
-                  style={{ height: `${50 + fullness * 50}%` }}
-                  onClick={(e) => showTooltip(e, dayIndex, booking.id)}
-                  onMouseEnter={(e) => showTooltip(e, dayIndex, booking.id)}
+                  className={`flex-1 rounded-sm cursor-pointer transition-all duration-150 border border-white/50 ${getDayBarFillColor(fullness)}`}
+                  style={{ height: `${30 + fullness * 70}%` }} // Scale from 30% to 100% height
+                  onClick={(e) => showTooltip(e, i, booking.id)}
+                  onMouseEnter={(e) => showTooltip(e, i, booking.id)}
                   onMouseLeave={hideTooltip}
-                  title={dayDate ? formatDate(dayDate) : 'Date information not available'}
+                  title={`${formatDate(day.date)}: ${dayStaffIds.length}/${dayStaffCount} staff`}
                 ></div>
               );
             })}
-            {bookingSummary.days > 15 && (
-              <div className="flex-1 rounded-md bg-secondary-300 hover:bg-secondary-400 h-1/2 flex items-center justify-center cursor-pointer transition-colors">
-                <span className="text-xs text-white font-bold">+{bookingSummary.days - 15}</span>
+            {bookingSummary.days > 30 && (
+              <div className="flex-1 rounded-sm bg-secondary-300 group-hover/microbars:bg-secondary-400 h-1/2 flex items-center justify-center cursor-default transition-colors">
+                <span className="text-2xs text-white font-bold">+{bookingSummary.days - 30}</span>
               </div>
             )}
           </div>
-        </div>
+        )}
         
-        {/* Arrow indicator for clickable card */}
-        <div className="flex justify-end mt-3">
-          <div className="text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity">
-            <ArrowRightIcon className="h-5 w-5" />
-          </div>
+        {/* Arrow indicator for clickable card - subtle */}
+        <div className="flex justify-end items-center mt-auto pt-2">
+          <span className="text-xs text-secondary-400 group-hover:text-primary-500 transition-colors">View Details</span>
+          <ArrowRightIcon className="h-3.5 w-3.5 ml-1 text-secondary-400 group-hover:text-primary-500 transition-colors" />
         </div>
       </div>
     </div>

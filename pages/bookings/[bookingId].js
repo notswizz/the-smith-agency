@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import { doc, getDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import DashboardLayout from '@/components/ui/DashboardLayout';
 import Button from '@/components/ui/Button';
@@ -8,8 +8,6 @@ import Link from 'next/link';
 import useStore from '@/lib/hooks/useStore';
 import { 
   ArrowLeftIcon, 
-  PencilIcon, 
-  TrashIcon, 
   CalendarIcon,
   UserGroupIcon,
   DocumentTextIcon,
@@ -18,7 +16,9 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   XMarkIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  CalendarDaysIcon,
+  ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline';
 
 export default function BookingDetail() {
@@ -26,21 +26,17 @@ export default function BookingDetail() {
   const { bookingId } = router.query;
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
   const { staff = [], clients = [], shows = [] } = useStore();
   
-  // Tab state for mobile view
-  const [activeTab, setActiveTab] = useState('details');
+  const [activeTab, setActiveTab] = useState('overview');
 
-  // Sort dates needed chronologically
   const sortedDatesNeeded = useMemo(() => {
     if (!booking?.datesNeeded) return [];
     return [...booking.datesNeeded].sort((a, b) => new Date(a.date) - new Date(b.date));
   }, [booking]);
 
-  // Calculate total staff needed vs assigned
   const staffingSummary = useMemo(() => {
-    if (!booking?.datesNeeded) return { needed: 0, assigned: 0, complete: false };
+    if (!booking?.datesNeeded) return { needed: 0, assigned: 0, complete: false, progress: 0 };
     
     const totalStaffNeeded = booking.datesNeeded.reduce((total, date) => 
       total + (date.staffCount || 1), 0);
@@ -51,11 +47,11 @@ export default function BookingDetail() {
     return {
       needed: totalStaffNeeded,
       assigned: totalStaffAssigned,
-      complete: totalStaffAssigned >= totalStaffNeeded
+      complete: totalStaffNeeded > 0 && totalStaffAssigned >= totalStaffNeeded,
+      progress: totalStaffNeeded > 0 ? Math.round((totalStaffAssigned / totalStaffNeeded) * 100) : 0
     };
   }, [booking]);
 
-  // Helper to get staff names by ID
   const getStaffName = (id) => {
     const member = staff.find(s => s.id === id);
     if (!member) return '[Unknown Staff]';
@@ -64,7 +60,6 @@ export default function BookingDetail() {
       : member.name || '[Unknown Staff]';
   };
   
-  // Helper to get client and show
   const client = useMemo(() => {
     if (!booking) return null;
     return clients.find(c => c.id === booking.clientId) || null;
@@ -88,25 +83,11 @@ export default function BookingDetail() {
     fetchBooking();
   }, [bookingId]);
 
-  const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this booking? This action cannot be undone.')) {
-      try {
-        setDeleting(true);
-        await deleteDoc(doc(db, 'bookings', bookingId));
-        router.push('/bookings');
-      } catch (error) {
-        console.error('Error deleting booking:', error);
-        setDeleting(false);
-        alert('Failed to delete booking. Please try again.');
-      }
-    }
-  };
-
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary-500"></div>
         </div>
       </DashboardLayout>
     );
@@ -115,15 +96,13 @@ export default function BookingDetail() {
   if (!booking) {
     return (
       <DashboardLayout>
-        <div className="max-w-4xl mx-auto py-8 px-4">
-          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-            <div className="text-red-500 text-4xl mb-4">
-              <ExclamationTriangleIcon className="w-16 h-16 mx-auto" />
-            </div>
-            <h1 className="text-2xl font-bold text-secondary-900 mb-2">Booking Not Found</h1>
-            <p className="text-secondary-600 mb-6">The booking you're looking for doesn't exist or has been removed.</p>
+        <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-xl shadow-2xl p-8 text-center">
+            <ExclamationTriangleIcon className="w-20 h-20 mx-auto text-red-400 mb-6" />
+            <h1 className="text-3xl font-bold text-secondary-900 mb-3">Booking Not Found</h1>
+            <p className="text-secondary-600 text-lg mb-8">The booking you're looking for doesn't exist or has been removed.</p>
             <Link href="/bookings">
-              <Button variant="primary">Return to Bookings</Button>
+              <Button variant="primary" size="lg">Return to Bookings List</Button>
             </Link>
           </div>
         </div>
@@ -131,320 +110,271 @@ export default function BookingDetail() {
     );
   }
 
-  // Format the status labels
-  const statusLabels = {
-    'confirmed': 'Confirmed',
-    'pending': 'Pending',
-    'cancelled': 'Cancelled'
-  };
-
-  // Get date range
+  const statusLabels = { 'confirmed': 'Confirmed', 'pending': 'Pending', 'cancelled': 'Cancelled' };
   const firstDate = sortedDatesNeeded.length > 0 ? new Date(sortedDatesNeeded[0].date) : null;
   const lastDate = sortedDatesNeeded.length > 0 ? new Date(sortedDatesNeeded[sortedDatesNeeded.length - 1].date) : null;
+  
   const formatShortDate = (date) => {
     if (!date) return '--';
-    // Adjust for timezone offset to fix date being behind by 1 day
     const adjustedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
-    return adjustedDate.toLocaleDateString('en-US', { 
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+    return adjustedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  // Get status colors
-  const getStatusColor = (status) => {
+  const getStatusStyles = (status) => {
     switch(status) {
-      case 'confirmed': return 'emerald';
-      case 'pending': return 'amber';
-      case 'cancelled': return 'red';
-      default: return 'secondary';
+      case 'confirmed': return { badge: 'bg-emerald-100 text-emerald-700', icon: CheckCircleIcon };
+      case 'pending': return { badge: 'bg-amber-100 text-amber-700', icon: ClockIcon };
+      case 'cancelled': return { badge: 'bg-red-100 text-red-700', icon: XMarkIcon };
+      default: return { badge: 'bg-secondary-100 text-secondary-700', icon: InformationCircleIcon };
     }
   };
-  
-  const statusColor = getStatusColor(booking.status);
+  const currentStatusStyles = getStatusStyles(booking.status);
+  const StatusIcon = currentStatusStyles.icon;
 
-  // Render booking details content
-  const renderDetailsContent = () => (
-    <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-secondary-200">
-      {/* Status header */}
-      <div className={`h-2 w-full bg-gradient-to-r from-${statusColor}-500 to-${statusColor}-400`} />
-
-      <div className="p-4 sm:p-5">
-        {/* Booking header with client, show and status */}
-        <div className="flex flex-col mb-3 sm:mb-5">
-          <div className="mb-2">
-            <div className="flex items-center gap-2 mb-1">
-              <BuildingOffice2Icon className="h-5 w-5 text-primary-500 flex-shrink-0" />
-              <h2 className="text-lg sm:text-xl font-semibold text-secondary-900 line-clamp-1">
-                {client?.name || 'Unknown Client'}
-              </h2>
-            </div>
-            <div className="flex items-center gap-2 ml-7">
-              <p className="text-sm sm:text-base text-secondary-700 line-clamp-1">
-                {show?.name || 'Unknown Show'}
-              </p>
-            </div>
-            {/* Subtle date range */}
-            <div className="flex items-center gap-1 ml-7 mt-1 text-xs text-secondary-500">
-              <CalendarIcon className="h-3 w-3" />
-              <span>{formatShortDate(firstDate)} - {formatShortDate(lastDate)}</span>
-            </div>
-          </div>
-
-          {/* Status badge for tablet/desktop with edit button */}
-          <div className="hidden sm:flex sm:items-center sm:justify-between">
-            <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium 
-              ${booking.status === 'confirmed' 
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                : booking.status === 'pending' 
-                  ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                  : 'bg-red-50 text-red-700 border border-red-200'
-              }`}>
-              {booking.status === 'confirmed' && (
-                <CheckCircleIcon className="w-4 h-4" />
-              )}
-              {booking.status === 'pending' && (
-                <ClockIcon className="w-4 h-4" />
-              )}
-              {booking.status === 'cancelled' && (
-                <XMarkIcon className="w-4 h-4" />
-              )}
-              {statusLabels[booking.status] || booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-            </div>
-            
-            <Link href={`/bookings/${bookingId}/edit`}>
-              <Button variant="text" size="sm" className="flex items-center text-secondary-500 hover:text-primary-600 transition-colors">
-                <PencilIcon className="h-4 w-4 mr-1" />
-                <span className="text-sm">Edit</span>
-              </Button>
-            </Link>
-          </div>
+  const renderBookingHeader = () => (
+    <div className="mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="flex items-center">
+          <Link href="/bookings" className="mr-3">
+            <Button variant="ghost" size="sm" className="p-2 text-secondary-600 hover:text-primary-600">
+              <ArrowLeftIcon className="h-5 w-5" />
+            </Button>
+          </Link>
+          <h1 className="text-2xl sm:text-3xl font-bold text-secondary-900">Booking Overview</h1>
         </div>
-
-        {/* Stats summary - Improved for mobile */}
-        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 shadow-sm">
-          <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            <div className="flex flex-col items-center p-1 sm:p-2">
-              <div className="flex items-center text-indigo-600 mb-1">
-                <CalendarIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-1" /> 
-                <span className="text-xs sm:text-sm font-medium">Days</span>
-              </div>
-              <span className="text-lg sm:text-2xl font-bold">{sortedDatesNeeded.length}</span>
-            </div>
-            
-            <div className="flex flex-col items-center p-1 sm:p-2">
-              <div className="flex items-center text-indigo-600 mb-1">
-                <UserGroupIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-1" /> 
-                <span className="text-xs sm:text-sm font-medium">Needed</span>
-              </div>
-              <span className="text-lg sm:text-2xl font-bold">{staffingSummary.needed}</span>
-            </div>
-            
-            <div className="flex flex-col items-center p-1 sm:p-2">
-              <div className="flex items-center text-indigo-600 mb-1">
-                <CheckCircleIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-1" /> 
-                <span className="text-xs sm:text-sm font-medium">Assigned</span>
-              </div>
-              <span className="text-lg sm:text-2xl font-bold">{staffingSummary.assigned}</span>
-            </div>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mt-2 sm:mt-0 items-end sm:items-center">
+          <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold ${currentStatusStyles.badge}`}>
+            <StatusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+            {statusLabels[booking.status] || booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
           </div>
-        </div>
-
-        {/* Notes section - improved spacing and padding */}
-        <div>
-          <div className="flex items-center mb-2 sm:mb-3">
-            <DocumentTextIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary-600 mr-2" />
-            <h3 className="text-sm font-medium text-secondary-900">Notes</h3>
-          </div>
-          <div className="bg-white rounded-lg p-3 sm:p-4 border border-secondary-200 shadow-sm min-h-[80px]">
-            {booking.notes ? (
-              <p className="text-secondary-700 whitespace-pre-wrap text-sm leading-relaxed">{booking.notes}</p>
-            ) : (
-              <p className="text-secondary-400 italic text-sm">No notes added</p>
-            )}
-          </div>
+          <Link href={`/bookings/${bookingId}/edit`} className="w-full sm:w-auto">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto flex items-center justify-center">
+              <UserGroupIcon className="h-4 w-4 mr-2" />
+              Manage Staff
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
   );
 
-  // Render schedule content
-  const renderScheduleContent = () => (
-    <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-secondary-200">
-      <div className="p-3 sm:p-4 border-b border-secondary-200 bg-secondary-50 flex items-center justify-between">
-        <div className="flex items-center">
-          <CalendarIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary-600 mr-2" />
-          <h3 className="font-medium text-sm sm:text-base text-secondary-900">Schedule</h3>
+  const renderKeyInformationCard = () => (
+    <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border border-secondary-200">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div>
+          <div className="flex items-center text-secondary-500 mb-1">
+            <BuildingOffice2Icon className="h-5 w-5 mr-2" />
+            <span className="text-sm font-medium">Client</span>
+          </div>
+          <p className="text-lg font-semibold text-secondary-900">{client?.name || 'Unknown Client'}</p>
         </div>
-        <span className="text-xs bg-primary-100 text-primary-800 px-2 py-1 rounded-full">
-          {sortedDatesNeeded.length} date{sortedDatesNeeded.length !== 1 ? 's' : ''}
+        <div>
+          <div className="flex items-center text-secondary-500 mb-1">
+            <CalendarIcon className="h-5 w-5 mr-2" />
+            <span className="text-sm font-medium">Show</span>
+          </div>
+          <p className="text-lg font-semibold text-secondary-900">{show?.name || 'Unknown Show'}</p>
+        </div>
+        <div>
+          <div className="flex items-center text-secondary-500 mb-1">
+            <CalendarDaysIcon className="h-5 w-5 mr-2" />
+            <span className="text-sm font-medium">Dates</span>
+          </div>
+          <p className="text-lg font-semibold text-secondary-900">
+            {firstDate && lastDate ? `${formatShortDate(firstDate)} - ${formatShortDate(lastDate)}` : 'N/A'}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderOverviewContent = () => (
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl shadow-lg p-6 border border-secondary-200">
+        <div className="flex items-center mb-4">
+            <UserGroupIcon className="h-6 w-6 text-primary-500 mr-3" />
+            <h3 className="text-xl font-semibold text-secondary-900">Staffing Summary</h3>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div className="bg-primary-50 p-4 rounded-lg text-center">
+            <p className="text-3xl font-bold text-primary-600">{sortedDatesNeeded.length}</p>
+            <p className="text-sm text-primary-500">Total Days</p>
+          </div>
+          <div className="bg-indigo-50 p-4 rounded-lg text-center">
+            <p className="text-3xl font-bold text-indigo-600">{staffingSummary.needed}</p>
+            <p className="text-sm text-indigo-500">Staff Positions</p>
+          </div>
+          <div className="bg-emerald-50 p-4 rounded-lg text-center">
+            <p className="text-3xl font-bold text-emerald-600">{staffingSummary.assigned}</p>
+            <p className="text-sm text-emerald-500">Staff Assigned</p>
+          </div>
+        </div>
+        <div>
+          <div className="flex justify-between text-sm font-medium text-secondary-700 mb-1">
+            <span>Overall Progress</span>
+            <span>{staffingSummary.progress}% ({staffingSummary.assigned}/{staffingSummary.needed})</span>
+          </div>
+          <div className="w-full bg-secondary-200 rounded-full h-3">
+            <div 
+              className={`h-3 rounded-full ${staffingSummary.complete ? 'bg-emerald-500' : 'bg-primary-500'}`}
+              style={{ width: `${staffingSummary.progress}%` }}
+            ></div>
+          </div>
+           {staffingSummary.needed > 0 && !staffingSummary.complete && staffingSummary.assigned < staffingSummary.needed && (
+            <p className="mt-2 text-sm text-amber-600 flex items-center">
+              <ExclamationTriangleIcon className="h-4 w-4 mr-1.5" />
+              This booking needs {staffingSummary.needed - staffingSummary.assigned} more staff.
+            </p>
+          )}
+          {staffingSummary.needed > 0 && staffingSummary.complete && (
+             <p className="mt-2 text-sm text-emerald-600 flex items-center">
+              <CheckCircleIcon className="h-4 w-4 mr-1.5" />
+              All staff positions are filled for this booking.
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-lg p-6 border border-secondary-200">
+        <div className="flex items-center mb-4">
+            <ClipboardDocumentListIcon className="h-6 w-6 text-primary-500 mr-3" />
+            <h3 className="text-xl font-semibold text-secondary-900">Notes</h3>
+        </div>
+        <div className="bg-secondary-50 p-4 rounded-lg min-h-[100px]">
+          {booking.notes ? (
+            <p className="text-secondary-700 whitespace-pre-wrap text-sm leading-relaxed">{booking.notes}</p>
+          ) : (
+            <p className="text-secondary-500 italic text-sm">No notes have been added for this booking.</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderDailyScheduleContent = () => (
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-secondary-200">
+      <div className="p-5 border-b border-secondary-200 bg-secondary-50 flex items-center justify-between">
+        <div className="flex items-center">
+          <CalendarDaysIcon className="h-6 w-6 text-primary-500 mr-3" />
+          <h3 className="text-xl font-semibold text-secondary-900">Daily Staffing Schedule</h3>
+        </div>
+        <span className="text-sm bg-primary-100 text-primary-700 font-medium px-3 py-1 rounded-full">
+          {sortedDatesNeeded.length} Day{sortedDatesNeeded.length !== 1 ? 's' : ''}
         </span>
       </div>
       
       {sortedDatesNeeded.length > 0 ? (
-        <div className="p-2 sm:p-3 max-h-[500px] sm:max-h-[800px] overflow-y-auto">
-          <div className="space-y-2 sm:space-y-3">
-            {sortedDatesNeeded.map(({ date, staffCount = 1, staffIds }, i) => (
-              <div key={i} className="bg-secondary-50 rounded-lg p-2 sm:p-3 border border-secondary-100">
-                <div className="flex flex-col mb-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center">
-                      <ClockIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary-600 mr-1.5 flex-shrink-0" />
-                      <span className="font-medium text-xs sm:text-sm line-clamp-1">
-                        {(() => {
-                          const dateObj = new Date(date);
-                          // Adjust for timezone offset to fix date being behind by 1 day
-                          const adjustedDate = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000);
-                          return adjustedDate.toLocaleDateString('en-US', { 
-                            weekday: 'short',
-                            month: 'short',
-                            day: 'numeric',
-                          });
-                        })()}
-                      </span>
-                    </div>
-                    <span className={`text-2xs sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full flex-shrink-0
-                      ${(staffIds?.filter(Boolean).length || 0) >= (staffCount || 1)
-                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                        : 'bg-amber-100 text-amber-800 border border-amber-200'
-                      }`}
-                    >
-                      {staffIds?.filter(Boolean).length || 0}/{staffCount || 1}
-                    </span>
+        <div className="divide-y divide-secondary-200 max-h-[calc(100vh-300px)] overflow-y-auto">
+          {sortedDatesNeeded.map(({ date, staffCount = 1, staffIds = [] }, i) => {
+            const assignedStaffForDate = staffIds.filter(Boolean);
+            const isDateFullyStaffed = assignedStaffForDate.length >= staffCount;
+            const dateObj = new Date(date);
+            const adjustedDate = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000);
+            const formattedDate = adjustedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+            return (
+              <div key={i} className="p-5 hover:bg-secondary-50 transition-colors duration-150">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
+                  <div>
+                    <p className="text-lg font-semibold text-primary-600">{formattedDate}</p>
+                    <p className="text-sm text-secondary-500">
+                      {staffCount} Staff Position{staffCount !== 1 ? 's' : ''} Needed
+                    </p>
                   </div>
+                  <span className={`mt-2 sm:mt-0 text-xs font-medium px-3 py-1 rounded-full flex items-center
+                    ${isDateFullyStaffed
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-amber-100 text-amber-700'
+                    }`}
+                  >
+                    {isDateFullyStaffed ? <CheckCircleIcon className="w-4 h-4 mr-1.5" /> : <ClockIcon className="w-4 h-4 mr-1.5" />}
+                    {assignedStaffForDate.length}/{staffCount} Assigned
+                  </span>
                 </div>
                 
-                <div className="ml-5 sm:ml-6">
-                  {staffIds?.some(id => id) ? (
-                    <div className="flex flex-col gap-1.5">
-                      {staffIds.filter(Boolean).map((staffId, idx) => (
-                        <span key={idx} className="inline-flex items-center px-2 py-1 rounded-md bg-white border border-primary-100 text-primary-700 text-xs shadow-sm">
-                          <UserGroupIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1" />
-                          <span className="truncate">{getStaffName(staffId)}</span>
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="bg-white border border-amber-100 text-amber-700 rounded-md p-1.5 flex items-center shadow-sm">
-                      <ExclamationTriangleIcon className="w-3 w-3 sm:w-3.5 sm:h-3.5 mr-1" />
-                      <span className="text-2xs sm:text-xs">No staff assigned</span>
-                    </div>
-                  )}
-                </div>
+                {staffCount > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {Array.from({ length: staffCount }).map((_, slotIndex) => {
+                      const staffId = staffIds[slotIndex];
+                      return (
+                        <div key={slotIndex} 
+                             className={`p-3 rounded-lg border
+                                        ${staffId ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
+                          <div className="flex items-center">
+                            <UserGroupIcon className={`w-5 h-5 mr-2 ${staffId ? 'text-emerald-600' : 'text-amber-600'}`} />
+                            {staffId ? (
+                              <span className="text-sm font-medium text-secondary-800 truncate">{getStaffName(staffId)}</span>
+                            ) : (
+                              <span className="text-sm text-amber-700 italic">Position Open</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                   <p className="text-sm text-secondary-500">No staff required for this day.</p>
+                )}
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       ) : (
-        <div className="p-6 sm:p-8 text-center">
-          <CalendarIcon className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-secondary-300 mb-3" />
-          <p className="text-sm text-secondary-500">No dates selected for this booking</p>
-          <div className="mt-4">
-            <Link href={`/bookings/${bookingId}/edit`}>
-              <Button variant="outline" size="sm" className="flex items-center gap-1 mx-auto">
-                <PencilIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-                Add Dates
-              </Button>
-            </Link>
-          </div>
+        <div className="p-10 text-center">
+          <CalendarIcon className="w-16 h-16 mx-auto text-secondary-300 mb-4" />
+          <p className="text-xl font-semibold text-secondary-700 mb-2">No Dates Scheduled</p>
+          <p className="text-secondary-500">There are no dates specified for this booking's schedule.</p>
+          <Link href={`/bookings/${bookingId}/edit`} className="mt-6 inline-block">
+            <Button variant="primary" size="md">
+                <UserGroupIcon className="h-5 w-5 mr-2" /> Manage Staff & Dates
+            </Button>
+          </Link>
         </div>
       )}
     </div>
   );
 
+  const tabItems = [
+    { id: 'overview', label: 'Overview', icon: InformationCircleIcon },
+    { id: 'schedule', label: 'Daily Schedule', icon: CalendarDaysIcon },
+  ];
+
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto py-3 sm:py-5 px-3 sm:px-4">
-        {/* Header with back button and actions - improved for mobile */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2 sm:gap-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Link href="/bookings" className="mr-2 sm:mr-3">
-                <Button variant="ghost" size="sm" className="flex items-center text-secondary-600 p-1 sm:p-2">
-                  <ArrowLeftIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="hidden sm:inline ml-1">Back</span>
-                </Button>
-              </Link>
-              <h1 className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-500">
-                Booking Details
-              </h1>
-            </div>
-            
-            {/* Status badge and edit button for mobile */}
-            <div className="sm:hidden flex items-center gap-2">
-              <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium 
-                ${booking.status === 'confirmed' 
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                  : booking.status === 'pending' 
-                    ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                    : 'bg-red-50 text-red-700 border border-red-200'
-                }`}>
-                {booking.status === 'confirmed' && (
-                  <CheckCircleIcon className="w-3 h-3" />
-                )}
-                {booking.status === 'pending' && (
-                  <ClockIcon className="w-3 h-3" />
-                )}
-                {booking.status === 'cancelled' && (
-                  <XMarkIcon className="w-3 h-3" />
-                )}
-                {statusLabels[booking.status]}
-              </div>
-              
-              <Link href={`/bookings/${bookingId}/edit`}>
-                <Button variant="text" size="sm" className="flex items-center text-secondary-500 hover:text-primary-600 transition-colors p-1">
-                  <PencilIcon className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
+      <div className="max-w-7xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
+        {renderBookingHeader()}
+        {renderKeyInformationCard()}
+
+        <div className="mb-6">
+          <div className="block">
+            <nav className="flex space-x-1 sm:space-x-2 rounded-lg bg-secondary-100 p-1" aria-label="Tabs">
+              {tabItems.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`
+                    flex-1 group flex items-center justify-center px-3 py-2.5 text-sm font-medium rounded-md transition-all
+                    focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-secondary-100
+                    ${activeTab === tab.id
+                      ? 'bg-white text-primary-600 shadow-md'
+                      : 'text-secondary-600 hover:bg-secondary-200 hover:text-secondary-800'
+                    }
+                  `}
+                >
+                  <tab.icon className={`-ml-0.5 mr-2 h-5 w-5 ${activeTab === tab.id ? 'text-primary-500' : 'text-secondary-400 group-hover:text-secondary-500'}`} />
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </nav>
           </div>
         </div>
 
-        {/* Mobile Tab Navigation */}
-        <div className="lg:hidden flex border-b border-secondary-200 mb-2">
-          <button
-            onClick={() => setActiveTab('details')}
-            className={`flex-1 py-2 px-2 text-sm font-medium flex justify-center items-center gap-1.5 ${
-              activeTab === 'details'
-                ? 'text-primary-600 border-b-2 border-primary-500'
-                : 'text-secondary-600 hover:text-secondary-900'
-            }`}
-          >
-            <InformationCircleIcon className="h-4 w-4" />
-            Details
-          </button>
-          <button
-            onClick={() => setActiveTab('schedule')}
-            className={`flex-1 py-2 px-2 text-sm font-medium flex justify-center items-center gap-1.5 ${
-              activeTab === 'schedule'
-                ? 'text-primary-600 border-b-2 border-primary-500'
-                : 'text-secondary-600 hover:text-secondary-900'
-            }`}
-          >
-            <CalendarIcon className="h-4 w-4" />
-            Schedule
-            <span className="bg-primary-100 text-primary-800 text-xs rounded-full h-5 min-w-5 flex items-center justify-center px-1">
-              {sortedDatesNeeded.length}
-            </span>
-          </button>
-        </div>
-
-        {/* Main content - Single column with tabs on mobile, two columns on desktop */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-5">
-          {/* Left column - Booking details */}
-          <div className={`lg:col-span-2 space-y-3 sm:space-y-5 ${activeTab !== 'details' && 'hidden lg:block'}`}>
-            {renderDetailsContent()}
-          </div>
-
-          {/* Right column - Staff schedule */}
-          <div className={`lg:col-span-1 ${activeTab !== 'schedule' && 'hidden lg:block'}`}>
-            {renderScheduleContent()}
-          </div>
+        <div>
+          {activeTab === 'overview' && renderOverviewContent()}
+          {activeTab === 'schedule' && renderDailyScheduleContent()}
         </div>
         
-        {/* Bottom buffer to ensure content is fully visible - especially on mobile */}
-        <div className="h-20 sm:h-12 lg:h-8"></div>
+        <div className="h-16"></div>
       </div>
     </DashboardLayout>
   );

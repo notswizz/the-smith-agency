@@ -3,27 +3,23 @@ import { useRouter } from 'next/router';
 import DashboardLayout from '@/components/ui/DashboardLayout';
 import Button from '@/components/ui/Button';
 import useStore from '@/lib/hooks/useStore';
-import { formatDate } from '@/utils/dateUtils';
-import { doc, deleteDoc } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { 
   ArrowLeftIcon, 
   CalendarIcon, 
   UserGroupIcon, 
-  BriefcaseIcon, 
-  DocumentTextIcon,
   BuildingOffice2Icon,
   XMarkIcon,
   PlusIcon,
   CheckCircleIcon,
   CheckIcon,
   ClockIcon,
-  TrashIcon,
   InformationCircleIcon
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
-export default function EditBooking() {
+export default function StaffAssignment() {
   const router = useRouter();
   const { bookingId } = router.query;
   const { bookings, clients, shows, updateBooking, staff, availability, getBookingsForStaff } = useStore();
@@ -31,17 +27,13 @@ export default function EditBooking() {
   const [showDateRange, setShowDateRange] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formErrors, setFormErrors] = useState({});
-  const [status, setStatus] = useState(null);
-  const [activeSection, setActiveSection] = useState('details');
   const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!bookingId) return;
     const booking = bookings.find(b => b.id === bookingId);
     if (booking) {
       setFormData({ ...booking });
-      setStatus(booking.status || 'pending');
       const show = shows.find(s => s.id === booking.showId);
       if (show && show.startDate && show.endDate) {
         const start = new Date(show.startDate);
@@ -94,11 +86,6 @@ export default function EditBooking() {
       updatedDatesNeeded.push({ date, staffIds: [staffId], staffCount: 1, staffIndex });
     }
     setFormData({ ...formData, datesNeeded: updatedDatesNeeded });
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
   };
 
   const handleAddStaffSlot = (date) => {
@@ -168,22 +155,8 @@ export default function EditBooking() {
   // Memoize form validation result to prevent infinite re-renders
   const isFormValid = useMemo(() => {
     if (!formData) return false;
-    return formData.clientId && formData.showId && (formData.datesNeeded?.length > 0);
-  }, [formData?.clientId, formData?.showId, formData?.datesNeeded?.length]);
-
-  const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this booking? This action cannot be undone.')) {
-      try {
-        setDeleting(true);
-        await deleteDoc(doc(db, 'bookings', bookingId));
-        router.push('/bookings');
-      } catch (error) {
-        console.error('Error deleting booking:', error);
-        setDeleting(false);
-        alert('Failed to delete booking. Please try again.');
-      }
-    }
-  };
+    return true; // We're only managing staff assignments now, not validating other fields
+  }, [formData]);
 
   if (loading || !formData) {
     return (
@@ -213,23 +186,10 @@ export default function EditBooking() {
                 </Button>
               </Link>
               <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-500">
-                Edit Booking
+                Staff Assignment
               </h1>
             </div>
             <div className="flex items-center gap-2">
-              <Button 
-                variant="danger-outline" 
-                size="sm"
-                onClick={handleDelete}
-                disabled={deleting}
-                className="flex items-center"
-              >
-                {deleting ? (
-                  <span className="animate-spin h-3 w-3 border-2 border-red-600 border-t-transparent rounded-full" />
-                ) : (
-                  <TrashIcon className="h-3.5 w-3.5" />
-                )}
-              </Button>
               <Link href={`/bookings/${bookingId}`}>
                 <Button variant="white" size="sm">Cancel</Button>
               </Link>
@@ -276,25 +236,11 @@ export default function EditBooking() {
               </Button>
             </Link>
             <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-500">
-              Edit Booking
+              Staff Assignment
             </h1>
           </div>
           
           <div className="flex space-x-3">
-            <Button
-              variant="danger-outline"
-              size="sm"
-              onClick={handleDelete}
-              disabled={deleting}
-              className="flex items-center"
-            >
-              {deleting ? (
-                <span className="animate-spin h-4 w-4 border-2 border-red-600 border-t-transparent rounded-full mr-1.5" />
-              ) : (
-                <TrashIcon className="h-4 w-4 mr-1.5" />
-              )}
-              Delete
-            </Button>
             <Link href={`/bookings/${bookingId}`}>
               <Button variant="white" size="sm">
                 Cancel
@@ -302,10 +248,10 @@ export default function EditBooking() {
             </Link>
             <Button
               type="submit"
-              form="booking-form"
+              form="staff-form"
               variant="primary"
               size="sm"
-              disabled={!isFormValid || saving}
+              disabled={saving}
               className="flex items-center"
             >
               {saving ? (
@@ -313,7 +259,7 @@ export default function EditBooking() {
               ) : (
                 <CheckCircleIcon className="h-4 w-4 mr-1.5" />
               )}
-              Save Changes
+              Save Assignments
             </Button>
           </div>
         </div>
@@ -324,7 +270,7 @@ export default function EditBooking() {
             <div className="flex flex-col items-center">
               <div className="flex items-center text-indigo-600 mb-1">
                 <CalendarIcon className="h-5 w-5 mr-1" /> 
-                <span className="text-sm font-medium">Dates Selected</span>
+                <span className="text-sm font-medium">Dates</span>
               </div>
               <span className="text-2xl font-bold">{formData.datesNeeded?.length || 0}</span>
             </div>
@@ -347,157 +293,50 @@ export default function EditBooking() {
           </div>
         </div>
         
-        <form id="booking-form" onSubmit={(e) => {
-          e.preventDefault();
-          // Run validation check on submit (not during render)
-          const errors = {};
-          if (!formData.clientId) errors.clientId = 'Please select a client';
-          if (!formData.showId) errors.showId = 'Please select a show';
-          if (!formData.datesNeeded || formData.datesNeeded.length === 0) {
-            errors.dates = 'Please select at least one date';
-          }
+        {/* Booking Info Card */}
+        <div className="bg-white rounded-xl shadow-sm p-4 mb-5 border border-secondary-200">
+          <div className="flex items-center mb-3">
+            <InformationCircleIcon className="h-5 w-5 text-primary-600 mr-2" />
+            <h3 className="font-medium text-base text-secondary-900">Booking Information</h3>
+          </div>
           
-          setFormErrors(errors);
-          
-          if (Object.keys(errors).length === 0) {
-            setSaving(true);
-            updateBooking(bookingId, { ...formData, status })
-              .then(() => router.push(`/bookings/${bookingId}`))
-              .catch(err => {
-                console.error('Failed to update booking:', err);
-                setSaving(false);
-                alert('Failed to update booking. Please try again.');
-              });
-          }
-        }} className="space-y-6">
-        
-        {/* Client & Show Selection */}
-        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 space-y-4 sm:space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            {/* Client selection */}
-            <div>
-              <label htmlFor="clientId" className="block text-sm font-medium text-secondary-700 mb-1">
-                Client <span className="text-red-500">*</span>
-              </label>
-              <div className="relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <BuildingOffice2Icon className="h-5 w-5 text-secondary-400" aria-hidden="true" />
-                </div>
-                <select 
-                  id="clientId" 
-                  name="clientId" 
-                  value={formData.clientId || ''} 
-                  onChange={handleInputChange}
-                  className={`pl-10 block w-full rounded-md shadow-sm sm:text-sm ${
-                    formErrors.clientId 
-                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
-                      : 'border-secondary-300 focus:border-primary-500 focus:ring-primary-500'
-                  }`}
-                >
-                  <option value="">Select a client</option>
-                  {clients.map(client => (
-                    <option key={client.id} value={client.id}>{client.name}</option>
-                  ))}
-                </select>
-                {formErrors.clientId && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.clientId}</p>
-                )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex items-start">
+              <BuildingOffice2Icon className="h-5 w-5 text-secondary-500 flex-shrink-0 mt-0.5 mr-2" />
+              <div>
+                <p className="text-xs text-secondary-500 mb-0.5">Client</p>
+                <p className="text-sm font-medium">{selectedClient?.name || 'Unknown Client'}</p>
               </div>
             </div>
             
-            {/* Show selection */}
-            <div>
-              <label htmlFor="showId" className="block text-sm font-medium text-secondary-700 mb-1">
-                Show <span className="text-red-500">*</span>
-              </label>
-              <div className="relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <CalendarIcon className="h-5 w-5 text-secondary-400" aria-hidden="true" />
-                </div>
-                <select 
-                  id="showId" 
-                  name="showId" 
-                  value={formData.showId || ''} 
-                  onChange={handleInputChange}
-                  className={`pl-10 block w-full rounded-md shadow-sm sm:text-sm ${
-                    formErrors.showId 
-                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
-                      : 'border-secondary-300 focus:border-primary-500 focus:ring-primary-500'
-                  }`}
-                >
-                  <option value="">Select a show</option>
-                  {shows.map(show => (
-                    <option key={show.id} value={show.id}>
-                      {show.name} ({formatDate(show.startDate)} - {formatDate(show.endDate)})
-                    </option>
-                  ))}
-                </select>
-                {formErrors.showId && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.showId}</p>
-                )}
+            <div className="flex items-start">
+              <CalendarIcon className="h-5 w-5 text-secondary-500 flex-shrink-0 mt-0.5 mr-2" />
+              <div>
+                <p className="text-xs text-secondary-500 mb-0.5">Show</p>
+                <p className="text-sm font-medium">{selectedShow?.name || 'Unknown Show'}</p>
               </div>
             </div>
           </div>
-          
-          {/* Status Selection */}
-          <div>
-            <label className="block text-sm font-medium text-secondary-700 mb-2">
-              Status
-            </label>
-            <div className="flex flex-wrap gap-3">
-              {['pending', 'confirmed', 'cancelled'].map(statusValue => (
-                <label key={statusValue} className={`
-                  flex items-center px-4 py-2 rounded-full border transition-all cursor-pointer
-                  ${status === statusValue ? 
-                    (statusValue === 'pending' ? 'bg-amber-50 border-amber-300 text-amber-700' : 
-                     statusValue === 'confirmed' ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 
-                     'bg-red-50 border-red-300 text-red-700') : 
-                    'bg-white border-secondary-200 text-secondary-700 hover:bg-secondary-50'}
-                `}>
-                  <input
-                    type="radio"
-                    name="status"
-                    value={statusValue}
-                    checked={status === statusValue}
-                    onChange={() => setStatus(statusValue)}
-                    className="sr-only"
-                  />
-                  <span className="capitalize">{statusValue}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-          
-          {/* Notes */}
-          <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-secondary-700 mb-1">
-              Notes
-            </label>
-            <textarea
-              id="notes"
-              name="notes"
-              rows="3"
-              value={formData.notes || ''}
-              onChange={handleInputChange}
-              className="block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-              placeholder="Add any special instructions or notes about this booking"
-            ></textarea>
-          </div>
-          
-          {/* Validation issues for shows */}
-          {formData.showId && showDateRange.length === 0 && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-4 rounded-md">
-              No valid dates found for this show. Check show start/end date format.
-            </div>
-          )}
         </div>
+        
+        <form id="staff-form" onSubmit={(e) => {
+          e.preventDefault();
+          setSaving(true);
+          updateBooking(bookingId, { ...formData })
+            .then(() => router.push(`/bookings/${bookingId}`))
+            .catch(err => {
+              console.error('Failed to update staff assignments:', err);
+              setSaving(false);
+              alert('Failed to update staff assignments. Please try again.');
+            });
+        }} className="space-y-6">
         
         {/* Staff Assignment */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-secondary-200">
           <div className="p-4 border-b border-secondary-200 bg-secondary-50 flex items-center justify-between">
             <div className="flex items-center">
               <UserGroupIcon className="h-5 w-5 text-primary-600 mr-2" />
-              <h3 className="font-medium text-secondary-900">Staff Assignment</h3>
+              <h3 className="font-medium text-secondary-900">Assign Staff to Dates</h3>
             </div>
             <span className="text-xs bg-primary-100 text-primary-800 px-2 py-1 rounded-full">
               {sortedDatesNeeded.length} date{sortedDatesNeeded.length !== 1 ? 's' : ''}
@@ -513,7 +352,7 @@ export default function EditBooking() {
                   
                   return (
                     <div key={date} className={`${isComplete ? 'bg-green-50 border-green-200' : 'bg-secondary-50 border-secondary-200'} rounded-lg p-3 border`}>
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center">
                           <ClockIcon className="h-4 w-4 text-primary-600 mr-1.5" />
                           <span className="text-xs sm:text-sm font-medium line-clamp-1">
@@ -548,7 +387,7 @@ export default function EditBooking() {
                         </span>
                       </div>
                       
-                      <div className="space-y-2 ml-6">
+                      <div className="space-y-3 ml-6">
                         {/* Render a dropdown for each staff needed */}
                         {Array.from({ length: staffCount }).map((_, i) => {
                           const availableStaff = getAvailableStaffForDate(date, i);
@@ -562,7 +401,7 @@ export default function EditBooking() {
                                   <UserGroupIcon className={`h-3.5 w-3.5 ${hasStaffAssigned ? 'text-green-500' : 'text-secondary-400'}`} />
                                 </div>
                                 <select
-                                  className={`pl-7 block w-full text-xs rounded-md border shadow-sm focus:border-primary-500 focus:ring-primary-500 transition-colors ${
+                                  className={`pl-7 block w-full text-sm rounded-md border shadow-sm focus:border-primary-500 focus:ring-primary-500 transition-colors ${
                                     hasStaffAssigned 
                                       ? 'border-green-300 bg-green-50 text-green-900' 
                                       : 'border-secondary-300'
@@ -599,11 +438,11 @@ export default function EditBooking() {
                         {/* Add staff button */}
                         <button
                           type="button"
-                          className="mt-1 text-xs flex items-center text-primary-600 hover:text-primary-800"
+                          className="text-sm flex items-center text-primary-600 hover:text-primary-800 bg-white px-3 py-1.5 rounded-md border border-primary-200 shadow-sm"
                           onClick={() => handleAddStaffSlot(date)}
                         >
-                          <PlusIcon className="h-3.5 w-3.5 mr-1" />
-                          Add staff
+                          <PlusIcon className="h-4 w-4 mr-1" />
+                          Add staff position
                         </button>
                       </div>
                     </div>
@@ -614,8 +453,8 @@ export default function EditBooking() {
           ) : (
             <div className="p-8 text-center">
               <CalendarIcon className="w-12 h-12 mx-auto text-secondary-300 mb-3" />
-              <p className="text-secondary-500">No dates selected</p>
-              <p className="text-secondary-400 text-sm">Use the schedule to adjust booking days</p>
+              <p className="text-secondary-500">No dates available for this booking</p>
+              <p className="text-secondary-400 text-sm">Please contact an administrator to add dates</p>
             </div>
           )}
         </div>
@@ -625,7 +464,7 @@ export default function EditBooking() {
           <Button
             type="submit"
             variant="primary"
-            disabled={!isFormValid || saving}
+            disabled={saving}
             className="w-full flex items-center justify-center py-3.5 text-base font-medium rounded-lg"
           >
             {saving ? (
@@ -633,7 +472,7 @@ export default function EditBooking() {
             ) : (
               <CheckCircleIcon className="h-5 w-5 mr-2" />
             )}
-            Save Changes
+            Save Assignments
           </Button>
         </div>
         
