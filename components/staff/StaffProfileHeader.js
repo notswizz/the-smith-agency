@@ -9,6 +9,7 @@ import {
   PencilSquareIcon,
   AcademicCapIcon,
   IdentificationIcon,
+  MapPinIcon,
 } from '@heroicons/react/24/outline';
 import Button from '@/components/ui/Button';
 
@@ -106,50 +107,74 @@ export default function StaffProfileHeader({ staffMember, totalDaysWorked, booki
                 {name}
               </h2>
               
-              {staffMember.college && (
-                <div className="mt-0.5 sm:mt-1 flex items-center justify-center md:justify-start">
-                  <AcademicCapIcon className="h-4 w-4 text-secondary-500 mr-1" />
-                  <span className="text-xs sm:text-sm text-secondary-600">{staffMember.college}</span>
-                </div>
-              )}
+              <div className="mt-1 sm:mt-2 flex flex-wrap items-center justify-center md:justify-start gap-2">
+                {staffMember.college && (
+                  <div className="flex items-center text-secondary-600 bg-secondary-50 px-2 py-1 rounded-md">
+                    <AcademicCapIcon className="h-3.5 w-3.5 text-secondary-500 mr-1" />
+                    <span className="text-xs">{staffMember.college}</span>
+                  </div>
+                )}
+                
+                {staffMember.location && (
+                  <div className="flex items-center text-secondary-600 bg-secondary-50 px-2 py-1 rounded-md">
+                    <MapPinIcon className="h-3.5 w-3.5 text-secondary-500 mr-1" />
+                    <span className="text-xs">{staffMember.location}</span>
+                  </div>
+                )}
+              </div>
               
-              {/* Contact information - Redesigned as buttons */}
-              <div className="mt-3 sm:mt-4 flex flex-wrap gap-2 sm:gap-3 justify-center md:justify-start">
+              {/* Contact information - Enhanced design */}
+              <div className="mt-3 sm:mt-4 flex flex-wrap gap-2 justify-center md:justify-start">
                 {staffMember.email && (
-                    <a
-                      href={`mailto:${staffMember.email}`}
-                      className="flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary-500 text-white hover:bg-primary-600 transition-all shadow-md hover:shadow-lg text-xs sm:text-sm font-medium"
-                    >
-                      <EnvelopeIcon className="h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1 sm:mr-2" />
-                      <span className="hidden sm:inline">{staffMember.email}</span>
+                  <a
+                    href={`mailto:${staffMember.email}`}
+                    className="group relative flex items-center px-3.5 py-2 rounded-full bg-gradient-to-r from-blue-500/90 to-indigo-600/90 text-white hover:from-blue-500 hover:to-indigo-600 transition-all shadow-sm hover:shadow-md text-sm font-medium overflow-hidden"
+                  >
+                    <span className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                    <span className="relative flex items-center">
+                      <span className="flex items-center justify-center bg-white/20 rounded-full w-6 h-6 mr-2">
+                        <EnvelopeIcon className="h-3.5 w-3.5" />
+                      </span>
+                      <span className="hidden sm:inline max-w-[180px] truncate">{staffMember.email}</span>
                       <span className="sm:hidden">Email</span>
-                    </a>
+                    </span>
+                  </a>
                 )}
                 
                 {staffMember.phone && (
-                    <a
-                      href={`tel:${staffMember.phone}`}
-                      className="flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-green-500 text-white hover:bg-green-600 transition-all shadow-md hover:shadow-lg text-xs sm:text-sm font-medium"
-                    >
-                      <PhoneIcon className="h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1 sm:mr-2" />
+                  <a
+                    href={`tel:${staffMember.phone}`}
+                    className="group relative flex items-center px-3.5 py-2 rounded-full bg-gradient-to-r from-green-500/90 to-teal-500/90 text-white hover:from-green-500 hover:to-teal-500 transition-all shadow-sm hover:shadow-md text-sm font-medium overflow-hidden"
+                  >
+                    <span className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                    <span className="relative flex items-center">
+                      <span className="flex items-center justify-center bg-white/20 rounded-full w-6 h-6 mr-2">
+                        <PhoneIcon className="h-3.5 w-3.5" />
+                      </span>
                       <span className="hidden sm:inline">{staffMember.phone}</span>
                       <span className="sm:hidden">Call</span>
-                    </a>
+                    </span>
+                  </a>
                 )}
                 
                 {staffMember.instagram && (
-                    <a
-                      href={`https://instagram.com/${staffMember.instagram.replace('@', '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-pink-500 to-pink-600 text-white hover:from-pink-600 hover:to-pink-700 transition-all shadow-md hover:shadow-lg text-xs sm:text-sm font-medium"
-                    >
-                      <svg className="h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1 sm:mr-2" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                      </svg>
+                  <a
+                    href={`https://instagram.com/${staffMember.instagram.replace('@', '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group relative flex items-center px-3.5 py-2 rounded-full bg-gradient-to-r from-purple-500/90 to-pink-500/90 text-white hover:from-purple-500 hover:to-pink-500 transition-all shadow-sm hover:shadow-md text-sm font-medium overflow-hidden"
+                  >
+                    <span className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                    <span className="relative flex items-center">
+                      <span className="flex items-center justify-center bg-white/20 rounded-full w-6 h-6 mr-2">
+                        <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                        </svg>
+                      </span>
                       <span className="hidden sm:inline">{staffMember.instagram}</span>
                       <span className="sm:hidden">Instagram</span>
-                    </a>
+                    </span>
+                  </a>
                 )}
               </div>
             </div>

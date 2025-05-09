@@ -158,6 +158,26 @@ export default function StaffAssignment() {
     return true; // We're only managing staff assignments now, not validating other fields
   }, [formData]);
 
+  const handleStatusToggle = () => {
+    const newStatus = formData.status === 'pending' ? 'confirmed' : 'pending';
+    setFormData({ ...formData, status: newStatus });
+  };
+
+  const getStatusStyles = (status) => {
+    switch(status) {
+      case 'confirmed': return { 
+        badge: 'bg-emerald-100 text-emerald-700 border-emerald-200', 
+        icon: CheckCircleIcon,
+        toggle: 'bg-emerald-500'
+      };
+      case 'pending': default: return { 
+        badge: 'bg-amber-100 text-amber-700 border-amber-200', 
+        icon: ClockIcon,
+        toggle: 'bg-secondary-300'
+      };
+    }
+  };
+
   if (loading || !formData) {
     return (
       <DashboardLayout>
@@ -171,6 +191,8 @@ export default function StaffAssignment() {
   // Get the selected client and show for display
   const selectedClient = clients.find(c => c.id === formData.clientId);
   const selectedShow = shows.find(s => s.id === formData.showId);
+  const currentStatusStyles = getStatusStyles(formData.status);
+  const StatusIcon = currentStatusStyles.icon;
 
   return (
     <DashboardLayout>
@@ -198,6 +220,27 @@ export default function StaffAssignment() {
           
           {/* Mobile stats summary */}
           <div className="bg-white rounded-xl overflow-hidden shadow-sm mb-4">
+            {/* Status Toggle Mobile */}
+            <div className="p-3 border-b border-secondary-100 flex justify-between items-center">
+              <div className="flex items-center">
+                <StatusIcon className="h-4 w-4 mr-2 text-secondary-600" />
+                <span className="text-sm font-medium">Status</span>
+              </div>
+              <button 
+                onClick={handleStatusToggle}
+                className="relative inline-flex h-6 w-11 items-center rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
+                type="button"
+                aria-pressed={formData.status === 'confirmed'}
+              >
+                <span className="sr-only">Toggle status</span>
+                <span 
+                  className={`${formData.status === 'confirmed' ? 'bg-emerald-500' : 'bg-secondary-300'} inline-block h-6 w-11 rounded-full transition`}
+                ></span>
+                <span 
+                  className={`${formData.status === 'confirmed' ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                ></span>
+              </button>
+            </div>
             <div className="grid grid-cols-3 divide-x divide-secondary-100">
               <div className="flex flex-col items-center py-3">
                 <div className="flex items-center text-indigo-600 mb-1">
@@ -266,7 +309,34 @@ export default function StaffAssignment() {
         
         {/* Desktop Stats summary */}
         <div className="hidden sm:block bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-4 mb-6 shadow-sm">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
+            {/* Status Toggle Desktop */}
+            <div className="flex flex-col items-center">
+              <div className="flex items-center text-indigo-600 mb-1">
+                <StatusIcon className="h-5 w-5 mr-1" />
+                <span className="text-sm font-medium">Status</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <span className={`text-sm font-medium ${formData.status === 'confirmed' ? 'text-emerald-700' : 'text-amber-700'}`}>
+                  {formData.status === 'confirmed' ? 'Confirmed' : 'Pending'}
+                </span>
+                <button 
+                  onClick={handleStatusToggle}
+                  className="relative inline-flex h-6 w-11 items-center rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
+                  type="button"
+                  aria-pressed={formData.status === 'confirmed'}
+                >
+                  <span className="sr-only">Toggle status</span>
+                  <span 
+                    className={`${formData.status === 'confirmed' ? 'bg-emerald-500' : 'bg-secondary-300'} inline-block h-6 w-11 rounded-full transition`}
+                  ></span>
+                  <span 
+                    className={`${formData.status === 'confirmed' ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                  ></span>
+                </button>
+              </div>
+            </div>
+          
             <div className="flex flex-col items-center">
               <div className="flex items-center text-indigo-600 mb-1">
                 <CalendarIcon className="h-5 w-5 mr-1" /> 
@@ -300,7 +370,7 @@ export default function StaffAssignment() {
             <h3 className="font-medium text-base text-secondary-900">Booking Information</h3>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="flex items-start">
               <BuildingOffice2Icon className="h-5 w-5 text-secondary-500 flex-shrink-0 mt-0.5 mr-2" />
               <div>
@@ -314,6 +384,18 @@ export default function StaffAssignment() {
               <div>
                 <p className="text-xs text-secondary-500 mb-0.5">Show</p>
                 <p className="text-sm font-medium">{selectedShow?.name || 'Unknown Show'}</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start">
+              <StatusIcon className="h-5 w-5 text-secondary-500 flex-shrink-0 mt-0.5 mr-2" />
+              <div>
+                <p className="text-xs text-secondary-500 mb-0.5">Status</p>
+                <div className="flex items-center space-x-2">
+                  <div className={`px-2.5 py-1 rounded-full text-xs font-medium ${currentStatusStyles.badge}`}>
+                    {formData.status === 'confirmed' ? 'Confirmed' : 'Pending'}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
