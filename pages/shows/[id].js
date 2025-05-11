@@ -18,11 +18,13 @@ import {
   MapPinIcon,
   TagIcon
 } from '@heroicons/react/24/outline';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function ShowProfile() {
   const router = useRouter();
   const { id } = router.query;
-  const { shows, staff, bookings, deleteShow } = useStore();
+  const { shows, staff, bookings, deleteShow, clients, updateShow } = useStore();
 
   const [isEditing, setIsEditing] = useState(false);
   const [showData, setShowData] = useState(null);
@@ -72,14 +74,40 @@ export default function ShowProfile() {
     });
   };
 
+  // Helper to get client name for a booking
+  const getClientName = (booking) => {
+    if (booking.clientName) return booking.clientName;
+    if (booking.clientId && Array.isArray(clients)) {
+      const client = clients.find(c => c.id === booking.clientId);
+      if (client) return client.name;
+    }
+    return 'Client';
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    // In a real app, you would update the database here
+    // Save changes to the show (simulate updateShow if available)
+    if (updateShow && typeof updateShow === 'function') {
+      updateShow(id, formData);
+    }
     setShowData({
       ...showData,
       ...formData
     });
     setIsEditing(false);
+  };
+
+  // PDF print handler
+  const handlePrintPDF = async () => {
+    const input = document.getElementById('bookings-pdf-section');
+    if (!input) return;
+    const canvas = await html2canvas(input, { scale: 2 });
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save(`${showData.name}_bookings.pdf`);
   };
 
   if (loading) {
@@ -126,7 +154,7 @@ export default function ShowProfile() {
                   Back
                 </Button>
               </Link>
-              <h1 className="text-2xl font-bold text-secondary-900">{showData.name}</h1>
+              <h1 className="text-3xl font-extrabold text-primary-800 ml-2 drop-shadow-sm">{showData.name}</h1>
             </div>
             <div className="flex space-x-3">
               {isEditing ? (
@@ -160,264 +188,146 @@ export default function ShowProfile() {
             </div>
           </div>
 
-          {/* Show information */}
-          <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-            {/* Show header with summary information */}
-            <div className="bg-gradient-to-r from-primary-100 to-secondary-100 p-6 border-b border-secondary-200">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm text-secondary-600">
-                    <CalendarIcon className="h-4 w-4 mr-1" />
+          {/* Improved Show Profile Section */}
+          <div className="bg-gradient-to-r from-primary-50 to-secondary-100 shadow rounded-xl p-8 flex flex-col md:flex-row md:items-center md:justify-between border border-secondary-200">
+            <div className="space-y-2 flex-1">
+              {isEditing ? (
+                <form className="space-y-4" onSubmit={handleSubmit}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-medium text-secondary-700">Show Name</label>
+                      <input type="text" id="name" name="name" value={formData.name} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm" />
+                    </div>
+                    <div>
+                      <label htmlFor="type" className="block text-sm font-medium text-secondary-700">Show Type</label>
+                      <input type="text" id="type" name="type" value={formData.type} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm" />
+                    </div>
+                    <div>
+                      <label htmlFor="season" className="block text-sm font-medium text-secondary-700">Season</label>
+                      <input type="text" id="season" name="season" value={formData.season} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm" />
+                    </div>
+                    <div>
+                      <label htmlFor="location" className="block text-sm font-medium text-secondary-700">Location</label>
+                      <input type="text" id="location" name="location" value={formData.location} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm" />
+                    </div>
+                    <div>
+                      <label htmlFor="startDate" className="block text-sm font-medium text-secondary-700">Start Date</label>
+                      <input type="date" id="startDate" name="startDate" value={formData.startDate} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm" />
+                    </div>
+                    <div>
+                      <label htmlFor="endDate" className="block text-sm font-medium text-secondary-700">End Date</label>
+                      <input type="date" id="endDate" name="endDate" value={formData.endDate} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm" />
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="description" className="block text-sm font-medium text-secondary-700">Description</label>
+                    <textarea id="description" name="description" rows="3" value={formData.description} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"></textarea>
+                  </div>
+                  <div className="flex space-x-2 mt-4">
+                    <Button variant="secondary" size="sm" type="button" onClick={() => setIsEditing(false)}>Cancel</Button>
+                    <Button variant="primary" size="sm" type="submit">Save Changes</Button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <div className="flex items-center text-lg text-secondary-700 font-semibold">
+                    <CalendarIcon className="h-5 w-5 mr-2 text-primary-500" />
                     <span>{formatDate(showData.startDate)} - {formatDate(showData.endDate)}</span>
                   </div>
-                  <div className="flex items-center text-sm text-secondary-600">
-                    <MapPinIcon className="h-4 w-4 mr-1" />
+                  <div className="flex items-center text-md text-secondary-700">
+                    <MapPinIcon className="h-5 w-5 mr-2 text-primary-400" />
                     <span>{showData.location}</span>
                   </div>
-                  <div className="flex items-center text-sm text-secondary-600">
-                    <TagIcon className="h-4 w-4 mr-1" />
+                  <div className="flex items-center text-md text-secondary-700">
+                    <TagIcon className="h-5 w-5 mr-2 text-secondary-400" />
                     <span>Season: {showData.season} | Type: {showData.type}</span>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Tabs navigation */}
-            <div className="border-b border-secondary-200">
-              <nav className="flex -mb-px">
-                <button
-                  onClick={() => setActiveTab('details')}
-                  className={`py-4 px-6 text-sm font-medium ${
-                    activeTab === 'details'
-                      ? 'border-b-2 border-primary-500 text-primary-600'
-                      : 'text-secondary-500 hover:text-secondary-700 hover:border-secondary-300'
-                  }`}
-                >
-                  Show Details
-                </button>
-                <button
-                  onClick={() => setActiveTab('bookings')}
-                  className={`py-4 px-6 text-sm font-medium ${
-                    activeTab === 'bookings'
-                      ? 'border-b-2 border-primary-500 text-primary-600'
-                      : 'text-secondary-500 hover:text-secondary-700 hover:border-secondary-300'
-                  }`}
-                >
-                  Bookings ({showBookings.length})
-                </button>
-              </nav>
-            </div>
-
-            {/* Tab content */}
-            <div className="p-6">
-              {activeTab === 'details' && (
-                <>
-                  {isEditing ? (
-                    <form className="space-y-4">
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <div>
-                          <label htmlFor="name" className="block text-sm font-medium text-secondary-700">
-                            Show Name
-                          </label>
-                          <input
-                            type="text"
-                            id="name"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="type" className="block text-sm font-medium text-secondary-700">
-                            Show Type
-                          </label>
-                          <input
-                            type="text"
-                            id="type"
-                            name="type"
-                            value={formData.type}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="season" className="block text-sm font-medium text-secondary-700">
-                            Season
-                          </label>
-                          <input
-                            type="text"
-                            id="season"
-                            name="season"
-                            value={formData.season}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="location" className="block text-sm font-medium text-secondary-700">
-                            Location
-                          </label>
-                          <input
-                            type="text"
-                            id="location"
-                            name="location"
-                            value={formData.location}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="startDate" className="block text-sm font-medium text-secondary-700">
-                            Start Date
-                          </label>
-                          <input
-                            type="date"
-                            id="startDate"
-                            name="startDate"
-                            value={formData.startDate}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="endDate" className="block text-sm font-medium text-secondary-700">
-                            End Date
-                          </label>
-                          <input
-                            type="date"
-                            id="endDate"
-                            name="endDate"
-                            value={formData.endDate}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-secondary-700">
-                          Description
-                        </label>
-                        <textarea
-                          id="description"
-                          name="description"
-                          rows="4"
-                          value={formData.description}
-                          onChange={handleInputChange}
-                          className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                        ></textarea>
-                      </div>
-                    </form>
-                  ) : (
-                    <div className="space-y-4">
-                      {showData.description && (
-                        <div>
-                          <h3 className="text-sm font-medium text-secondary-700">Description</h3>
-                          <p className="mt-1 text-sm text-secondary-600">{showData.description}</p>
-                        </div>
-                      )}
-                    </div>
+                  {showData.description && (
+                    <div className="mt-2 text-secondary-600 text-base italic">{showData.description}</div>
                   )}
                 </>
               )}
-
-              {activeTab === 'bookings' && (
-                <div className="space-y-4">
-                  <div className="mb-4 flex justify-between items-center">
-                    <div>
-                      <h3 className="text-lg font-medium text-secondary-900">Staff Bookings</h3>
-                      <p className="text-sm text-secondary-600">
-                        {showBookings.length} staff members assigned to this show
-                      </p>
-                    </div>
-                    <Link href={`/bookings/new?showId=${id}`}>
-                      <Button variant="primary" size="sm" className="flex items-center">
-                        <span className="h-4 w-4 mr-1">+</span>
-                        Assign Staff
-                      </Button>
-                    </Link>
-                  </div>
-
-                  {showBookings.length === 0 ? (
-                    <div className="text-center p-6 bg-secondary-50 rounded-lg">
-                      <UserIcon className="h-8 w-8 mx-auto text-secondary-400" />
-                      <h3 className="mt-2 text-sm font-medium text-secondary-900">No staff assigned</h3>
-                      <p className="mt-1 text-sm text-secondary-600">
-                        Get started by assigning staff members to this show.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {showBookings.map((booking) => {
-                        const staffMember = staff.find(s => s.id === booking.staffId);
-                        return (
-                          <div key={booking.id} className="bg-white rounded-lg shadow border border-secondary-200 overflow-hidden hover:shadow-md transition-shadow">
-                            <div className={`h-1.5 w-full ${
-                              booking.status === 'confirmed' 
-                                ? 'bg-green-500' 
-                                : booking.status === 'pending' 
-                                  ? 'bg-yellow-500'
-                                  : 'bg-red-500'
-                            }`}></div>
-                            <div className="p-4">
-                              <div className="flex items-start justify-between">
-                                {staffMember ? (
-                                  <div className="flex items-center">
-                                    <div className="flex-shrink-0 h-10 w-10">
-                                      <div className="h-10 w-10 rounded-full bg-secondary-200 flex items-center justify-center text-secondary-600">
-                                        {staffMember.firstName.charAt(0)}{staffMember.lastName.charAt(0)}
-                                      </div>
-                                    </div>
-                                    <div className="ml-3">
-                                      <div className="text-sm font-medium text-secondary-900">
-                                        <Link href={`/staff/${staffMember.id}`} className="hover:underline">
-                                          {staffMember.firstName} {staffMember.lastName}
-                                        </Link>
-                                      </div>
-                                      <div className="text-xs text-secondary-500">
-                                        {staffMember.email}
-                                      </div>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <span className="text-secondary-500">Staff not found</span>
-                                )}
-                                <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                  booking.status === 'confirmed' 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : booking.status === 'pending' 
-                                      ? 'bg-yellow-100 text-yellow-800'
-                                      : 'bg-red-100 text-red-800'
-                                }`}>
-                                  {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                                </span>
-                              </div>
-                              
-                              <div className="mt-3 space-y-2">
-                                <div className="text-sm">
-                                  <span className="text-secondary-500">Role:</span> 
-                                  <span className="font-medium text-secondary-900 ml-1">{booking.role}</span>
-                                </div>
-                                <div className="text-sm">
-                                  <span className="text-secondary-500">Assigned:</span>
-                                  <span className="text-secondary-900 ml-1">{formatDate(booking.assignedDate)}</span>
-                                </div>
-                              </div>
-                              
-                              <div className="mt-4 flex justify-end">
-                                <Link href={`/bookings/${booking.id}`} className="text-primary-600 hover:text-primary-900 text-sm">
-                                  View Details
-                                </Link>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
+            <div className="mt-6 md:mt-0 flex flex-col items-end space-y-2">
+              <Button variant="outline" size="sm" onClick={handlePrintPDF}>
+                Print Bookings PDF
+              </Button>
+            </div>
+          </div>
+
+          {/* Bookings Section - always visible, compact view */}
+          <div id="bookings-pdf-section" className="bg-white shadow-lg rounded-xl p-6 border border-secondary-200">
+            <div className="mb-4 flex justify-between items-center">
+              <div>
+                <h3 className="text-2xl font-bold text-secondary-900">Bookings</h3>
+                <p className="text-md text-secondary-600">
+                  {showBookings.length} booking{showBookings.length !== 1 ? 's' : ''} for this show
+                </p>
+              </div>
+            </div>
+            {showBookings.length === 0 ? (
+              <div className="text-center p-6 bg-secondary-50 rounded-lg">
+                <UserIcon className="h-8 w-8 mx-auto text-secondary-400" />
+                <h3 className="mt-2 text-lg font-medium text-secondary-900">No bookings yet</h3>
+                <p className="mt-1 text-md text-secondary-600">
+                  Get started by assigning staff members to this show.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {showBookings.map((booking) => {
+                  // Calculate total staff assigned and total days
+                  const totalDays = Array.isArray(booking.datesNeeded) ? booking.datesNeeded.length : 0;
+                  const staffSet = new Set();
+                  if (Array.isArray(booking.datesNeeded)) {
+                    booking.datesNeeded.forEach(date => {
+                      if (Array.isArray(date.staffIds)) {
+                        date.staffIds.filter(Boolean).forEach(id => staffSet.add(id));
+                      }
+                    });
+                  }
+                  const totalStaff = staffSet.size;
+                  // List unique staff assigned (not per day)
+                  const staffList = Array.from(staffSet).map(staffId => {
+                    const staffMember = staff.find(s => s.id === staffId);
+                    return staffMember ? (staffMember.firstName ? `${staffMember.firstName} ${staffMember.lastName}` : staffMember.name || 'Staff') : 'Staff';
+                  });
+                  return (
+                    <div key={booking.id} className="bg-gradient-to-br from-primary-50 to-secondary-50 rounded-lg shadow border border-secondary-200 hover:shadow-lg transition-shadow p-4 flex flex-col h-full">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-lg font-semibold text-primary-700">{getClientName(booking)}</div>
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          booking.status === 'confirmed' 
+                            ? 'bg-green-100 text-green-800' 
+                            : booking.status === 'pending' 
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                        }`}>
+                          {booking.status ? booking.status.charAt(0).toUpperCase() + booking.status.slice(1) : 'Pending'}
+                        </span>
+                      </div>
+                      <div className="text-sm text-secondary-700 mb-2">
+                        <span className="font-medium">Notes:</span> {booking.notes || '—'}
+                      </div>
+                      <div className="flex flex-wrap gap-4 mt-2 text-sm text-secondary-700">
+                        <div><span className="font-medium">Total Days:</span> {totalDays}</div>
+                        <div><span className="font-medium">Staff Assigned:</span> {totalStaff}</div>
+                      </div>
+                      {staffList.length > 0 && (
+                        <div className="mt-2 text-xs text-secondary-700">
+                          <span className="font-medium">Staff Working:</span> {staffList.join(', ')}
+                        </div>
+                      )}
+                      <div className="mt-auto flex justify-end pt-4">
+                        <Link href={`/bookings/${booking.id}`} className="text-primary-600 hover:text-primary-900 text-sm font-medium">
+                          View Details
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </DashboardLayout>

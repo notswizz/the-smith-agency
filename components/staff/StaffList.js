@@ -9,6 +9,7 @@ import {
   BriefcaseIcon,
   IdentificationIcon,
   CalendarIcon,
+  StatusOnlineIcon,
 } from '@heroicons/react/24/outline';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -17,7 +18,7 @@ import useStore from '@/lib/hooks/useStore';
 export default function StaffList({ staff = [] }) {
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3 snap-y snap-mandatory overflow-y-auto sm:overflow-visible">
         {staff && staff.map((staffMember) => (
           <StaffCard key={staffMember.id} staffMember={staffMember} />
         ))}
@@ -54,58 +55,94 @@ function StaffCard({ staffMember }) {
     return total;
   }, 0);
 
+  // Calculate availability status
+  const isActivelyWorking = staffBookings.some(booking => {
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    return booking.datesNeeded?.some(date => 
+      date.date === todayStr && 
+      Array.isArray(date.staffIds) && 
+      date.staffIds.includes(staffMember.id)
+    );
+  });
+
   return (
-    <Link href={`/staff/${staffMember.id}`} className="block transform transition-transform duration-300 hover:scale-[1.02]">
-      <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl relative transition-all duration-300 border-b-4 border-pink-500 h-full hover:shadow-[0_8px_30px_rgb(219,39,119,0.2)]">
-        {/* Floating edit button */}
-        <div className="absolute top-2 sm:top-3 right-2 sm:right-3 z-10">
-          <Link href={`/staff/${staffMember.id}/edit`} onClick={(e) => e.stopPropagation()}>
-            <button className="bg-white/90 backdrop-blur-sm p-1.5 sm:p-2 rounded-full text-secondary-600 hover:text-pink-600 hover:bg-white transition-colors shadow-sm">
-              <PencilSquareIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </button>
-          </Link>
+    <Link href={`/staff/${staffMember.id}`} className="block snap-start snap-always">
+      <div className="bg-gradient-to-br from-white to-pink-50 rounded-xl overflow-hidden shadow-md hover:shadow-xl relative transition-all duration-300 border border-pink-100 h-full group hover:translate-y-[-4px]">
+        {/* Decorative top accent */}
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-pink-400 to-pink-500"></div>
+        
+        {/* Status indicator */}
+        <div className="absolute top-3 right-3 z-20">
+          <div className="flex items-center gap-1.5">
+            {isActivelyWorking ? (
+              <span className="flex items-center">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+                <span className="ml-1.5 text-2xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Working Today</span>
+              </span>
+            ) : (
+              <Link href={`/staff/${staffMember.id}/edit`} onClick={(e) => e.stopPropagation()}>
+                <button className="bg-white/80 backdrop-blur-sm p-2 rounded-full text-secondary-600 hover:text-pink-600 hover:shadow-md transition-all duration-200 shadow-sm border border-secondary-100 hover:border-pink-200">
+                  <PencilSquareIcon className="h-4 w-4" />
+                </button>
+              </Link>
+            )}
+          </div>
         </div>
         
-        {/* Days Worked Badge - Show only if days worked > 0 */}
-        {totalDaysWorked > 0 && (
-          <div className="absolute top-2 sm:top-3 left-2 sm:left-3 z-10">
-            <div className="bg-pink-100 text-pink-800 text-2xs sm:text-xs font-bold px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-full flex items-center">
-              <CalendarIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1" /> 
-              {totalDaysWorked}
+        {/* Booking stats - Stacked vertically - Icons only */}
+        <div className="absolute top-3 left-3 z-20 flex flex-col space-y-1.5">
+          {totalDaysWorked > 0 && (
+            <div className="bg-pink-100 text-pink-800 text-xs font-bold px-2 py-1 rounded-full flex items-center shadow-sm">
+              <CalendarIcon className="h-3.5 w-3.5 mr-1" /> 
+              <span>{totalDaysWorked}</span>
             </div>
-          </div>
-        )}
+          )}
+          
+          {staffBookings.length > 0 && (
+            <div className="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded-full flex items-center shadow-sm">
+              <BriefcaseIcon className="h-3.5 w-3.5 mr-1" /> 
+              <span>{staffBookings.length}</span>
+            </div>
+          )}
+        </div>
         
         {/* Card content with profile picture highlight */}
-        <div className="px-4 sm:px-6 pt-6 pb-5 sm:pb-6 relative">
-          {/* Profile circle with image or initials - now with pink border */}
-          <div className="flex flex-col items-center mb-4 sm:mb-5">
-            <div className="h-36 w-36 sm:h-40 sm:w-40 rounded-full bg-white flex items-center justify-center text-2xl sm:text-3xl font-semibold overflow-hidden border-4 border-pink-500 shadow-lg">
-              {profileImage ? (
-                <img 
-                  src={profileImage} 
-                  alt={name}
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.style.display = 'none';
-                    e.target.parentNode.innerHTML = `<span class="text-pink-500">${initials}</span>`;
-                  }}
-                />
-              ) : (
-                <span className="text-pink-500">{initials}</span>
-              )}
+        <div className="px-5 pt-12 pb-6 relative z-10">
+          {/* Profile circle with image or initials */}
+          <div className="flex flex-col items-center mb-5">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-pink-400 to-pink-500 blur-[3px] opacity-60 transform scale-[1.03] group-hover:blur-[4px] group-hover:opacity-70 transition-all duration-300"></div>
+              <div className="h-36 w-36 sm:h-40 sm:w-40 rounded-full bg-white flex items-center justify-center text-2xl sm:text-3xl font-semibold overflow-hidden border-4 border-white shadow-lg relative group-hover:shadow-pink-200 transition-all duration-300">
+                {profileImage ? (
+                  <img 
+                    src={profileImage} 
+                    alt={name}
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.style.display = 'none';
+                      e.target.parentNode.innerHTML = `<span class="bg-gradient-to-r from-pink-500 to-pink-600 text-transparent bg-clip-text">${initials}</span>`;
+                    }}
+                  />
+                ) : (
+                  <span className="bg-gradient-to-r from-pink-500 to-pink-600 text-transparent bg-clip-text">{initials}</span>
+                )}
+              </div>
             </div>
           </div>
           
           {/* Name and college */}
-          <div className="text-center mb-4 sm:mb-5">
-            <h3 className="text-lg sm:text-xl font-bold text-secondary-900">
+          <div className="text-center mb-5">
+            <h3 className="text-lg sm:text-xl font-extrabold text-secondary-800 tracking-tight group-hover:text-pink-600 transition-colors duration-300">
               {name}
             </h3>
             {staffMember.college && (
-              <div className="mt-1 inline-flex items-center px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-secondary-100 text-secondary-800 text-2xs sm:text-xs font-medium">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-secondary-100 text-secondary-700 text-xs font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1 text-secondary-500" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
                 </svg>
                 {staffMember.college}
@@ -114,15 +151,15 @@ function StaffCard({ staffMember }) {
           </div>
           
           {/* Contact buttons */}
-          <div className="flex justify-center space-x-3 sm:space-x-4">
+          <div className="flex justify-center space-x-4">
             {staffMember.email && (
               <Link 
                 href={`mailto:${staffMember.email}`}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-pink-500 text-white p-2.5 sm:p-3 rounded-full hover:bg-pink-600 transition-colors shadow-md"
+                className="bg-gradient-to-r from-pink-500 to-pink-600 text-white p-3 rounded-full hover:shadow-lg transition-all duration-300 shadow-md transform hover:-translate-y-1 hover:scale-110"
                 title={`Email ${name}`}
               >
-                <EnvelopeIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                <EnvelopeIcon className="h-5 w-5" />
               </Link>
             )}
             
@@ -130,10 +167,10 @@ function StaffCard({ staffMember }) {
               <Link 
                 href={`tel:${staffMember.phone}`}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-green-500 text-white p-2.5 sm:p-3 rounded-full hover:bg-green-600 transition-colors shadow-md"
+                className="bg-gradient-to-r from-green-500 to-green-600 text-white p-3 rounded-full hover:shadow-lg transition-all duration-300 shadow-md transform hover:-translate-y-1 hover:scale-110"
                 title={`Call ${name}`}
               >
-                <PhoneIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                <PhoneIcon className="h-5 w-5" />
               </Link>
             )}
           </div>

@@ -1,21 +1,32 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import DashboardLayout from '@/components/ui/DashboardLayout';
 import ClientList from '@/components/clients/ClientList';
-import ClientFilters from '@/components/clients/ClientFilters';
 import Button from '@/components/ui/Button';
 import useStore from '@/lib/hooks/useStore';
-import { searchClients, filterClientsByCategory, filterClientsByLocation } from '@/utils/filterUtils';
-import { PlusIcon } from '@heroicons/react/24/outline';
+import { searchClients } from '@/utils/filterUtils';
+import { PlusIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 export default function ClientsDirectory() {
   const { clients, getBookingsForClient } = useStore();
-  const [filters, setFilters] = useState({
-    search: '',
-    category: 'all',
-    location: 'all',
-  });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [scrolled, setScrolled] = useState(false);
+
+  // Handle scroll event to add shadow to header
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 10;
+      if (isScrolled !== scrolled) {
+        setScrolled(isScrolled);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [scrolled]);
 
   // Calculate total booking days for each client
   const clientsWithBookingData = useMemo(() => {
@@ -37,41 +48,20 @@ export default function ClientsDirectory() {
     });
   }, [clients, getBookingsForClient]);
 
-  // Get unique categories and locations for filters
-  const categories = useMemo(() => {
-    const uniqueCategories = [...new Set(clients.map(client => client.category))];
-    return uniqueCategories.sort();
-  }, [clients]);
-
-  const locations = useMemo(() => {
-    const uniqueLocations = [...new Set(clients.map(client => client.location))];
-    return uniqueLocations.sort();
-  }, [clients]);
-
-  // Apply filters to clients
+  // Apply search to clients
   const filteredClients = useMemo(() => {
     let result = clientsWithBookingData;
 
     // Apply search filter
-    if (filters.search) {
-      result = searchClients(result, filters.search);
-    }
-
-    // Apply category filter
-    if (filters.category !== 'all') {
-      result = filterClientsByCategory(result, filters.category);
-    }
-
-    // Apply location filter
-    if (filters.location !== 'all') {
-      result = filterClientsByLocation(result, filters.location);
+    if (searchQuery) {
+      result = searchClients(result, searchQuery);
     }
     
     // Sort by total days booked (descending)
     result = [...result].sort((a, b) => b.totalDaysBooked - a.totalDaysBooked);
 
     return result;
-  }, [clientsWithBookingData, filters]);
+  }, [clientsWithBookingData, searchQuery]);
 
   return (
     <>
@@ -81,12 +71,20 @@ export default function ClientsDirectory() {
       </Head>
 
       <DashboardLayout>
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full relative">
           {/* Sticky header section */}
-          <div className="sticky top-0 z-10 bg-secondary-50 px-3 sm:px-4 py-3 sm:py-4 border-b border-secondary-200">
-            {/* Header with title and actions - more compact layout */}
+          <div className={`sticky top-0 z-30 bg-white px-3 sm:px-4 py-3 sm:py-4 transition-all duration-300 ${scrolled ? 'shadow-sm border-b border-gray-200' : ''}`}>
+            {/* Header with title and actions */}
             <div className="flex items-center justify-between mb-3">
-              <h1 className="text-xl sm:text-2xl font-bold text-secondary-900">Client Directory</h1>
+              <div className="flex items-center">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+                  Client Directory
+                </h1>
+                <div className="ml-2 bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded-md hidden sm:flex items-center">
+                  {clients.length} Clients
+                </div>
+              </div>
+              
               <Link href="/clients/new">
                 <Button variant="primary" size="sm" className="flex items-center">
                   <PlusIcon className="h-4 w-4 mr-1" />
@@ -95,34 +93,61 @@ export default function ClientsDirectory() {
               </Link>
             </div>
 
-            {/* Filters */}
-            <ClientFilters
-              filters={filters}
-              setFilters={setFilters}
-              showCount={filteredClients.length}
-              totalCount={clients.length}
-              categories={categories}
-              locations={locations}
-            />
+            {/* Search bar with enhanced styling */}
+            <div className="bg-white shadow-sm rounded-lg p-3 border border-gray-200">
+              <div className="flex items-center gap-2">
+                <div className="relative flex-grow">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" aria-hidden="true" />
+                  </div>
+                  <input
+                    type="text"
+                    name="search"
+                    id="search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="block w-full pl-9 pr-10 py-2 border border-gray-300 rounded-md bg-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-sm transition-all duration-200"
+                    placeholder="Search clients by name..."
+                  />
+                  {searchQuery && (
+                    <button 
+                      onClick={() => setSearchQuery('')}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <XMarkIcon className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+                
+                {/* Simple client count badge */}
+                <div className="flex-shrink-0 bg-gray-100 text-gray-700 text-xs font-medium px-2.5 py-1 rounded-md flex items-center">
+                  <span className="font-bold">{filteredClients.length}</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Scrollable content area */}
-          <div className="flex-1 overflow-auto pb-4 pt-3 px-3 sm:px-4">
+          {/* Scrollable content area with proper z-index */}
+          <div className="flex-1 overflow-auto pb-4 pt-3 px-3 sm:px-4 relative z-10 scroll-smooth">
             {/* Client list */}
             {filteredClients.length > 0 ? (
               <ClientList clients={filteredClients} />
             ) : (
-              <div className="bg-white shadow-sm rounded-lg p-6 text-center">
-                <p className="text-secondary-500">No clients found matching your filters.</p>
-                <p className="mt-2">
-                  <Button variant="outline" size="sm" onClick={() => setFilters({
-                    search: '',
-                    category: 'all',
-                    location: 'all',
-                  })}>
-                    Reset Filters
-                  </Button>
-                </p>
+              <div className="bg-white shadow-sm rounded-lg p-6 text-center border border-gray-200 mt-4">
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <MagnifyingGlassIcon className="h-6 w-6 text-gray-400" />
+                  </div>
+                  <p className="text-gray-600 mb-3">No clients found matching your search.</p>
+                  {searchQuery && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setSearchQuery('')}>
+                      Clear Search
+                    </Button>
+                  )}
+                </div>
               </div>
             )}
           </div>

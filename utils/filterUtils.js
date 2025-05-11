@@ -54,10 +54,40 @@ export const searchStaff = (staff, query) => {
   return staff.filter(s => {
     if (!s) return false;
     
-    // Check if the staff member has a name property (firstName/lastName or name)
-    const hasNameMatch = (s.firstName && s.lastName && 
-      `${s.firstName} ${s.lastName}`.toLowerCase().includes(lowerQuery)) ||
-      (s.name && s.name.toLowerCase().includes(lowerQuery));
+    // Prioritize name matching - handle all possible name formats
+    let fullName = '';
+    
+    // Handle firstName + lastName format
+    if (s.firstName && s.lastName) {
+      fullName = `${s.firstName} ${s.lastName}`.toLowerCase();
+    } 
+    // Handle single name field
+    else if (s.name) {
+      fullName = s.name.toLowerCase();
+    }
+    // Handle other variations that might exist
+    else if (s.first_name && s.last_name) {
+      fullName = `${s.first_name} ${s.last_name}`.toLowerCase();
+    }
+    
+    // First check name as the primary search field
+    if (fullName && fullName.includes(lowerQuery)) {
+      return true;
+    }
+    
+    // Check first name only (more lenient matching)
+    if (s.firstName && s.firstName.toLowerCase().includes(lowerQuery)) {
+      return true;
+    }
+    
+    // Check last name only (more lenient matching)
+    if (s.lastName && s.lastName.toLowerCase().includes(lowerQuery)) {
+      return true;
+    }
+    
+    // Only look at these other fields if specifically requested
+    // in your updated requirements, we're focusing on name search
+    // but keeping fallbacks just in case
     
     // Check if the staff member has an email
     const hasEmailMatch = s.email && s.email.toLowerCase().includes(lowerQuery);
@@ -65,10 +95,7 @@ export const searchStaff = (staff, query) => {
     // Check if the staff member has a phone
     const hasPhoneMatch = s.phone && s.phone.includes(lowerQuery);
     
-    // Check if the staff member has Instagram
-    const hasInstagramMatch = s.instagram && s.instagram.toLowerCase().includes(lowerQuery);
-    
-    return hasNameMatch || hasEmailMatch || hasPhoneMatch || hasInstagramMatch;
+    return hasEmailMatch || hasPhoneMatch;
   });
 };
 
@@ -81,20 +108,31 @@ export const searchClients = (clients, query) => {
   return clients.filter(c => {
     if (!c) return false;
     
-    // Check company name and website
+    // Check name, email, phone, location, and other basic fields
     if ((c.name && c.name.toLowerCase().includes(lowerQuery)) || 
-        (c.website && c.website.toLowerCase().includes(lowerQuery))) {
+        (c.email && c.email.toLowerCase().includes(lowerQuery)) ||
+        (c.phone && c.phone.includes(lowerQuery)) ||
+        (c.location && c.location.toLowerCase().includes(lowerQuery)) ||
+        (c.industry && c.industry.toLowerCase().includes(lowerQuery)) ||
+        (c.website && c.website.toLowerCase().includes(lowerQuery)) ||
+        (c.notes && c.notes.toLowerCase().includes(lowerQuery))) {
       return true;
     }
     
-    // Check contact information
+    // Check contact information (if stored in a contacts array)
     if (c.contacts && Array.isArray(c.contacts) && c.contacts.length > 0) {
       return c.contacts.some(contact => {
         if (!contact) return false;
         return (contact.name && contact.name.toLowerCase().includes(lowerQuery)) ||
               (contact.email && contact.email.toLowerCase().includes(lowerQuery)) ||
-              (contact.phone && contact.phone.includes(lowerQuery));
+              (contact.phone && contact.phone.includes(lowerQuery)) ||
+              (contact.title && contact.title.toLowerCase().includes(lowerQuery));
       });
+    }
+    
+    // Check contactInfo as a string if it exists
+    if (c.contactInfo && typeof c.contactInfo === 'string') {
+      return c.contactInfo.toLowerCase().includes(lowerQuery);
     }
     
     return false;
