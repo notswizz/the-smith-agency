@@ -10,6 +10,16 @@ import { ClockIcon, CheckCircleIcon, XMarkIcon } from '@heroicons/react/24/outli
 
 export default function BookingsDirectory() {
   const { bookings, shows, staff, clients } = useStore();
+  
+  // Ensure bookings is an array and handle potential nested structure
+  const bookingsArray = useMemo(() => {
+    return Array.isArray(bookings) 
+      ? bookings 
+      : (bookings?.items && Array.isArray(bookings.items)) 
+        ? bookings.items 
+        : [];
+  }, [bookings]);
+  
   const [filters, setFilters] = useState({
     search: '',
     status: 'all',
@@ -97,7 +107,7 @@ export default function BookingsDirectory() {
 
   // Apply filters to bookings
   const filteredBookings = useMemo(() => {
-    let result = bookings;
+    let result = bookingsArray;
     
     // Apply search filter
     if (filters.search) {
@@ -171,7 +181,7 @@ export default function BookingsDirectory() {
     
     // Sort by date (most recent assigned first)
     return result.sort((a, b) => new Date(b.assignedDate) - new Date(a.assignedDate));
-  }, [bookings, filters, shows, staff, clients]);
+  }, [bookingsArray, filters, shows, staff, clients]);
 
   const resetFilters = () => {
     setFilters({
@@ -366,7 +376,7 @@ export default function BookingsDirectory() {
       {/* Staff Tooltip */}
       <StaffTooltip
         activeTooltip={activeTooltip}
-        bookings={bookings}
+        bookings={bookingsArray}
         getStaffForDay={getStaffForDay}
         hideTooltip={hideTooltip}
       />

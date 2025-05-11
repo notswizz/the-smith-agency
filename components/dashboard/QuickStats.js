@@ -15,6 +15,15 @@ import {
 export default function QuickStats() {
   const { staff, clients, bookings, shows } = useStore();
   
+  // Ensure bookings is an array and handle potential nested structure
+  const bookingsArray = useMemo(() => {
+    return Array.isArray(bookings) 
+      ? bookings 
+      : (bookings?.items && Array.isArray(bookings.items)) 
+        ? bookings.items 
+        : [];
+  }, [bookings]);
+  
   // Calculate stats
   const stats = useMemo(() => {
     // Total booking days (all days across all bookings)
@@ -28,10 +37,10 @@ export default function QuickStats() {
     today.setHours(0, 0, 0, 0);
 
     // Active vs inactive bookings
-    const activeBookings = bookings.filter(b => b.status !== 'cancelled');
+    const activeBookings = bookingsArray.filter(b => b.status !== 'cancelled');
     
     // Calculate needed metrics
-    bookings.forEach(booking => {
+    bookingsArray.forEach(booking => {
       const datesNeeded = Array.isArray(booking.datesNeeded) ? booking.datesNeeded : [];
       
       if (booking.status !== 'cancelled') {

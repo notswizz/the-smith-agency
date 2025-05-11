@@ -11,8 +11,15 @@ import {
 export default function KeyStats() {
   const { staff, clients, bookings } = useStore();
   
+  // Ensure bookings is an array and handle potential nested structure
+  const bookingsArray = Array.isArray(bookings) 
+    ? bookings 
+    : (bookings?.items && Array.isArray(bookings.items)) 
+      ? bookings.items 
+      : [];
+  
   // Calculate total booking days
-  const totalBookingDays = bookings.reduce((total, booking) => {
+  const totalBookingDays = bookingsArray.reduce((total, booking) => {
     if (booking.status !== 'cancelled' && Array.isArray(booking.datesNeeded)) {
       return total + booking.datesNeeded.length;
     }
@@ -20,7 +27,7 @@ export default function KeyStats() {
   }, 0);
 
   // Active bookings (not cancelled)
-  const activeBookings = bookings.filter(b => b.status !== 'cancelled');
+  const activeBookings = bookingsArray.filter(b => b.status !== 'cancelled');
 
   // Stats array
   const stats = [
@@ -51,7 +58,7 @@ export default function KeyStats() {
     {
       id: 'bookings',
       name: 'Total Bookings',
-      value: bookings.length,
+      value: bookingsArray.length,
       icon: ClipboardDocumentListIcon,
       color: 'from-emerald-500 to-green-500',
       link: '/bookings'
