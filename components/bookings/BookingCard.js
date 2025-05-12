@@ -5,7 +5,6 @@ import {
   CheckCircleIcon, 
   ClockIcon, 
   XCircleIcon,
-  ArrowRightIcon,
   CalendarIcon,
   UserGroupIcon,
   BuildingOffice2Icon,
@@ -141,10 +140,10 @@ const BookingCard = ({
       {/* Gradient header based on status */}
       <div className={`h-2 w-full bg-gradient-to-r ${currentStatusStyle.gradient}`}></div>
       
-      <div className="p-5 flex-grow flex flex-col space-y-4">
+      <div className="p-4 flex-grow flex flex-col space-y-3">
         {/* Top section with status and edit button */}
         <div className="flex justify-between items-start">
-          <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold ${currentStatusStyle.bg} ${currentStatusStyle.text} border ${currentStatusStyle.border}`}>
+          <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${currentStatusStyle.bg} ${currentStatusStyle.text} border ${currentStatusStyle.border}`}>
             {currentStatusStyle.icon}
             {statusLabels[booking.status] || booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
           </div>
@@ -153,50 +152,50 @@ const BookingCard = ({
               e.stopPropagation();
               router.push(`/bookings/${booking.id}/edit`);
             }}
-            className="p-1.5 rounded-md text-secondary-400 hover:text-primary-600 hover:bg-primary-50 transition-colors opacity-50 group-hover:opacity-100 focus:opacity-100"
+            className="p-1 rounded-md text-secondary-400 hover:text-primary-600 hover:bg-primary-50 transition-colors opacity-50 group-hover:opacity-100 focus:opacity-100"
             aria-label="Edit staff assignments"
           >
-            <PencilSquareIcon className="w-5 h-5" />
+            <PencilSquareIcon className="w-4 h-4" />
           </button>
         </div>
         
         {/* Client and Show Info */}
         <div>
-          <div className="flex items-start gap-3 mb-1">
-            <div className="flex-shrink-0 mt-1 w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center text-primary-500 shadow-sm border border-primary-100">
-              <BuildingOffice2Icon className="w-4 h-4" />
+          <div className="flex items-start gap-3 mb-0.5">
+            <div className="flex-shrink-0 mt-1 w-7 h-7 rounded-full bg-primary-50 flex items-center justify-center text-primary-500 shadow-sm border border-primary-100">
+              <BuildingOffice2Icon className="w-3.5 h-3.5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-secondary-800 group-hover:text-primary-600 transition-colors leading-tight">
+              <h3 className="text-sm font-bold text-secondary-800 group-hover:text-primary-600 transition-colors leading-tight">
                 {client?.name || '[Unknown Client]'}
               </h3>
-              <h4 className="text-sm text-secondary-500">
+              <h4 className="text-xs text-secondary-500">
                 {show?.name || '[Unknown Show]'}
               </h4>
             </div>
           </div>
           
-          <div className="flex items-center text-xs text-secondary-500 ml-11 mt-0.5">
-            <CalendarIcon className="w-3.5 h-3.5 mr-1.5 flex-shrink-0 text-secondary-400" />
+          <div className="flex items-center text-xs text-secondary-500 ml-10 mt-0.5">
+            <CalendarIcon className="w-3 h-3 mr-1 flex-shrink-0 text-secondary-400" />
             <span>{formatDateRange()}</span>
           </div>
         </div>
         
         {/* Staff/Days Stats and Progress */}
-        <div className="rounded-lg bg-secondary-50 p-3 border border-secondary-100 shadow-sm space-y-3">
+        <div className="rounded-lg bg-secondary-50 p-2.5 border border-secondary-100 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm">
-              <CalendarIcon className="w-4 h-4 text-indigo-500" />
+            <div className="flex items-center gap-1.5 text-xs">
+              <CalendarIcon className="w-3.5 h-3.5 text-indigo-500" />
               <span className="font-medium text-secondary-700">{bookingSummary.days} Day{bookingSummary.days !== 1 ? 's' : ''}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <UserGroupIcon className="w-4 h-4 text-indigo-500" />
+            <div className="flex items-center gap-1.5 text-xs">
+              <UserGroupIcon className="w-3.5 h-3.5 text-indigo-500" />
               <span className="font-medium text-secondary-700">{totalStaffAssigned}/{totalStaffNeeded} Staff</span>
             </div>
           </div>
           
           <div>
-            <div className="flex justify-between items-center text-xs mb-0.5">
+            <div className="flex justify-between items-center text-2xs mb-0.5">
               <span className="font-medium text-secondary-600">Staff Filled</span>
               <span className={`font-semibold ${
                 staffCompletionPercentage >= 100 ? 'text-emerald-600' :
@@ -206,7 +205,7 @@ const BookingCard = ({
                 {Math.round(staffCompletionPercentage)}%
               </span>
             </div>
-            <div className="relative h-2.5 bg-secondary-200 rounded-full overflow-hidden shadow-inner">
+            <div className="relative h-2 bg-secondary-200 rounded-full overflow-hidden shadow-inner">
               <div 
                 className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 ease-out ${getFillColorClass(staffCompletionPercentage)}`}
                 style={{ width: `${staffCompletionPercentage}%` }}
@@ -217,7 +216,7 @@ const BookingCard = ({
 
         {/* Daily Staffing Micro-Bars */}
         {bookingSummary.days > 0 && (
-          <div className="mt-1 flex items-end h-8 gap-0.5 overflow-hidden relative group/microbars">
+          <div className="flex items-end h-7 gap-0.5 overflow-hidden relative group/microbars">
             {Array.from({ length: Math.min(bookingSummary.days, 30) }).map((_, i) => {
               const day = sortedDates[i];
               if (!day) return null;
@@ -244,12 +243,6 @@ const BookingCard = ({
             )}
           </div>
         )}
-        
-        {/* Arrow indicator for clickable card - subtle */}
-        <div className="flex justify-end items-center mt-auto pt-2">
-          <span className="text-xs text-secondary-400 group-hover:text-primary-500 transition-colors">View Details</span>
-          <ArrowRightIcon className="h-3.5 w-3.5 ml-1 text-secondary-400 group-hover:text-primary-500 transition-colors" />
-        </div>
       </div>
     </div>
   );

@@ -20,7 +20,6 @@ const navigation = [
   { name: 'Clients', href: '/clients', icon: BuildingOffice2Icon, shortName: 'Clients' },
   { name: 'Shows', href: '/shows', icon: CalendarIcon, shortName: 'Shows' },
   { name: 'Bookings', href: '/bookings', icon: ClipboardDocumentListIcon, shortName: 'Bookings' },
-  { name: 'SMS', href: '/sms', icon: ChatBubbleLeftRightIcon, shortName: 'SMS' },
 ];
 
 export default function DashboardLayout({ children }) {

@@ -179,8 +179,13 @@ export default function BookingsDirectory() {
       });
     }
     
-    // Sort by date (most recent assigned first)
-    return result.sort((a, b) => new Date(b.assignedDate) - new Date(a.assignedDate));
+    // Sort by creation date (newest first)
+    return result.sort((a, b) => {
+      // Safely handle missing createdAt values by defaulting to old dates
+      const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+      const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+      return dateB - dateA;
+    });
   }, [bookingsArray, filters, shows, staff, clients]);
 
   const resetFilters = () => {
