@@ -7,6 +7,7 @@ import GlobalSearch from '@/components/dashboard/GlobalSearch';
 import ShowsCalendar from '@/components/dashboard/ShowsCalendar';
 import UpcomingShows from '@/components/dashboard/UpcomingShows';
 import RecentStaffSignups from '@/components/dashboard/RecentStaffSignups';
+import RecentBookings from '@/components/dashboard/RecentBookings';
 
 export default function Dashboard() {
   return (
@@ -32,21 +33,29 @@ export default function Dashboard() {
           {/* Key Stats */}
           <KeyStats />
           
-          {/* Dashboard Content Grid */}
+          {/* Dashboard Content Grid - Two Even Columns */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
-            {/* Left Column: Calendar */}
-            <div className="bg-white rounded-xl shadow-md p-5 transition-shadow hover:shadow-lg h-full">
-              <ShowsCalendar />
-            </div>
-            
-            {/* Right Column: Split into two components */}
+            {/* Left Column: Calendar and Upcoming Shows */}
             <div className="space-y-4 sm:space-y-6">
-              {/* Top Right: Upcoming Shows */}
+              {/* Calendar */}
+              <div className="bg-white rounded-xl shadow-md p-5 transition-shadow hover:shadow-lg">
+                <ShowsCalendar />
+              </div>
+              
+              {/* Upcoming Shows */}
               <div className="bg-white rounded-xl shadow-md p-5 transition-shadow hover:shadow-lg">
                 <UpcomingShows />
               </div>
+            </div>
+            
+            {/* Right Column: Recent Sections */}
+            <div className="space-y-4 sm:space-y-6">
+              {/* Recent Bookings */}
+              <div className="bg-white rounded-xl shadow-md p-5 transition-shadow hover:shadow-lg">
+                <RecentBookings />
+              </div>
               
-              {/* Bottom Right: Recent Staff Signups */}
+              {/* Recent Staff Signups */}
               <div className="bg-white rounded-xl shadow-md p-5 transition-shadow hover:shadow-lg">
                 <RecentStaffSignups />
               </div>

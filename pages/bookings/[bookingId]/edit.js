@@ -15,9 +15,11 @@ import {
   CheckCircleIcon,
   CheckIcon,
   ClockIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
+import StaffAvailabilityModal from '@/components/bookings/StaffAvailabilityModal';
 
 export default function StaffAssignment() {
   const router = useRouter();
@@ -28,6 +30,7 @@ export default function StaffAssignment() {
   const [loading, setLoading] = useState(true);
   const [formErrors, setFormErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
 
   useEffect(() => {
     if (!bookingId) return;
@@ -413,6 +416,18 @@ export default function StaffAssignment() {
             });
         }} className="space-y-6">
         
+        {/* Staff Availability Button */}
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => setIsStaffModalOpen(true)}
+            className="w-full flex items-center justify-center py-2 px-3 border border-primary-300 text-sm font-medium rounded-md text-primary-700 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            <EyeIcon className="h-4 w-4 mr-1.5" />
+            Staff Availability Overview
+          </button>
+        </div>
+        
         {/* Staff Assignment */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-secondary-200">
           <div className="p-4 border-b border-secondary-200 bg-secondary-50 flex items-center justify-between">
@@ -540,6 +555,19 @@ export default function StaffAssignment() {
             </div>
           )}
         </div>
+        
+        {/* Render the Staff Availability Modal */}
+        <StaffAvailabilityModal
+          isOpen={isStaffModalOpen}
+          onClose={() => setIsStaffModalOpen(false)}
+          showId={formData.showId}
+          showName={selectedShow?.name || 'Show'}
+          availability={availability}
+          staff={staff}
+          bookings={bookings}
+          currentBookingId={bookingId}
+          showDateRange={showDateRange}
+        />
         
         {/* Fixed Save Button on Mobile */}
         <div className="fixed sm:hidden bottom-0 left-0 right-0 bg-white border-t-2 border-secondary-200 p-4 z-50 shadow-lg">
