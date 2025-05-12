@@ -20,7 +20,7 @@ const splashScreens = [
 // Create a simple splash screen with "The Smith Agency" text
 function createSplashSVG(width, height) {
   const fontSize = Math.floor(Math.min(width, height) * 0.06);
-  const backgroundColor = '#8b5cf6'; // Violet color
+  const backgroundColor = '#FF69B4'; // Hot pink color
   
   return `
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">

@@ -37,7 +37,7 @@ export default function PWAInstallPrompt() {
   if (!showPrompt) return null;
   
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-violet-600 text-white p-4 shadow-lg z-40">
+    <div className="fixed bottom-0 left-0 right-0 text-white p-4 shadow-lg z-40" style={{ backgroundColor: '#FF69B4' }}>
       <div className="flex items-start justify-between">
         <div className="flex items-center">
           <ArrowDownTrayIcon className="h-8 w-8 mr-3" />

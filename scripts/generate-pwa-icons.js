@@ -10,11 +10,11 @@ if (!fs.existsSync(iconsDir)) {
   fs.mkdirSync(iconsDir, { recursive: true });
 }
 
-// Create a simple violet icon with "SA" text
+// Create a simple hot pink icon with "TSA" text
 const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
-const backgroundColor = '#8b5cf6'; // Violet color
+const backgroundColor = '#FF69B4'; // Hot pink color
 
-// Function to create a base SVG with "SA" text
+// Function to create a base SVG with "TSA" text
 function createBaseSVG(size) {
   const fontSize = Math.floor(size * 0.4);
   return `
@@ -28,7 +28,7 @@ function createBaseSVG(size) {
         font-weight="bold" 
         fill="white" 
         text-anchor="middle" 
-        dominant-baseline="middle">SA</text>
+        dominant-baseline="middle">TSA</text>
     </svg>
   `;
 }

@@ -16,8 +16,9 @@ export default function SplashScreen() {
 
   return (
     <div 
-      className="fixed inset-0 bg-violet-600 flex flex-col items-center justify-center z-50"
+      className="fixed inset-0 flex flex-col items-center justify-center z-50"
       style={{
+        backgroundColor: '#FF69B4', // Hot pink
         transition: 'opacity 0.5s ease-in-out',
         opacity: show ? 1 : 0
       }}
