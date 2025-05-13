@@ -199,39 +199,24 @@ export default function StaffAssignment() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4">
-        {/* Mobile Header */}
-        <div className="flex flex-col gap-3 mb-4 sm:hidden">
+      <div className="max-w-7xl mx-auto py-3 sm:py-6 px-3 sm:px-4">
+        {/* Mobile Header - More compact */}
+        <div className="flex flex-col gap-2 mb-3 sm:hidden">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Link href={`/bookings/${bookingId}`} className="mr-2">
                 <Button variant="ghost" size="sm" className="flex items-center text-secondary-600 p-1">
                   <ArrowLeftIcon className="h-4 w-4" />
-                  <span className="ml-1">Back</span>
                 </Button>
               </Link>
-              <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-500">
+              <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-500">
                 Staff Assignment
               </h1>
             </div>
-            <div className="flex items-center gap-2">
-              <Link href={`/bookings/${bookingId}`}>
-                <Button variant="white" size="sm">Cancel</Button>
-              </Link>
-            </div>
-          </div>
-          
-          {/* Mobile stats summary */}
-          <div className="bg-white rounded-xl overflow-hidden shadow-sm mb-4">
-            {/* Status Toggle Mobile */}
-            <div className="p-3 border-b border-secondary-100 flex justify-between items-center">
-              <div className="flex items-center">
-                <StatusIcon className="h-4 w-4 mr-2 text-secondary-600" />
-                <span className="text-sm font-medium">Status</span>
-              </div>
+            <div className="flex items-center">
               <button 
                 onClick={handleStatusToggle}
-                className="relative inline-flex h-6 w-11 items-center rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
+                className="relative inline-flex h-6 w-11 items-center rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 mr-2"
                 type="button"
                 aria-pressed={formData.status === 'confirmed'}
               >
@@ -243,29 +228,27 @@ export default function StaffAssignment() {
                   className={`${formData.status === 'confirmed' ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition`}
                 ></span>
               </button>
+              <Link href={`/bookings/${bookingId}`}>
+                <Button variant="white" size="xs">Cancel</Button>
+              </Link>
             </div>
+          </div>
+          
+          {/* Mobile stats summary - More compact */}
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-secondary-100">
             <div className="grid grid-cols-3 divide-x divide-secondary-100">
-              <div className="flex flex-col items-center py-3">
-                <div className="flex items-center text-indigo-600 mb-1">
-                  <CalendarIcon className="h-4 w-4 mr-1" /> 
-                </div>
-                <span className="text-lg font-bold">{formData.datesNeeded?.length || 0}</span>
+              <div className="flex flex-col items-center py-2">
+                <span className="text-base font-semibold">{formData.datesNeeded?.length || 0}</span>
                 <span className="text-xs text-secondary-500">Days</span>
               </div>
               
-              <div className="flex flex-col items-center py-3">
-                <div className="flex items-center text-indigo-600 mb-1">
-                  <UserGroupIcon className="h-4 w-4 mr-1" /> 
-                </div>
-                <span className="text-lg font-bold">{staffRequirementsSummary.total}</span>
+              <div className="flex flex-col items-center py-2">
+                <span className="text-base font-semibold">{staffRequirementsSummary.total}</span>
                 <span className="text-xs text-secondary-500">Needed</span>
               </div>
               
-              <div className="flex flex-col items-center py-3">
-                <div className="flex items-center text-indigo-600 mb-1">
-                  <CheckCircleIcon className="h-4 w-4 mr-1" /> 
-                </div>
-                <span className="text-lg font-bold">{staffRequirementsSummary.assigned}</span>
+              <div className="flex flex-col items-center py-2">
+                <span className="text-base font-semibold">{staffRequirementsSummary.assigned}</span>
                 <span className="text-xs text-secondary-500">Assigned</span>
               </div>
             </div>
@@ -366,38 +349,31 @@ export default function StaffAssignment() {
           </div>
         </div>
         
-        {/* Booking Info Card */}
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-5 border border-secondary-200">
-          <div className="flex items-center mb-3">
-            <InformationCircleIcon className="h-5 w-5 text-primary-600 mr-2" />
-            <h3 className="font-medium text-base text-secondary-900">Booking Information</h3>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Booking Info Card - Simplified for mobile */}
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 mb-4 sm:mb-5 border border-secondary-200">
+          <div className="flex flex-col sm:grid sm:grid-cols-3 gap-2 sm:gap-4">
             <div className="flex items-start">
-              <BuildingOffice2Icon className="h-5 w-5 text-secondary-500 flex-shrink-0 mt-0.5 mr-2" />
-              <div>
+              <BuildingOffice2Icon className="h-4 w-4 sm:h-5 sm:w-5 text-secondary-500 flex-shrink-0 mt-0.5 mr-1.5 sm:mr-2" />
+              <div className="min-w-0">
                 <p className="text-xs text-secondary-500 mb-0.5">Client</p>
-                <p className="text-sm font-medium">{selectedClient?.name || 'Unknown Client'}</p>
+                <p className="text-sm font-medium break-words">{selectedClient?.name || 'Unknown Client'}</p>
               </div>
             </div>
             
             <div className="flex items-start">
-              <CalendarIcon className="h-5 w-5 text-secondary-500 flex-shrink-0 mt-0.5 mr-2" />
-              <div>
+              <CalendarIcon className="h-4 w-4 sm:h-5 sm:w-5 text-secondary-500 flex-shrink-0 mt-0.5 mr-1.5 sm:mr-2" />
+              <div className="min-w-0">
                 <p className="text-xs text-secondary-500 mb-0.5">Show</p>
-                <p className="text-sm font-medium">{selectedShow?.name || 'Unknown Show'}</p>
+                <p className="text-sm font-medium break-words">{selectedShow?.name || 'Unknown Show'}</p>
               </div>
             </div>
             
             <div className="flex items-start">
-              <StatusIcon className="h-5 w-5 text-secondary-500 flex-shrink-0 mt-0.5 mr-2" />
+              <StatusIcon className="h-4 w-4 sm:h-5 sm:w-5 text-secondary-500 flex-shrink-0 mt-0.5 mr-1.5 sm:mr-2" />
               <div>
                 <p className="text-xs text-secondary-500 mb-0.5">Status</p>
-                <div className="flex items-center space-x-2">
-                  <div className={`px-2.5 py-1 rounded-full text-xs font-medium ${currentStatusStyles.badge}`}>
-                    {formData.status === 'confirmed' ? 'Confirmed' : 'Pending'}
-                  </div>
+                <div className={`px-2 py-0.5 rounded-full text-xs font-medium inline-flex items-center ${currentStatusStyles.badge}`}>
+                  {formData.status === 'confirmed' ? 'Confirmed' : 'Pending'}
                 </div>
               </div>
             </div>
@@ -414,10 +390,10 @@ export default function StaffAssignment() {
               setSaving(false);
               alert('Failed to update staff assignments. Please try again.');
             });
-        }} className="space-y-6">
+        }} className="space-y-4 sm:space-y-6">
         
         {/* Staff Availability Button */}
-        <div className="mb-4">
+        <div className="mb-3 sm:mb-4">
           <button
             type="button"
             onClick={() => setIsStaffModalOpen(true)}
@@ -429,11 +405,11 @@ export default function StaffAssignment() {
         </div>
         
         {/* Staff Assignment */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-secondary-200">
-          <div className="p-4 border-b border-secondary-200 bg-secondary-50 flex items-center justify-between">
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-secondary-200">
+          <div className="p-3 sm:p-4 border-b border-secondary-200 bg-secondary-50 flex items-center justify-between">
             <div className="flex items-center">
-              <UserGroupIcon className="h-5 w-5 text-primary-600 mr-2" />
-              <h3 className="font-medium text-secondary-900">Assign Staff to Dates</h3>
+              <UserGroupIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary-600 mr-1.5 sm:mr-2" />
+              <h3 className="font-medium text-secondary-900 text-sm sm:text-base">Assign Staff to Dates</h3>
             </div>
             <span className="text-xs bg-primary-100 text-primary-800 px-2 py-1 rounded-full">
               {sortedDatesNeeded.length} date{sortedDatesNeeded.length !== 1 ? 's' : ''}
@@ -441,17 +417,17 @@ export default function StaffAssignment() {
           </div>
           
           {sortedDatesNeeded.length > 0 ? (
-            <div className="p-3 max-h-[800px] overflow-y-auto">
+            <div className="p-2 sm:p-3 max-h-[calc(100vh-300px)] overflow-y-auto">
               <div className="space-y-3">
                 {sortedDatesNeeded.map(({ date, staffCount = 1, staffIds = [] }) => {
                   const assignedCount = staffIds.filter(Boolean).length;
                   const isComplete = assignedCount >= staffCount;
                   
                   return (
-                    <div key={date} className={`${isComplete ? 'bg-green-50 border-green-200' : 'bg-secondary-50 border-secondary-200'} rounded-lg p-3 border`}>
-                      <div className="flex items-center justify-between mb-3">
+                    <div key={date} className={`${isComplete ? 'bg-green-50 border-green-200' : 'bg-secondary-50 border-secondary-200'} rounded-lg p-2 sm:p-3 border`}>
+                      <div className="flex items-center justify-between mb-2 sm:mb-3 pr-1">
                         <div className="flex items-center">
-                          <ClockIcon className="h-4 w-4 text-primary-600 mr-1.5" />
+                          <ClockIcon className="h-4 w-4 text-primary-600 mr-1 sm:mr-1.5 flex-shrink-0" />
                           <span className="text-xs sm:text-sm font-medium line-clamp-1">
                             {(() => {
                               const dateObj = new Date(date);
@@ -465,26 +441,48 @@ export default function StaffAssignment() {
                             })()}
                           </span>
                         </div>
-                        <span className={`text-xs px-2 py-0.5 rounded-full flex items-center
-                          ${isComplete 
-                            ? 'bg-green-100 text-green-800 border border-green-200' 
-                            : 'bg-amber-100 text-amber-800 border border-amber-200'
-                          }`}
-                        >
-                          {isComplete ? (
-                            <>
-                              <CheckIcon className="h-3 w-3 mr-1" />
-                              <span>Filled</span>
-                            </>
-                          ) : (
-                            <>
-                              <span>{assignedCount}/{staffCount}</span>
-                            </>
-                          )}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <span className={`text-xs px-1.5 py-0.5 rounded-full flex items-center
+                            ${isComplete 
+                              ? 'bg-green-100 text-green-800 border border-green-200' 
+                              : 'bg-amber-100 text-amber-800 border border-amber-200'
+                            }`}
+                          >
+                            {isComplete ? (
+                              <>
+                                <CheckIcon className="h-3 w-3 mr-0.5" />
+                                <span className="hidden sm:inline">Filled</span>
+                                <span className="sm:hidden">{assignedCount}/{staffCount}</span>
+                              </>
+                            ) : (
+                              <>
+                                <span>{assignedCount}/{staffCount}</span>
+                              </>
+                            )}
+                          </span>
+                          
+                          <div className="flex gap-1">
+                            {staffCount > 1 && (
+                              <button 
+                                type="button"
+                                className="p-1 text-secondary-400 hover:text-red-500 bg-white rounded-full border border-secondary-200"
+                                onClick={() => handleRemoveStaffSlot(date)}
+                              >
+                                <XMarkIcon className="h-3 w-3" />
+                              </button>
+                            )}
+                            <button 
+                              type="button"
+                              className="p-1 text-primary-600 hover:text-primary-800 bg-white rounded-full border border-primary-200"
+                              onClick={() => handleAddStaffSlot(date)}
+                            >
+                              <PlusIcon className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
                       </div>
                       
-                      <div className="space-y-3 ml-6">
+                      <div className="space-y-2 ml-4 sm:ml-6">
                         {/* Render a dropdown for each staff needed */}
                         {Array.from({ length: staffCount }).map((_, i) => {
                           const availableStaff = getAvailableStaffForDate(date, i);
@@ -498,7 +496,7 @@ export default function StaffAssignment() {
                                   <UserGroupIcon className={`h-3.5 w-3.5 ${hasStaffAssigned ? 'text-green-500' : 'text-secondary-400'}`} />
                                 </div>
                                 <select
-                                  className={`pl-7 block w-full text-sm rounded-md border shadow-sm focus:border-primary-500 focus:ring-primary-500 transition-colors ${
+                                  className={`pl-7 block w-full text-xs sm:text-sm h-9 sm:h-10 rounded-md border shadow-sm focus:border-primary-500 focus:ring-primary-500 transition-colors ${
                                     hasStaffAssigned 
                                       ? 'border-green-300 bg-green-50 text-green-900' 
                                       : 'border-secondary-300'
@@ -514,33 +512,14 @@ export default function StaffAssignment() {
                                   ))}
                                 </select>
                                 {hasStaffAssigned && (
-                                  <div className="absolute inset-y-0 right-8 flex items-center pointer-events-none">
+                                  <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
                                     <CheckIcon className="h-3.5 w-3.5 text-green-500" />
                                   </div>
                                 )}
                               </div>
-                              {i > 0 && (
-                                <button 
-                                  type="button"
-                                  className="ml-1 p-1 text-secondary-400 hover:text-red-500"
-                                  onClick={() => handleRemoveStaffSlot(date)}
-                                >
-                                  <XMarkIcon className="h-4 w-4" />
-                                </button>
-                              )}
                             </div>
                           );
                         })}
-                        
-                        {/* Add staff button */}
-                        <button
-                          type="button"
-                          className="text-sm flex items-center text-primary-600 hover:text-primary-800 bg-white px-3 py-1.5 rounded-md border border-primary-200 shadow-sm"
-                          onClick={() => handleAddStaffSlot(date)}
-                        >
-                          <PlusIcon className="h-4 w-4 mr-1" />
-                          Add staff position
-                        </button>
                       </div>
                     </div>
                   );
@@ -548,10 +527,10 @@ export default function StaffAssignment() {
               </div>
             </div>
           ) : (
-            <div className="p-8 text-center">
-              <CalendarIcon className="w-12 h-12 mx-auto text-secondary-300 mb-3" />
-              <p className="text-secondary-500">No dates available for this booking</p>
-              <p className="text-secondary-400 text-sm">Please contact an administrator to add dates</p>
+            <div className="p-6 sm:p-8 text-center">
+              <CalendarIcon className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-secondary-300 mb-3" />
+              <p className="text-secondary-500 text-sm sm:text-base">No dates available for this booking</p>
+              <p className="text-secondary-400 text-xs sm:text-sm">Please contact an administrator to add dates</p>
             </div>
           )}
         </div>
@@ -570,12 +549,12 @@ export default function StaffAssignment() {
         />
         
         {/* Fixed Save Button on Mobile */}
-        <div className="fixed sm:hidden bottom-0 left-0 right-0 bg-white border-t-2 border-secondary-200 p-4 z-50 shadow-lg">
+        <div className="fixed sm:hidden bottom-0 left-0 right-0 bg-white border-t border-secondary-200 p-3 z-50 shadow-lg">
           <Button
             type="submit"
             variant="primary"
             disabled={saving}
-            className="w-full flex items-center justify-center py-3.5 text-base font-medium rounded-lg"
+            className="w-full flex items-center justify-center py-3 text-base font-medium rounded-lg"
           >
             {saving ? (
               <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2" />

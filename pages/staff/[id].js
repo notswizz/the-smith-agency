@@ -10,6 +10,7 @@ import StaffSizes from '@/components/staff/StaffSizes';
 import StaffBookingHistory from '@/components/staff/StaffBookingHistory';
 import StaffAvailability from '@/components/staff/StaffAvailability';
 import StaffTabToggle from '@/components/staff/StaffTabToggle';
+import StaffNotes from '@/components/staff/StaffNotes';
 
 export default function StaffProfile() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function StaffProfile() {
   const { getStaffById, getBookingsForStaff, shows, getShowById, availability, clients } = useStore();
   const [staffMember, setStaffMember] = useState(null);
   const [bookings, setBookings] = useState([]);
-  const [activeTabMobile, setActiveTabMobile] = useState('bookings'); // 'bookings' or 'availability'
+  const [activeTabMobile, setActiveTabMobile] = useState('bookings'); // 'bookings', 'availability', or 'notes'
   const [isSizesOpen, setIsSizesOpen] = useState(false);
 
   useEffect(() => {
@@ -95,28 +96,36 @@ export default function StaffProfile() {
             </div>
           )}
           
-          {/* Bookings and Availability Side by Side */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            {/* Mobile Tab Toggle */}
-            <StaffTabToggle activeTab={activeTabMobile} setActiveTab={setActiveTabMobile} />
-            
-            {/* Left Column: Booking History */}
-            <div className={`${activeTabMobile === 'availability' ? 'lg:block hidden' : ''}`}>
-              <StaffBookingHistory 
-                bookings={bookings} 
-                staffId={id} 
-                getShowById={getShowById}
-                clients={clients} 
-              />
+          {/* Mobile Tab Toggle */}
+          <StaffTabToggle activeTab={activeTabMobile} setActiveTab={setActiveTabMobile} />
+          
+          {/* Content based on mobile tab selection */}
+          <div className="space-y-4 sm:space-y-6">
+            {/* Bookings and Availability Side by Side on large screens */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              {/* Left Column: Booking History */}
+              <div className={`${activeTabMobile === 'bookings' ? '' : 'lg:block hidden'}`}>
+                <StaffBookingHistory 
+                  bookings={bookings} 
+                  staffId={id} 
+                  getShowById={getShowById}
+                  clients={clients} 
+                />
+              </div>
+              
+              {/* Right Column: Availability */}
+              <div className={`${activeTabMobile === 'availability' ? '' : 'lg:block hidden'}`}>
+                <StaffAvailability 
+                  staffId={id} 
+                  availability={availability} 
+                  getShowById={getShowById}
+                />
+              </div>
             </div>
             
-            {/* Right Column: Availability */}
-            <div className={`${activeTabMobile === 'bookings' ? 'lg:block hidden' : ''}`}>
-              <StaffAvailability 
-                staffId={id} 
-                availability={availability} 
-                getShowById={getShowById}
-              />
+            {/* Staff Notes Section - Show on large screens or when notes tab is active */}
+            <div className={activeTabMobile === 'notes' ? '' : 'lg:block hidden'}>
+              <StaffNotes staffId={id} staffMember={staffMember} />
             </div>
           </div>
           
