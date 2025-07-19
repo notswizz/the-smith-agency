@@ -68,51 +68,48 @@ function StaffCard({ staffMember }) {
 
   return (
     <Link href={`/staff/${staffMember.id}`} className="block snap-start snap-always">
-      <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg relative transition-all duration-300 border border-gray-200 h-full group hover:translate-y-[-2px] border-t-2 border-t-pink-400">
+      <div className="bg-gradient-to-br from-white via-pink-50 to-pink-100 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl relative transition-all duration-300 border border-gray-200 h-full group hover:scale-[1.025] hover:border-pink-400 hover:ring-2 hover:ring-pink-100">
         {/* Status indicator */}
         <div className="absolute top-3 right-3 z-20">
           <div className="flex items-center gap-1.5">
             {isActivelyWorking ? (
               <span className="flex items-center">
-                <span className="relative flex h-3 w-3">
+                <span className="relative flex h-4 w-4">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500 ring-2 ring-white"></span>
+                  <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500 ring-2 ring-white"></span>
                 </span>
-                <span className="ml-1.5 text-2xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-md border border-green-200">Working Today</span>
+                <span className="ml-2 text-xs font-semibold text-green-800 bg-green-100 px-2 py-0.5 rounded-full border border-green-200 shadow-sm">Working Today</span>
               </span>
             ) : (
               <Link href={`/staff/${staffMember.id}/edit`} onClick={(e) => e.stopPropagation()}>
-                <button className="bg-white p-2 rounded-full text-gray-500 hover:text-gray-700 transition-all duration-200 shadow-sm border border-gray-200 hover:border-pink-300">
+                <button className="bg-white p-2 rounded-full text-gray-500 hover:text-pink-500 transition-all duration-200 shadow border border-gray-200 hover:border-pink-300 opacity-0 group-hover:opacity-100 pointer-events-auto">
                   <PencilSquareIcon className="h-4 w-4" />
                 </button>
               </Link>
             )}
           </div>
         </div>
-        
         {/* Booking stats - Stacked vertically - Icons only */}
-        <div className="absolute top-3 left-3 z-20 flex flex-col space-y-1.5">
+        <div className="absolute top-3 left-3 z-20 flex flex-col space-y-2">
           {totalDaysWorked > 0 && (
-            <div className="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-1 rounded-md flex items-center shadow-sm border border-gray-200 border-l-2 border-l-pink-400">
-              <CalendarIcon className="h-3.5 w-3.5 mr-1 text-gray-600" /> 
+            <div className="bg-pink-100 text-pink-700 text-xs font-bold px-2 py-1 rounded-lg flex items-center shadow border border-pink-200">
+              <CalendarIcon className="h-4 w-4 mr-1 text-pink-500" />
               <span>{totalDaysWorked}</span>
             </div>
           )}
-          
           {staffBookings.length > 0 && (
-            <div className="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-1 rounded-md flex items-center shadow-sm border border-gray-200 border-l-2 border-l-pink-400">
-              <BriefcaseIcon className="h-3.5 w-3.5 mr-1 text-gray-600" /> 
+            <div className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-lg flex items-center shadow border border-blue-200">
+              <BriefcaseIcon className="h-4 w-4 mr-1 text-blue-500" />
               <span>{staffBookings.length}</span>
             </div>
           )}
         </div>
-        
         {/* Card content with profile picture */}
-        <div className="px-5 pt-12 pb-6 relative z-10">
+        <div className="px-6 pt-14 pb-7 relative z-10">
           {/* Profile circle with image or initials */}
-          <div className="flex flex-col items-center mb-5">
+          <div className="flex flex-col items-center mb-6">
             <div className="relative">
-              <div className="h-32 w-32 sm:h-36 sm:w-36 rounded-lg bg-white flex items-center justify-center text-2xl sm:text-3xl font-semibold overflow-hidden border-4 border-white shadow-md relative transition-all duration-300">
+              <div className="h-28 w-28 sm:h-32 sm:w-32 rounded-full bg-white flex items-center justify-center text-2xl sm:text-3xl font-semibold overflow-hidden border-4 border-pink-200 shadow-md relative transition-all duration-300 ring-4 ring-pink-100 group-hover:ring-pink-300">
                 {profileImage ? (
                   <img 
                     src={profileImage} 
@@ -130,43 +127,42 @@ function StaffCard({ staffMember }) {
               </div>
             </div>
           </div>
-          
           {/* Name and college */}
-          <div className="text-center mb-5">
-            <h3 className="text-lg sm:text-xl font-bold text-gray-800 tracking-tight group-hover:text-pink-600 transition-colors duration-300">
+          <div className="text-center mb-6">
+            <h3 className="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight group-hover:text-pink-600 transition-colors duration-300">
               {name}
             </h3>
             {staffMember.college && (
-              <div className="mt-2 inline-flex items-center px-3 py-1 rounded-md bg-gray-100 text-gray-700 text-xs font-medium border border-gray-200">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+              <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold border border-gray-200 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
                 </svg>
                 {staffMember.college}
               </div>
             )}
           </div>
-          
+          {/* Divider */}
+          <div className="w-full h-px bg-gradient-to-r from-pink-200 via-gray-200 to-blue-200 mb-5" />
           {/* Contact buttons */}
-          <div className="flex justify-center space-x-3">
+          <div className="flex justify-center space-x-4">
             {staffMember.email && (
               <Link 
                 href={`mailto:${staffMember.email}`}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-gray-100 text-gray-700 hover:bg-gray-200 p-2.5 rounded-md flex items-center justify-center transition-all duration-200 border border-gray-200 w-10 h-10 hover:border-pink-200"
+                className="bg-gray-100 text-gray-700 hover:bg-pink-100 p-3 rounded-xl flex items-center justify-center transition-all duration-200 border border-gray-200 w-11 h-11 hover:border-pink-300 shadow-sm hover:scale-110"
                 title={`Email ${name}`}
               >
-                <EnvelopeIcon className="h-5 w-5 text-gray-500" />
+                <EnvelopeIcon className="h-5 w-5 text-pink-500" />
               </Link>
             )}
-            
             {staffMember.phone && (
               <Link 
                 href={`tel:${staffMember.phone}`}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-gray-100 text-gray-700 hover:bg-gray-200 p-2.5 rounded-md flex items-center justify-center transition-all duration-200 border border-gray-200 w-10 h-10 hover:border-pink-200"
+                className="bg-gray-100 text-gray-700 hover:bg-blue-100 p-3 rounded-xl flex items-center justify-center transition-all duration-200 border border-gray-200 w-11 h-11 hover:border-blue-300 shadow-sm hover:scale-110"
                 title={`Call ${name}`}
               >
-                <PhoneIcon className="h-5 w-5 text-gray-500" />
+                <PhoneIcon className="h-5 w-5 text-blue-500" />
               </Link>
             )}
           </div>

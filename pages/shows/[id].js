@@ -16,7 +16,9 @@ import {
   ArrowLeftIcon,
   UserIcon,
   MapPinIcon,
-  TagIcon
+  TagIcon,
+  PlayIcon,
+  PauseIcon
 } from '@heroicons/react/24/outline';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -38,7 +40,8 @@ export default function ShowProfile() {
     location: '',
     startDate: '',
     endDate: '',
-    description: ''
+    description: '',
+    status: 'active' // Add status field with default value
   });
 
   // Fetch show data and related bookings
@@ -54,7 +57,8 @@ export default function ShowProfile() {
           location: show.location,
           startDate: show.startDate,
           endDate: show.endDate,
-          description: show.description || ''
+          description: show.description || '',
+          status: show.status || 'active' // Initialize status field
         });
 
         // Get bookings for this show
@@ -74,6 +78,14 @@ export default function ShowProfile() {
     });
   };
 
+  // Status toggle handler
+  const handleStatusToggle = () => {
+    setFormData({
+      ...formData,
+      status: formData.status === 'active' ? 'inactive' : 'active'
+    });
+  };
+
   // Helper to get client name for a booking
   const getClientName = (booking) => {
     if (booking.clientName) return booking.clientName;
@@ -84,16 +96,23 @@ export default function ShowProfile() {
     return 'Client';
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Save changes to the show (simulate updateShow if available)
-    if (updateShow && typeof updateShow === 'function') {
-      updateShow(id, formData);
-    }
-    setShowData({
+    
+    // Prepare the updated show data
+    const updatedShowData = {
       ...showData,
-      ...formData
-    });
+      ...formData,
+      status: formData.status // Ensure status is included
+    };
+    
+    // Save changes to the show
+    if (updateShow && typeof updateShow === 'function') {
+      await updateShow(id, updatedShowData);
+    }
+    
+    // Update local state
+    setShowData(updatedShowData);
     setIsEditing(false);
   };
 
@@ -219,6 +238,79 @@ export default function ShowProfile() {
                       <input type="date" id="endDate" name="endDate" value={formData.endDate} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm" />
                     </div>
                   </div>
+                  
+                  {/* Status Toggle - Full Width */}
+                  <div className="bg-gradient-to-r from-white to-secondary-50 rounded-xl border-2 border-secondary-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                      <div className="flex-1">
+                        <label className="block text-lg font-bold text-secondary-900 mb-3">Show Status</label>
+                        <p className="text-sm text-secondary-600 leading-relaxed max-w-2xl">
+                          {formData.status === 'active' 
+                            ? 'This show is currently active and accepting new bookings. Staff can be assigned and clients can make reservations.' 
+                            : 'This show is inactive and not accepting new bookings. Existing bookings remain unaffected.'
+                          }
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center space-x-4 lg:ml-6">
+                        {/* Enhanced Toggle Switch */}
+                        <button
+                          type="button"
+                          onClick={handleStatusToggle}
+                          className={`relative inline-flex h-10 w-18 items-center rounded-full transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-primary-500/20 hover:scale-105 ${
+                            formData.status === 'active' 
+                              ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/25' 
+                              : 'bg-gradient-to-r from-secondary-400 to-secondary-500 shadow-lg shadow-secondary-400/25'
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-8 w-8 transform rounded-full bg-white shadow-lg transition-all duration-300 ease-in-out ${
+                              formData.status === 'active' ? 'translate-x-10' : 'translate-x-1'
+                            }`}
+                          />
+                          <span className="sr-only">Toggle show status</span>
+                        </button>
+                        
+                        {/* Status Indicator */}
+                        <div className={`flex items-center px-4 py-3 rounded-lg border-2 transition-all duration-300 ${
+                          formData.status === 'active' 
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
+                            : 'bg-secondary-50 border-secondary-200 text-secondary-700'
+                        }`}>
+                          {formData.status === 'active' ? (
+                            <>
+                              <div className="w-3 h-3 bg-emerald-500 rounded-full mr-2 animate-pulse"></div>
+                              <PlayIcon className="h-5 w-5 mr-1" />
+                              <span className="text-sm font-bold">Active</span>
+                            </>
+                          ) : (
+                            <>
+                              <div className="w-3 h-3 bg-secondary-500 rounded-full mr-2"></div>
+                              <PauseIcon className="h-5 w-5 mr-1" />
+                              <span className="text-sm font-bold">Inactive</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Additional Status Info */}
+                    <div className="mt-4 pt-4 border-t border-secondary-200">
+                      <div className="flex items-start space-x-3">
+                        <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                          formData.status === 'active' ? 'bg-emerald-500' : 'bg-secondary-500'
+                        }`}></div>
+                        <div className="text-xs text-secondary-600">
+                          <span className="font-medium">Current Impact:</span> {
+                            formData.status === 'active' 
+                              ? 'Show is visible to clients and staff can be assigned to bookings.' 
+                              : 'Show is hidden from new bookings but existing assignments remain active.'
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <div>
                     <label htmlFor="description" className="block text-sm font-medium text-secondary-700">Description</label>
                     <textarea id="description" name="description" rows="3" value={formData.description} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-secondary-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"></textarea>
@@ -230,9 +322,29 @@ export default function ShowProfile() {
                 </form>
               ) : (
                 <>
-                  <div className="flex items-center text-lg text-secondary-700 font-semibold">
-                    <CalendarIcon className="h-5 w-5 mr-2 text-primary-500" />
-                    <span>{formatDate(showData.startDate)} - {formatDate(showData.endDate)}</span>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center text-lg text-secondary-700 font-semibold">
+                      <CalendarIcon className="h-5 w-5 mr-2 text-primary-500" />
+                      <span>{formatDate(showData.startDate)} - {formatDate(showData.endDate)}</span>
+                    </div>
+                    {/* Status Badge */}
+                    <div className={`flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
+                      (showData.status || 'active') === 'active' 
+                        ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
+                        : 'bg-secondary-100 text-secondary-700 border border-secondary-200'
+                    }`}>
+                      {(showData.status || 'active') === 'active' ? (
+                        <>
+                          <PlayIcon className="h-4 w-4 mr-1" />
+                          Active
+                        </>
+                      ) : (
+                        <>
+                          <PauseIcon className="h-4 w-4 mr-1" />
+                          Inactive
+                        </>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center text-md text-secondary-700">
                     <MapPinIcon className="h-5 w-5 mr-2 text-primary-400" />

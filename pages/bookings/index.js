@@ -36,12 +36,15 @@ export default function BookingsDirectory() {
     position: { x: 0, y: 0 }
   });
 
-  // Get unique shows for filter
+  // Get unique shows for filter (only active shows)
   const showOptions = useMemo(() => {
-    return shows.map(show => ({
-      id: show.id,
-      name: show.name
-    })).sort((a, b) => a.name.localeCompare(b.name));
+    return shows
+      .filter(show => (show.status || 'active') === 'active')
+      .map(show => ({
+        id: show.id,
+        name: show.name
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [shows]);
 
   // Add helpers to get client and show names
@@ -108,6 +111,12 @@ export default function BookingsDirectory() {
   // Apply filters to bookings
   const filteredBookings = useMemo(() => {
     let result = bookingsArray;
+    
+    // Filter to only show bookings for active shows
+    result = result.filter(booking => {
+      const show = shows.find(s => s.id === booking.showId);
+      return show && (show.status || 'active') === 'active';
+    });
     
     // Apply search filter
     if (filters.search) {

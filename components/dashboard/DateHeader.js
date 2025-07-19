@@ -1,133 +1,356 @@
-import React from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/router';
+import useStore from '@/lib/hooks/useStore';
+import { MagnifyingGlassIcon, XMarkIcon, UserGroupIcon, BuildingOffice2Icon, CalendarIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import { 
-  UserGroupIcon, 
-  BuildingOffice2Icon,
-  CalendarIcon,
-  ClipboardDocumentListIcon,
-  PlusIcon
-} from '@heroicons/react/24/outline';
+import { createPortal } from 'react-dom';
 
 export default function DateHeader() {
+  const { staff, clients, bookings, shows } = useStore();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [results, setResults] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const [isMounted, setIsMounted] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const router = useRouter();
+  const searchRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const inputRef = useRef(null);
+
   // Format date
   const today = new Date();
-  const formattedDate = today.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-
-  // Get day and month for the visual date badge
   const day = today.getDate();
   const month = today.toLocaleDateString('en-US', { month: 'short' });
+  const weekday = today.toLocaleDateString('en-US', { weekday: 'long' });
+  const time = today.toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: true 
+  });
 
-  // Quick action buttons
-  const quickActions = [
-    {
-      id: 'add-staff',
-      title: 'Add Staff',
-      description: 'Create a new staff profile',
-      icon: UserGroupIcon,
-      gradient: 'from-primary-400 to-primary-600',
-      hoverGradient: 'hover:from-primary-500 hover:to-primary-700',
-      hoverEffect: 'hover:shadow-primary-300/50',
-      link: '/staff/new'
-    },
-    {
-      id: 'add-client',
-      title: 'Add Client',
-      description: 'Create a new client',
-      icon: BuildingOffice2Icon,
-      gradient: 'from-indigo-400 to-indigo-600',
-      hoverGradient: 'hover:from-indigo-500 hover:to-indigo-700',
-      hoverEffect: 'hover:shadow-indigo-300/50',
-      link: '/clients/new'
-    },
-    {
-      id: 'new-booking',
-      title: 'New Booking',
-      description: 'Create a new booking',
-      icon: ClipboardDocumentListIcon,
-      gradient: 'from-emerald-400 to-emerald-600',
-      hoverGradient: 'hover:from-emerald-500 hover:to-emerald-700',
-      hoverEffect: 'hover:shadow-emerald-300/50',
-      link: '/bookings/new'
-    },
-    {
-      id: 'add-show',
-      title: 'Add Show',
-      description: 'Create a new show',
-      icon: CalendarIcon,
-      gradient: 'from-blue-400 to-blue-600',
-      hoverGradient: 'hover:from-blue-500 hover:to-blue-700',
-      hoverEffect: 'hover:shadow-blue-300/50',
-      link: '/shows/new'
+  // Set mounted state for client-side rendering
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Handle clicks outside the search component to close results
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (searchRef.current && !searchRef.current.contains(event.target) && 
+          dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
     }
-  ];
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [searchRef, dropdownRef]);
+
+  // Position dropdown correctly relative to the search input
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+    }
+  }, [isOpen, searchTerm]);
+
+  // Reset search dropdown when route changes
+  useEffect(() => {
+    setIsOpen(false);
+    setSearchTerm('');
+  }, [router.asPath]);
+
+  // Search across data sources when searchTerm changes
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setResults([]);
+      return;
+    }
+
+    const term = searchTerm.toLowerCase().trim();
+    const searchResults = [];
+    
+    // Search Staff
+    staff.forEach(person => {
+      const fullName = person.name || `${person.firstName || ''} ${person.lastName || ''}`.trim();
+      if (fullName.toLowerCase().includes(term) || 
+          person.email?.toLowerCase().includes(term) ||
+          person.phone?.includes(term)) {
+        searchResults.push({
+          id: person.id,
+          type: 'staff',
+          title: fullName,
+          subtitle: person.email || 'No email',
+          url: `/staff/${person.id}`
+        });
+      }
+    });
+    
+    // Search Clients
+    clients.forEach(client => {
+      if (client.name.toLowerCase().includes(term) || 
+          client.email?.toLowerCase().includes(term) ||
+          client.phone?.includes(term) ||
+          client.location?.toLowerCase().includes(term)) {
+        searchResults.push({
+          id: client.id,
+          type: 'client',
+          title: client.name,
+          subtitle: client.location || 'No location',
+          url: `/clients/${client.id}`
+        });
+      }
+    });
+    
+    // Search Bookings
+    bookings.forEach(booking => {
+      const client = clients.find(c => c.id === booking.clientId);
+      const show = shows.find(s => s.id === booking.showId);
+      
+      if (client?.name.toLowerCase().includes(term) || 
+          show?.name.toLowerCase().includes(term) ||
+          booking.notes?.toLowerCase().includes(term)) {
+        searchResults.push({
+          id: booking.id,
+          type: 'booking',
+          title: show ? show.name : 'Unknown Show',
+          subtitle: client ? client.name : 'Unknown Client',
+          url: `/bookings/${booking.id}`
+        });
+      }
+    });
+    
+    // Limit results to top 8
+    setResults(searchResults.slice(0, 8));
+  }, [searchTerm, staff, clients, bookings, shows]);
+
+  // Handle keyboard navigation
+  const handleKeyDown = useCallback((e) => {
+    if (!isOpen) return;
+    
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex(prevIndex => 
+          prevIndex < results.length - 1 ? prevIndex + 1 : prevIndex
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex(prevIndex => 
+          prevIndex > 0 ? prevIndex - 1 : 0
+        );
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedIndex >= 0 && selectedIndex < results.length) {
+          handleResultClick(results[selectedIndex].url);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setIsOpen(false);
+        break;
+      default:
+        break;
+    }
+  }, [isOpen, results, selectedIndex]);
+
+  // Attach keyboard event listener
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
+
+  // Reset selectedIndex when results change
+  useEffect(() => {
+    setSelectedIndex(-1);
+  }, [results]);
+
+  const handleInputChange = (e) => {
+    setSearchTerm(e.target.value);
+    if (e.target.value.trim()) {
+      setIsOpen(true);
+    } else {
+      setIsOpen(false);
+    }
+  };
+
+  const handleClear = () => {
+    setSearchTerm('');
+    setIsOpen(false);
+  };
+
+  const getIconForType = (type) => {
+    switch (type) {
+      case 'staff':
+        return <UserGroupIcon className="h-4 w-4 text-primary-400" />;
+      case 'client':
+        return <BuildingOffice2Icon className="h-4 w-4 text-indigo-400" />;
+      case 'booking':
+        return <CalendarIcon className="h-4 w-4 text-emerald-400" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTypeLabel = (type) => {
+    switch (type) {
+      case 'staff':
+        return <span className="text-xs px-1.5 py-0.5 rounded bg-primary-50 text-primary-500">Staff</span>;
+      case 'client':
+        return <span className="text-xs px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-500">Client</span>;
+      case 'booking':
+        return <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-500">Booking</span>;
+      default:
+        return null;
+    }
+  };
+
+  // Render search results in a portal
+  const SearchResultsPortal = () => {
+    if (!isMounted || !isOpen) return null;
+    
+    return createPortal(
+      <div 
+        ref={dropdownRef}
+        className="search-results-dropdown bg-white shadow-2xl rounded-xl border border-secondary-200 overflow-hidden"
+        style={{
+          position: 'absolute',
+          top: `${dropdownPosition.top}px`,
+          left: `${dropdownPosition.left}px`,
+          width: `${dropdownPosition.width}px`,
+          maxHeight: '60vh',
+          zIndex: 9999
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {results.length > 0 ? (
+          <ul className="max-h-[60vh] overflow-y-auto py-2 divide-y divide-secondary-100">
+            {results.map((result, index) => (
+              <li key={`${result.type}-${result.id}`}>
+                <button 
+                  onClick={() => handleResultClick(result.url)}
+                  className={`block w-full text-left px-4 py-3 transition-colors ${
+                    index === selectedIndex ? 'bg-secondary-100' : 'hover:bg-secondary-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      {getIconForType(result.type)}
+                      <div className="ml-3">
+                        <div className="text-sm font-medium text-secondary-900 line-clamp-1">{result.title}</div>
+                        <div className="text-xs text-secondary-500 line-clamp-1">{result.subtitle}</div>
+                      </div>
+                    </div>
+                    <div>
+                      {getTypeLabel(result.type)}
+                    </div>
+                  </div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          searchTerm && (
+            <div className="py-4 px-4 text-center text-sm text-secondary-500">
+              No results found
+            </div>
+          )
+        )}
+      </div>,
+      document.body
+    );
+  };
+
+  // Add click handler for search results
+  const handleResultClick = (url) => {
+    setTimeout(() => {
+      router.push(url);
+      setIsOpen(false);
+      setSearchTerm('');
+    }, 10);
+  };
 
   return (
     <div className="mb-6 sm:mb-8 overflow-visible">
       <div className="relative p-4 sm:p-6 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/70 transition-all duration-300 hover:shadow-2xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
-          {/* Date section with improved visual badge */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
+          {/* Date section */}
           <div className="flex items-center">
-            <div className="flex-shrink-0 overflow-hidden rounded-2xl shadow-lg mr-4 transition-transform duration-300 hover:scale-105 border border-primary-100/70">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 flex flex-col relative overflow-hidden">
-                {/* Subtle gradient background for the date badge */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-primary-500/20 z-0"></div>
+            {/* Elegant date badge */}
+            <div className="flex-shrink-0 mr-4">
+              <div className="relative">
+                {/* Main date circle */}
+                <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg flex items-center justify-center relative overflow-hidden">
+                  {/* Subtle pattern overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+                  
+                  {/* Date content */}
+                  <div className="text-center relative z-10">
+                    <div className="text-white text-xs font-semibold uppercase tracking-wider leading-none">
+                      {month}
+                    </div>
+                    <div className="text-white text-2xl sm:text-3xl font-bold leading-none">
+                      {day}
+                    </div>
+                  </div>
+                </div>
                 
-                <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white text-center py-1.5 text-xs font-semibold uppercase tracking-wider relative z-10">
-                  {month}
-                </div>
-                <div className="bg-white text-center flex-1 flex items-center justify-center relative z-10">
-                  <span className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-500">{day}</span>
-                </div>
+                {/* Subtle glow effect */}
+                <div className="absolute inset-0 rounded-full bg-primary-400/20 blur-xl scale-110"></div>
               </div>
             </div>
+            
+            {/* Clean date text */}
             <div>
-              <p className="text-xl sm:text-2xl font-medium text-secondary-800 tracking-tight">
-                {formattedDate}
+              <p className="text-lg sm:text-xl font-semibold text-secondary-800 tracking-tight">
+                {weekday}
               </p>
-              <p className="text-xs sm:text-sm text-secondary-500 mt-0.5">
-                {today.toLocaleDateString('en-US', { hour: '2-digit', minute: '2-digit' })}
+              <p className="text-sm text-secondary-500 mt-0.5 flex items-center">
+                <span className="inline-block w-1.5 h-1.5 bg-secondary-400 rounded-full mr-2"></span>
+                {time}
               </p>
             </div>
           </div>
           
-          {/* Quick actions with improved styling */}
-          <div className="flex gap-3 sm:gap-4">
-            {quickActions.map((action) => (
-              <Link 
-                key={action.id}
-                href={action.link}
-                className={`
-                  group relative flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 
-                  rounded-xl text-white shadow-lg 
-                  bg-gradient-to-br ${action.gradient} ${action.hoverGradient}
-                  transition-all duration-300 ease-in-out
-                  hover:shadow-xl ${action.hoverEffect}
-                  transform hover:scale-105 active:scale-95
-                  before:absolute before:inset-0 before:rounded-xl before:bg-white/20 before:opacity-0 
-                  hover:before:opacity-100 before:transition-opacity
-                `}
-                title={action.title}
-              >
-                <action.icon className="h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-300 group-hover:scale-110 relative z-10" />
-                
-                {/* Enhanced tooltip on hover */}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 w-36
-                              px-2.5 py-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-xl text-center 
-                              pointer-events-none opacity-0 group-hover:opacity-100
-                              transition-all duration-300 z-20 translate-y-1 group-hover:translate-y-0
-                              border border-white/50">
-                  <div className="font-medium text-xs text-secondary-800">{action.title}</div>
-                  <div className="text-2xs text-secondary-500 mt-0.5">{action.description}</div>
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1.5
-                                w-3 h-3 rotate-45 bg-white border-r border-b border-white/50"></div>
+          {/* Search section */}
+          <div className="flex-1 lg:max-w-md xl:max-w-lg">
+            <div className="relative w-full" ref={searchRef}>
+              <div className="relative z-30 animated-search-border hover:shadow-xl transition-shadow duration-300">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MagnifyingGlassIcon className="h-4 w-4 sm:h-5 sm:w-5 text-secondary-500" />
                 </div>
-              </Link>
-            ))}
+                <input
+                  ref={inputRef}
+                  type="text"
+                  className="block w-full bg-white pl-9 sm:pl-11 pr-9 sm:pr-11 py-2.5 sm:py-3.5 rounded-xl focus:outline-none text-sm sm:text-base shadow-lg placeholder-secondary-400 transition-all border border-transparent"
+                  placeholder="Search staff, clients, or bookings..."
+                  value={searchTerm}
+                  onChange={handleInputChange}
+                  aria-label="Search across The Smith Agency"
+                />
+                {searchTerm && (
+                  <button
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={handleClear}
+                    aria-label="Clear search"
+                  >
+                    <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5 text-secondary-400 hover:text-secondary-600" />
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
         
@@ -135,6 +358,53 @@ export default function DateHeader() {
         <div className="absolute bottom-0 right-0 w-16 h-16 bg-gradient-to-tl from-primary-500/5 to-transparent rounded-tl-full"></div>
         <div className="absolute top-0 left-0 w-24 h-24 bg-gradient-to-br from-primary-500/5 to-transparent rounded-br-full"></div>
       </div>
+      
+      {/* Render search results in a portal */}
+      <SearchResultsPortal />
+      
+      {/* Custom styles for animated search border */}
+      <style jsx global>{`
+        @keyframes gradient {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
+        }
+
+        .animated-search-border::before {
+          content: "";
+          position: absolute;
+          inset: -2px;
+          z-index: -1;
+          border-radius: 16px;
+          background: linear-gradient(
+            -45deg, 
+            #ff3366, 
+            #ff9933, 
+            #ffcc33, 
+            #33ccff, 
+            #9966ff
+          );
+          background-size: 400% 400%;
+          animation: gradient 8s ease infinite;
+          opacity: 0.7;
+          transition: opacity 0.3s ease;
+        }
+
+        .animated-search-border:focus-within::before {
+          opacity: 1;
+        }
+
+        .search-results-dropdown {
+          z-index: 9999 !important;
+          position: absolute !important;
+        }
+      `}</style>
     </div>
   );
 } 

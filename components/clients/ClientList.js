@@ -31,99 +31,56 @@ export default function ClientList({ clients, view = 'grid' }) {
 
 function ClientCard({ client }) {
   const router = useRouter();
-  const clientLogo = client.logoUrl || null;
-  const initials = client.name?.substring(0, 2).toUpperCase() || '??';
-  
-  // Get the count of active/completed shows for this client
-  const activeShowsCount = client.shows?.filter(s => s.status === 'active')?.length || 0;
-  
-  // Get the total days booked (calculated in clients page)
   const totalDaysBooked = client.totalDaysBooked || 0;
-  
-  // Standardized gradient for all client cards
-  const standardGradient = 'from-gray-600 to-gray-700';
 
   return (
-    <Link href={`/clients/${client.id}`} className="block snap-start snap-always">
-      <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md relative transition-all duration-300 border border-gray-200 h-full hover:translate-y-[-2px]">
-        {/* Subtle top accent */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-primary-500"></div>
-        
-        {/* Edit button */}
-        <div className="absolute top-3 right-3 z-20">
-          <Link href={`/clients/${client.id}?edit=true`} onClick={(e) => e.stopPropagation()}>
-            <button className="bg-white p-2 rounded-full text-gray-500 hover:text-primary-600 transition-colors shadow-sm border border-gray-200">
-              <PencilSquareIcon className="h-4 w-4" />
-            </button>
-          </Link>
-        </div>
-        
-        {/* Days Booked Badge */}
-        <div className="absolute top-3 left-3 z-20">
+    <Link href={`/clients/${client.id}`} className="block">
+      <div className="relative rounded-2xl shadow-xl bg-white overflow-hidden transition-all duration-300 group hover:scale-[1.03] hover:shadow-2xl hover:ring-2 hover:ring-pink-200">
+        {/* Gradient Header */}
+        <div className="relative h-16 bg-gradient-to-r from-pink-500 to-rose-400 flex items-center px-5">
+          {/* Days badge in top left */}
           {totalDaysBooked > 0 && (
-            <div className="bg-primary-100 text-primary-700 text-xs font-bold px-2 py-1 rounded-md flex items-center">
-              <CalendarIcon className="h-3.5 w-3.5 mr-1" /> 
+            <div className="absolute top-2 left-2 z-20 bg-white text-pink-600 text-sm font-bold px-2.5 py-0.5 rounded-full shadow border border-pink-200 flex items-center gap-1.5 min-w-[44px] justify-center">
+              <CalendarIcon className="h-5 w-5 text-pink-400" />
               <span>{totalDaysBooked}</span>
             </div>
           )}
+          {/* Company name in header, smaller and with left margin to avoid badge */}
+          <h3 className="text-lg font-bold text-white text-center mx-auto w-full truncate drop-shadow-sm pl-12 pr-4">
+            {client.name}
+          </h3>
+          {/* Edit icon (hover only) */}
+          <div className="absolute top-3 right-3 z-30">
+            <Link href={`/clients/${client.id}?edit=true`} onClick={e => e.stopPropagation()}>
+              <button className="bg-white p-2 rounded-full text-gray-500 hover:text-pink-500 shadow border border-gray-200 opacity-0 group-hover:opacity-100 transition-all pointer-events-auto">
+                <PencilSquareIcon className="h-5 w-5" />
+              </button>
+            </Link>
+          </div>
         </div>
-        
-        {/* Card header with standardized gray gradient */}
-        <div className={`bg-gradient-to-r ${standardGradient} pt-5 px-6 pb-16 relative`}>
-          {/* Subdued decorative elements */}
-          <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -mr-8 -mt-8"></div>
-          <div className="absolute bottom-0 left-0 w-12 h-12 bg-white/10 rounded-full -ml-6 -mb-6"></div>
-        </div>
-        
-        <div className="px-6 pb-6 relative z-10">
-          {/* Logo/initials circle */}
-          <div className="flex flex-col items-center -mt-10 mb-4">
-            <div className="relative">
-              <div className="h-20 w-20 rounded-full bg-white flex items-center justify-center text-2xl font-semibold shadow-md border-4 border-white overflow-hidden">
-                {clientLogo ? (
-                  <img
-                    src={clientLogo}
-                    alt={client.name}
-                    className="h-full w-full object-cover rounded-full"
-                  />
-                ) : (
-                  <span className="text-transparent bg-clip-text bg-gradient-to-b from-gray-700 to-gray-900">{initials}</span>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          {/* Name only */}
-          <div className="text-center mb-5">
-            <h3 className="text-lg font-bold text-gray-800">
-              {client.name}
-            </h3>
-          </div>
-          
-          {/* Contact buttons */}
-          <div className="flex justify-center space-x-4 mt-4">
-            {client.email && (
-              <Link 
-                href={`mailto:${client.email}`}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-primary-500 text-white p-3 rounded-full hover:bg-primary-600 transition-colors shadow-sm"
-                title={`Email ${client.name}`}
-              >
-                <EnvelopeIcon className="h-5 w-5" />
-              </Link>
-            )}
-            
-            {client.phone && (
-              <Link 
-                href={`tel:${client.phone}`}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-gray-500 text-white p-3 rounded-full hover:bg-gray-600 transition-colors shadow-sm"
-                title={`Call ${client.name}`}
-              >
-                <PhoneIcon className="h-5 w-5" />
-              </Link>
-            )}
-          </div>
+        {/* No empty card body */}
+        {/* Card Footer - Contact Buttons */}
+        <div className="flex justify-center gap-6 py-7">
+          {client.email && (
+            <Link
+              href={`mailto:${client.email}`}
+              onClick={e => e.stopPropagation()}
+              className="w-12 h-12 flex items-center justify-center rounded-full bg-pink-500 text-white shadow-lg hover:bg-pink-600 transition-all text-xl border-2 border-white hover:scale-110"
+              title={`Email ${client.name}`}
+            >
+              <EnvelopeIcon className="h-6 w-6" />
+            </Link>
+          )}
+          {client.phone && (
+            <Link
+              href={`tel:${client.phone}`}
+              onClick={e => e.stopPropagation()}
+              className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-500 text-white shadow-lg hover:bg-gray-700 transition-all text-xl border-2 border-white hover:scale-110"
+              title={`Call ${client.name}`}
+            >
+              <PhoneIcon className="h-6 w-6" />
+            </Link>
+          )}
         </div>
       </div>
     </Link>
