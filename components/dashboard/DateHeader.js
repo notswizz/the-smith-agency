@@ -5,7 +5,7 @@ import { MagnifyingGlassIcon, XMarkIcon, UserGroupIcon, BuildingOffice2Icon, Cal
 import Link from 'next/link';
 import { createPortal } from 'react-dom';
 
-export default function DateHeader() {
+export default function DateHeader({ sidebar }) {
   const { staff, clients, bookings, shows } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState([]);
@@ -281,6 +281,22 @@ export default function DateHeader() {
       setSearchTerm('');
     }, 10);
   };
+
+  if (sidebar) {
+    return (
+      <div className="w-full flex justify-center items-center py-1">
+        <div className="w-full bg-white border border-black rounded-lg p-2 text-center shadow-md">
+          <div className="flex flex-col items-center">
+            <div className="flex items-end justify-center mb-0.5">
+              <span className="text-lg font-serif font-semibold leading-none mr-1 text-black">{month}</span>
+              <span className="text-2xl font-serif font-black leading-none text-black">{day}</span>
+            </div>
+            <div className="text-xs font-serif text-gray-500 opacity-90 font-medium">{weekday} • {time}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 mb-10">
