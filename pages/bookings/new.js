@@ -52,7 +52,7 @@ export default function NewBooking() {
   
   // Summary stats
   const totalStaffNeeded = useMemo(() => {
-    return formData.datesNeeded.reduce((sum, date) => sum + (date.staffCount || 1), 0);
+    return formData.datesNeeded.reduce((sum, date) => sum + (date.staffCount || 0), 0);
   }, [formData.datesNeeded]);
   
   const totalStaffAssigned = useMemo(() => {
@@ -268,7 +268,7 @@ export default function NewBooking() {
         } else {
           staffIds.push(staffId);
           // Also increment staffCount if needed
-          if (staffIds.length > (dateNeeded.staffCount || 1)) {
+          if (staffIds.length > (dateNeeded.staffCount || 0)) {
             return {
               ...dateNeeded,
               staffIds: staffIds,
@@ -321,7 +321,7 @@ export default function NewBooking() {
     updatedDatesNeeded.forEach(dateNeeded => {
       const availableStaff = getAvailableStaffForDate(dateNeeded.date);
       dateStaffMap[dateNeeded.date] = {
-        needed: dateNeeded.staffCount || 1,
+        needed: dateNeeded.staffCount || 0,
         staffAvailable: availableStaff,
         current: dateNeeded.staffIds || []
       };
@@ -735,7 +735,7 @@ export default function NewBooking() {
                                     const updatedDatesNeeded = [...formData.datesNeeded];
                                     const dateIndex = updatedDatesNeeded.findIndex(d => d.date === date);
                                     if (dateIndex >= 0) {
-                                      updatedDatesNeeded[dateIndex].staffCount = (staffCount || 1) + 1;
+                                      updatedDatesNeeded[dateIndex].staffCount = (staffCount || 0) + 1;
                                       setFormData({ ...formData, datesNeeded: updatedDatesNeeded });
                                     }
                                   }}

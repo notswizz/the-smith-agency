@@ -19,10 +19,21 @@ export default function KeyStats() {
       ? bookings.items 
       : [];
   
-  // Calculate total booking days
-  const totalBookingDays = bookingsArray.reduce((total, booking) => {
+  // Calculate total booking dates and days
+  const totalBookingDates = bookingsArray.reduce((total, booking) => {
     if (booking.status !== 'cancelled' && Array.isArray(booking.datesNeeded)) {
-      return total + booking.datesNeeded.length;
+      // Only count dates where staffCount > 0
+      const datesWithStaff = booking.datesNeeded.filter(d => (d.staffCount || 0) > 0);
+      return total + datesWithStaff.length;
+    }
+    return total;
+  }, 0);
+
+  const totalStaffDays = bookingsArray.reduce((total, booking) => {
+    if (booking.status !== 'cancelled' && Array.isArray(booking.datesNeeded)) {
+      // Calculate total staff days (assignments)
+      const datesWithStaff = booking.datesNeeded.filter(d => (d.staffCount || 0) > 0);
+      return total + datesWithStaff.reduce((sum, date) => sum + (date.staffCount || 0), 0);
     }
     return total;
   }, 0);
@@ -57,13 +68,13 @@ export default function KeyStats() {
     {
       id: 'days',
       name: 'Days Booked',
-      value: totalBookingDays,
-      icon: CalendarIcon,
+      value: totalStaffDays,
+      icon: UserGroupIcon,
       gradient: 'from-blue-400 to-cyan-600',
       iconGradient: 'from-blue-500 to-cyan-600',
       accentColor: 'blue-400',
       link: '/bookings',
-      decoration: '◆'
+      decoration: '◇'
     },
     {
       id: 'bookings',
@@ -84,6 +95,7 @@ export default function KeyStats() {
       case 'indigo-400': return 'text-indigo-400';
       case 'violet-400': return 'text-violet-400';
       case 'blue-400': return 'text-blue-400';
+      case 'purple-400': return 'text-purple-400';
       case 'emerald-400': return 'text-emerald-400';
       default: return 'text-secondary-400';
     }
@@ -95,6 +107,7 @@ export default function KeyStats() {
       case 'indigo-400': return 'bg-indigo-400/10 hover:bg-indigo-400/20';
       case 'violet-400': return 'bg-violet-400/10 hover:bg-violet-400/20';
       case 'blue-400': return 'bg-blue-400/10 hover:bg-blue-400/20';
+      case 'purple-400': return 'bg-purple-400/10 hover:bg-purple-400/20';
       case 'emerald-400': return 'bg-emerald-400/10 hover:bg-emerald-400/20';
       default: return 'bg-secondary-400/10 hover:bg-secondary-400/20';
     }
@@ -106,6 +119,7 @@ export default function KeyStats() {
       case 'indigo-400': return 'text-indigo-400';
       case 'violet-400': return 'text-violet-400';
       case 'blue-400': return 'text-blue-400';
+      case 'purple-400': return 'text-purple-400';
       case 'emerald-400': return 'text-emerald-400';
       default: return 'text-secondary-400';
     }
@@ -117,6 +131,7 @@ export default function KeyStats() {
       case 'indigo-400': return 'hover:shadow-indigo-400/10';
       case 'violet-400': return 'hover:shadow-violet-400/10';
       case 'blue-400': return 'hover:shadow-blue-400/10';
+      case 'purple-400': return 'hover:shadow-purple-400/10';
       case 'emerald-400': return 'hover:shadow-emerald-400/10';
       default: return 'hover:shadow-secondary-400/10';
     }
@@ -128,6 +143,7 @@ export default function KeyStats() {
       case 'indigo-400': return 'from-indigo-400/5';
       case 'violet-400': return 'from-violet-400/5';
       case 'blue-400': return 'from-blue-400/5';
+      case 'purple-400': return 'from-purple-400/5';
       case 'emerald-400': return 'from-emerald-400/5';
       default: return 'from-secondary-400/5';
     }

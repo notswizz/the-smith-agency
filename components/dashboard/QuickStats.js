@@ -40,15 +40,23 @@ export default function QuickStats() {
     const activeBookings = bookingsArray.filter(b => b.status !== 'cancelled');
     
     // Calculate needed metrics
+    let totalDatesWithStaff = 0;
+    let totalStaffDays = 0;
+    
     bookingsArray.forEach(booking => {
       const datesNeeded = Array.isArray(booking.datesNeeded) ? booking.datesNeeded : [];
       
       if (booking.status !== 'cancelled') {
-        totalBookingDays += datesNeeded.length;
+        // Only count dates where staffCount > 0
+        const datesWithStaff = datesNeeded.filter(d => (d.staffCount || 0) > 0);
+        totalDatesWithStaff += datesWithStaff.length;
+        
+        // Calculate total staff days (assignments)
+        totalStaffDays += datesWithStaff.reduce((total, date) => total + (date.staffCount || 0), 0);
         
         // Count staff assignments
         datesNeeded.forEach(d => {
-          const staffCount = d.staffCount || 1;
+          const staffCount = d.staffCount || 0;
           totalNeededAssignments += staffCount;
           totalStaffAssignments += Array.isArray(d.staffIds) 
             ? d.staffIds.filter(Boolean).length 
@@ -57,7 +65,7 @@ export default function QuickStats() {
         
         // Check if booking is fully staffed
         const isFullyStaffed = datesNeeded.every(d => {
-          const needed = d.staffCount || 1;
+          const needed = d.staffCount || 0;
           const assigned = Array.isArray(d.staffIds) ? d.staffIds.filter(Boolean).length : 0;
           return assigned >= needed;
         });
@@ -114,10 +122,10 @@ export default function QuickStats() {
         chartData: [5, 8, 10, 14, 12, 13, 18]
       },
       {
-        id: 'days-booked',
-        name: 'Days Booked',
-        value: totalBookingDays,
-        description: 'Total scheduled days',
+        id: 'dates-booked',
+        name: 'Dates Booked',
+        value: totalDatesWithStaff,
+        description: 'Total dates with staff',
         icon: CalendarIcon,
         color: 'bg-blue-100',
         iconColor: 'text-blue-600',
@@ -125,6 +133,19 @@ export default function QuickStats() {
         trend: '+8%',
         trendDirection: 'up',
         chartData: [23, 25, 30, 35, 32, 40, 45]
+      },
+      {
+        id: 'staff-days',
+        name: 'Staff Days',
+        value: totalStaffDays,
+        description: 'Total staff assignments',
+        icon: UserGroupIcon,
+        color: 'bg-purple-100',
+        iconColor: 'text-purple-600',
+        textColor: 'text-purple-600',
+        trend: '+12%',
+        trendDirection: 'up',
+        chartData: [45, 52, 58, 65, 62, 70, 75]
       },
       {
         id: 'revenue',

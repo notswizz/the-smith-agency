@@ -15,7 +15,7 @@ export default function RecentActivity() {
     
     return {
       title: `New booking for ${client?.name || 'Unknown Client'}`,
-      description: `${show?.name || 'Unknown Show'} - ${Array.isArray(activity.dates) ? activity.dates.length : Array.isArray(activity.datesNeeded) ? activity.datesNeeded.length : 0} day(s)`,
+      description: `${show?.name || 'Unknown Show'} - ${Array.isArray(activity.dates) ? activity.dates.length : Array.isArray(activity.datesNeeded) ? activity.datesNeeded.filter(d => (d.staffCount || 0) > 0).length : 0} day(s)`,
       date: formatDate(activity.createdAt),
       href: `/bookings/${activity.id}`
     };

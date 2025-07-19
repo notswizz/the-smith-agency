@@ -31,7 +31,8 @@ export default function ClientList({ clients, view = 'grid' }) {
 
 function ClientCard({ client }) {
   const router = useRouter();
-  const totalDaysBooked = client.totalDaysBooked || 0;
+  const totalDatesBooked = client.totalDatesBooked || 0;
+  const totalStaffDays = client.totalStaffDays || 0;
 
   return (
     <Link href={`/clients/${client.id}`} className="block">
@@ -39,10 +40,10 @@ function ClientCard({ client }) {
         {/* Gradient Header */}
         <div className="relative h-16 bg-gradient-to-r from-pink-500 to-rose-400 flex items-center px-5">
           {/* Days badge in top left */}
-          {totalDaysBooked > 0 && (
+          {totalStaffDays > 0 && (
             <div className="absolute top-2 left-2 z-20 bg-white text-pink-600 text-sm font-bold px-2.5 py-0.5 rounded-full shadow border border-pink-200 flex items-center gap-1.5 min-w-[44px] justify-center">
               <CalendarIcon className="h-5 w-5 text-pink-400" />
-              <span>{totalDaysBooked}</span>
+              <span>{totalStaffDays}</span>
             </div>
           )}
           {/* Company name in header, smaller and with left margin to avoid badge */}
@@ -166,7 +167,7 @@ function ClientTable({ clients }) {
                 <div className="flex items-center text-sm text-gray-600">
                   <CalendarIcon className="h-4 w-4 text-gray-400 mr-1" />
                   <span className="font-medium">
-                    {client.totalDaysBooked || 0}
+                    {client.totalStaffDays || 0}
                   </span>
                 </div>
               </td>

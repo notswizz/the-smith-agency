@@ -23,8 +23,15 @@ const BookingCard = ({
   
   // Get booking summary information
   const getBookingSummary = (datesNeeded = []) => {
-    if (!Array.isArray(datesNeeded) || datesNeeded.length === 0) return { days: 0, staffNames: [], staffIds: [] };
-    const days = datesNeeded.length;
+    if (!Array.isArray(datesNeeded) || datesNeeded.length === 0) return { dates: 0, days: 0, staffNames: [], staffIds: [] };
+    
+    // Only count dates where staffCount > 0
+    const datesWithStaff = datesNeeded.filter(d => (d.staffCount || 0) > 0);
+    const dates = datesWithStaff.length;
+    
+    // Calculate total days (staff assignments)
+    const days = datesWithStaff.reduce((total, date) => total + (date.staffCount || 0), 0);
+    
     const staffIdSet = new Set();
     datesNeeded.forEach(d => {
       if (Array.isArray(d.staffIds)) {
@@ -36,20 +43,20 @@ const BookingCard = ({
       return s ? (s.name || `${s.firstName || ''} ${s.lastName || ''}`.trim()) : '[Unknown Staff]';
     });
     const staffIds = Array.from(staffIdSet);
-    return { days, staffNames, staffIds };
+    return { dates, days, staffNames, staffIds };
   };
 
   const bookingSummary = getBookingSummary(booking.datesNeeded);
   
-  // Get sorted dates for the booking
+  // Get sorted dates for the booking (only dates that need staff)
   const sortedDates = booking.datesNeeded ? 
-    [...booking.datesNeeded].sort((a, b) => new Date(a.date) - new Date(b.date)) : 
+    [...booking.datesNeeded].filter(d => (d.staffCount || 0) > 0).sort((a, b) => new Date(a.date) - new Date(b.date)) : 
     [];
   const firstDate = sortedDates.length > 0 ? sortedDates[0].date : null;
   const lastDate = sortedDates.length > 0 ? sortedDates[sortedDates.length - 1].date : null;
   
   // Calculate staff needed vs assigned
-  const totalStaffNeeded = booking.datesNeeded?.reduce((total, date) => total + (date.staffCount || 1), 0) || 0;
+  const totalStaffNeeded = booking.datesNeeded?.reduce((total, date) => total + (date.staffCount || 0), 0) || 0;
   const totalStaffAssigned = booking.datesNeeded?.reduce((total, date) => 
     total + (date.staffIds?.filter(Boolean).length || 0), 0) || 0;
   
@@ -181,16 +188,16 @@ const BookingCard = ({
           </div>
         </div>
         
-        {/* Staff/Days Stats and Progress */}
+        {/* Staff/Dates/Days Stats and Progress */}
         <div className="rounded-lg bg-secondary-50 p-2.5 border border-secondary-100 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs">
               <CalendarIcon className="w-3.5 h-3.5 text-indigo-500" />
-              <span className="font-medium text-secondary-700">{bookingSummary.days} Day{bookingSummary.days !== 1 ? 's' : ''}</span>
+              <span className="font-medium text-secondary-700">{bookingSummary.dates} Date{bookingSummary.dates !== 1 ? 's' : ''}</span>
             </div>
             <div className="flex items-center gap-1.5 text-xs">
               <UserGroupIcon className="w-3.5 h-3.5 text-indigo-500" />
-              <span className="font-medium text-secondary-700">{totalStaffAssigned}/{totalStaffNeeded} Staff</span>
+              <span className="font-medium text-secondary-700">{totalStaffAssigned}/{totalStaffNeeded} Days</span>
             </div>
           </div>
           
@@ -215,13 +222,15 @@ const BookingCard = ({
         </div>
 
         {/* Daily Staffing Micro-Bars */}
-        {bookingSummary.days > 0 && (
+        {bookingSummary.dates > 0 && (
           <div className="flex items-end h-7 gap-0.5 overflow-hidden relative group/microbars">
-            {Array.from({ length: Math.min(bookingSummary.days, 30) }).map((_, i) => {
-              const day = sortedDates[i];
+            {Array.from({ length: Math.min(bookingSummary.dates, 30) }).map((_, i) => {
+              // Filter to only show days that need staff
+              const daysWithStaff = sortedDates.filter(day => (day.staffCount || 0) > 0);
+              const day = daysWithStaff[i];
               if (!day) return null;
               const dayStaffIds = day.staffIds || [];
-              const dayStaffCount = day.staffCount || 1;
+              const dayStaffCount = day.staffCount || 0;
               const fullness = Math.min(1, dayStaffIds.length / Math.max(1, dayStaffCount));
               
               return (
@@ -236,9 +245,9 @@ const BookingCard = ({
                 ></div>
               );
             })}
-            {bookingSummary.days > 30 && (
+            {bookingSummary.dates > 30 && (
               <div className="flex-1 rounded-sm bg-secondary-300 group-hover/microbars:bg-secondary-400 h-1/2 flex items-center justify-center cursor-default transition-colors">
-                <span className="text-2xs text-white font-bold">+{bookingSummary.days - 30}</span>
+                <span className="text-2xs text-white font-bold">+{bookingSummary.dates - 30}</span>
               </div>
             )}
           </div>

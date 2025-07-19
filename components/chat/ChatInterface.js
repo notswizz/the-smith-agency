@@ -358,7 +358,9 @@ const BookingCard = ({ booking }) => {
   const getDaysCount = () => {
     const dates = getDates();
     if (dates.length > 0) {
-      return dates.length;
+      // Only count days where staffCount > 0
+      const daysWithStaff = dates.filter(d => (d.staffCount || 0) > 0);
+      return daysWithStaff.length;
     }
     return booking.daysNeeded || 0;
   };

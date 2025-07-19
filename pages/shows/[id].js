@@ -389,7 +389,7 @@ export default function ShowProfile() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {showBookings.map((booking) => {
                   // Calculate total staff assigned and total days
-                  const totalDays = Array.isArray(booking.datesNeeded) ? booking.datesNeeded.length : 0;
+                  const totalDays = Array.isArray(booking.datesNeeded) ? booking.datesNeeded.filter(d => (d.staffCount || 0) > 0).length : 0;
                   const staffSet = new Set();
                   if (Array.isArray(booking.datesNeeded)) {
                     booking.datesNeeded.forEach(date => {

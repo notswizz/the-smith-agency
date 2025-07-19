@@ -17,7 +17,8 @@ export default function StaffAvailabilityModal({
   staff, 
   bookings, 
   currentBookingId,
-  showDateRange = []
+  showDateRange = [],
+  clientId
 }) {
   // Calculate booking status for each staff member
   const staffAvailabilitySummary = useMemo(() => {
@@ -31,6 +32,11 @@ export default function StaffAvailabilityModal({
     // Get all bookings for this show, except the current one
     const showBookings = Array.isArray(bookings) 
       ? bookings.filter(b => b.showId === showId && b.id !== currentBookingId)
+      : [];
+    
+    // Count bookings for the selected client
+    const clientBookings = Array.isArray(bookings) 
+      ? bookings.filter(b => b.clientId === clientId && b.id !== currentBookingId)
       : [];
     
     // Create a map of dates to booked staff
@@ -81,6 +87,19 @@ export default function StaffAvailabilityModal({
       // Skip staff with no availability for this show
       if (totalAvailableDates === 0) return null;
       
+      // Count how many times this staff member is booked for the selected client
+      const clientBookingCount = clientBookings.reduce((count, booking) => {
+        if (Array.isArray(booking.datesNeeded)) {
+          return count + booking.datesNeeded.reduce((dateCount, dateItem) => {
+            if (Array.isArray(dateItem.staffIds)) {
+              return dateCount + dateItem.staffIds.filter(id => id === member.id).length;
+            }
+            return dateCount;
+          }, 0);
+        }
+        return count;
+      }, 0);
+      
       return {
         id: member.id,
         name: member.name || `${member.firstName || ''} ${member.lastName || ''}`.trim() || '[NO NAME]',
@@ -91,16 +110,22 @@ export default function StaffAvailabilityModal({
         availabilityRate: totalAvailableDates / showDateRange.length,
         bookedRate: totalAvailableDates > 0 ? totalBookedDates / totalAvailableDates : 0,
         actuallyAvailableRate: totalActuallyAvailableDates / showDateRange.length,
-        dateStatusMap
+        dateStatusMap,
+        clientBookingCount,
+        isBooked: totalBookedDates > 0
       };
     }).filter(Boolean).sort((a, b) => {
-      // Sort by actually available dates (highest first), then by total available dates
+      // Sort by booked status first (booked staff at bottom), then by actually available dates
+      if (a.isBooked !== b.isBooked) {
+        return a.isBooked ? 1 : -1; // Available staff first, booked staff last
+      }
+      // Within each group, sort by actually available dates (highest first)
       if (b.totalActuallyAvailableDates !== a.totalActuallyAvailableDates) {
         return b.totalActuallyAvailableDates - a.totalActuallyAvailableDates;
       }
       return b.availabilityRate - a.availabilityRate;
     });
-  }, [showId, availability, staff, bookings, currentBookingId, showDateRange]);
+  }, [showId, availability, staff, bookings, currentBookingId, showDateRange, clientId]);
   
   if (!isOpen) return null;
 
@@ -137,10 +162,14 @@ export default function StaffAvailabilityModal({
                 {/* Staff list with availability */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {staffAvailabilitySummary.map(staff => (
-                    <div key={staff.id} className="bg-white border border-secondary-200 rounded-lg shadow-sm p-4">
+                    <div key={staff.id} className={`bg-white border rounded-lg shadow-sm p-4 ${staff.isBooked ? 'border-amber-200 bg-amber-50' : 'border-secondary-200'}`}>
                       <div className="flex items-start">
                         {/* Avatar/initials */}
-                        <div className="flex-shrink-0 h-10 w-10 rounded-full mr-3 bg-primary-100 border border-primary-200 flex items-center justify-center text-primary-700 overflow-hidden">
+                        <div className={`flex-shrink-0 h-10 w-10 rounded-full mr-3 border flex items-center justify-center overflow-hidden ${
+                          staff.isBooked 
+                            ? 'bg-amber-100 border-amber-200 text-amber-700' 
+                            : 'bg-primary-100 border-primary-200 text-primary-700'
+                        }`}>
                           {staff.photoURL ? (
                             <img src={staff.photoURL} alt={staff.name} className="w-full h-full object-cover" />
                           ) : (
@@ -176,6 +205,14 @@ export default function StaffAvailabilityModal({
                                     ({Math.round(staff.bookedRate * 100)}%)
                                   </span>
                                 )}
+                              </span>
+                            )}
+                            
+                            {/* Client booking count */}
+                            {staff.clientBookingCount > 0 && (
+                              <span className="bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2 py-0.5 flex items-center">
+                                <UserGroupIcon className="h-3 w-3 mr-1" />
+                                {staff.clientBookingCount} client booking{staff.clientBookingCount !== 1 ? 's' : ''}
                               </span>
                             )}
                             

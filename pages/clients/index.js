@@ -33,17 +33,29 @@ export default function ClientsDirectory() {
     return clients.map(client => {
       const clientBookings = getBookingsForClient(client.id) || [];
       
-      // Calculate total days booked
-      const totalDaysBooked = clientBookings.reduce((total, booking) => {
+      // Calculate total dates and days booked
+      const totalDatesBooked = clientBookings.reduce((total, booking) => {
         if (Array.isArray(booking.datesNeeded)) {
-          return total + booking.datesNeeded.length;
+          // Only count dates where staffCount > 0
+          const datesWithStaff = booking.datesNeeded.filter(d => (d.staffCount || 0) > 0);
+          return total + datesWithStaff.length;
+        }
+        return total;
+      }, 0);
+
+      const totalStaffDays = clientBookings.reduce((total, booking) => {
+        if (Array.isArray(booking.datesNeeded)) {
+          // Calculate total staff days (assignments)
+          const datesWithStaff = booking.datesNeeded.filter(d => (d.staffCount || 0) > 0);
+          return total + datesWithStaff.reduce((sum, date) => sum + (date.staffCount || 0), 0);
         }
         return total;
       }, 0);
       
       return {
         ...client,
-        totalDaysBooked
+        totalDatesBooked,
+        totalStaffDays
       };
     });
   }, [clients, getBookingsForClient]);
@@ -57,8 +69,8 @@ export default function ClientsDirectory() {
       result = searchClients(result, searchQuery);
     }
     
-    // Sort by total days booked (descending)
-    result = [...result].sort((a, b) => b.totalDaysBooked - a.totalDaysBooked);
+    // Sort by total dates booked (descending)
+    result = [...result].sort((a, b) => b.totalDatesBooked - a.totalDatesBooked);
 
     return result;
   }, [clientsWithBookingData, searchQuery]);
