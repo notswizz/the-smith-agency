@@ -118,19 +118,21 @@ export default function ShowsCalendar() {
   
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+      {/* Enhanced Header */}
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <CalendarIcon className="h-5 w-5 mr-2 text-primary-600" />
-          <h3 className="text-base font-medium text-secondary-900">Shows Calendar</h3>
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mr-3 shadow-sm">
+            <CalendarIcon className="h-4 w-4 text-white" />
+          </div>
+          <h3 className="text-lg font-semibold text-secondary-900">Shows Calendar</h3>
         </div>
-        <Link href="/shows" className="text-sm text-primary-600 hover:text-primary-800 flex items-center transition-colors">
+        <Link href="/shows" className="text-sm text-blue-600 hover:text-blue-800 flex items-center group transition-colors">
           All shows
-          <ArrowRightIcon className="ml-1 h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+          <ArrowRightIcon className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
         </Link>
       </div>
       
-      <div className="calendar-container rounded-xl bg-white/50 p-4 border border-white/70 shadow-sm">
+      <div className="calendar-container rounded-xl bg-white/90 backdrop-blur-sm p-6 border border-white/80 shadow-lg hover:shadow-xl transition-all duration-300">
         <style jsx global>{`
           /* Custom calendar styling */
           .calendar-container .react-calendar {
@@ -141,42 +143,45 @@ export default function ShowsCalendar() {
             box-shadow: none;
           }
           .calendar-container .react-calendar__tile {
-            padding: 0.75em 0.5em;
+            padding: 0.5em 0.25em;
             position: relative;
-            height: 3.5em;
+            height: 3.2em;
             border-radius: 0.5rem;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             margin: 2px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            font-weight: 500;
           }
           .calendar-container .react-calendar__month-view__weekdays__weekday {
             text-transform: uppercase;
             text-decoration: none;
             font-weight: 600;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: #6b7280;
-            padding-bottom: 0.8em;
+            padding-bottom: 1em;
             letter-spacing: 0.05em;
           }
           .calendar-container .react-calendar__month-view__weekdays__weekday abbr {
             text-decoration: none;
           }
           .calendar-container .react-calendar__tile--now {
-            background: #eff6ff;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             font-weight: bold;
-            color: #3b82f6;
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
           }
           .calendar-container .react-calendar__tile--active {
-            background: #dbeafe;
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
             color: #1e40af;
             font-weight: bold;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
           }
           .calendar-container .react-calendar__tile:enabled:hover,
           .calendar-container .react-calendar__tile:enabled:focus {
-            background-color: #f1f5f9;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
             border-radius: 0.5rem;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(148, 163, 184, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(148, 163, 184, 0.15);
           }
           .calendar-container .react-calendar__navigation button:enabled:hover,
           .calendar-container .react-calendar__navigation button:enabled:focus {
@@ -186,34 +191,36 @@ export default function ShowsCalendar() {
             display: none;
           }
           .calendar-container .react-calendar__month-view__weekdays {
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 2px solid #e2e8f0;
             margin-bottom: 0.5rem;
           }
           .calendar-container .react-calendar__month-view__days {
             gap: 2px;
           }
           .calendar-container .react-calendar__tile--hasActive {
-            background: #dbeafe;
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
           }
           .calendar-shows-indicators {
             position: absolute;
             bottom: 2px;
-            left: 0;
-            right: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            padding: 0 2px;
           }
         `}</style>
         
         {/* Custom navigation control */}
         <CustomNavigation 
           onNext={() => {
-            const nextMonth = new Date(value);
-            nextMonth.setMonth(nextMonth.getMonth() + 1);
-            setValue(nextMonth);
+            const newDate = new Date(value);
+            newDate.setMonth(newDate.getMonth() + 1);
+            setValue(newDate);
           }}
           onPrev={() => {
-            const prevMonth = new Date(value);
-            prevMonth.setMonth(prevMonth.getMonth() - 1);
-            setValue(prevMonth);
+            const newDate = new Date(value);
+            newDate.setMonth(newDate.getMonth() - 1);
+            setValue(newDate);
           }}
           label={value.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         />
@@ -222,7 +229,7 @@ export default function ShowsCalendar() {
           onChange={handleDayClick}
           value={value}
           tileContent={tileContent}
-          className="shadow-none border-none"
+          className="w-full"
           prevLabel={null}
           nextLabel={null}
           prev2Label={null}

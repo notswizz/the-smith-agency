@@ -207,11 +207,11 @@ export default function DateHeader() {
   const getTypeLabel = (type) => {
     switch (type) {
       case 'staff':
-        return <span className="text-xs px-1.5 py-0.5 rounded bg-primary-50 text-primary-500">Staff</span>;
+        return <span className="text-xs px-1.5 py-0.5 rounded bg-primary-500/20 text-primary-400 border border-primary-500/30">Staff</span>;
       case 'client':
-        return <span className="text-xs px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-500">Client</span>;
+        return <span className="text-xs px-1.5 py-0.5 rounded bg-primary-500/20 text-primary-400 border border-primary-500/30">Client</span>;
       case 'booking':
-        return <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-500">Booking</span>;
+        return <span className="text-xs px-1.5 py-0.5 rounded bg-primary-500/20 text-primary-400 border border-primary-500/30">Booking</span>;
       default:
         return null;
     }
@@ -224,7 +224,7 @@ export default function DateHeader() {
     return createPortal(
       <div 
         ref={dropdownRef}
-        className="search-results-dropdown bg-white shadow-2xl rounded-xl border border-secondary-200 overflow-hidden"
+        className="search-results-dropdown bg-black-950 shadow-2xl rounded-xl border-2 border-primary-500 overflow-hidden"
         style={{
           position: 'absolute',
           top: `${dropdownPosition.top}px`,
@@ -236,21 +236,21 @@ export default function DateHeader() {
         onClick={(e) => e.stopPropagation()}
       >
         {results.length > 0 ? (
-          <ul className="max-h-[60vh] overflow-y-auto py-2 divide-y divide-secondary-100">
+          <ul className="max-h-[60vh] overflow-y-auto py-2 divide-y divide-primary-500/20">
             {results.map((result, index) => (
               <li key={`${result.type}-${result.id}`}>
                 <button 
                   onClick={() => handleResultClick(result.url)}
                   className={`block w-full text-left px-4 py-3 transition-colors ${
-                    index === selectedIndex ? 'bg-secondary-100' : 'hover:bg-secondary-50'
+                    index === selectedIndex ? 'bg-primary-500/20' : 'hover:bg-primary-500/10'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       {getIconForType(result.type)}
                       <div className="ml-3">
-                        <div className="text-sm font-medium text-secondary-900 line-clamp-1">{result.title}</div>
-                        <div className="text-xs text-secondary-500 line-clamp-1">{result.subtitle}</div>
+                        <div className="text-sm font-medium text-white line-clamp-1">{result.title}</div>
+                        <div className="text-xs text-black-400 line-clamp-1">{result.subtitle}</div>
                       </div>
                     </div>
                     <div>
@@ -263,7 +263,7 @@ export default function DateHeader() {
           </ul>
         ) : (
           searchTerm && (
-            <div className="py-4 px-4 text-center text-sm text-secondary-500">
+            <div className="py-4 px-4 text-center text-sm text-black-400">
               No results found
             </div>
           )
@@ -283,128 +283,69 @@ export default function DateHeader() {
   };
 
   return (
-    <div className="mb-6 sm:mb-8 overflow-visible">
-      <div className="relative p-4 sm:p-6 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/70 transition-all duration-300 hover:shadow-2xl">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
-          {/* Date section */}
-          <div className="flex items-center">
-            {/* Elegant date badge */}
-            <div className="flex-shrink-0 mr-4">
-              <div className="relative">
-                {/* Main date circle */}
-                <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg flex items-center justify-center relative overflow-hidden">
-                  {/* Subtle pattern overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-                  
-                  {/* Date content */}
-                  <div className="text-center relative z-10">
-                    <div className="text-white text-xs font-semibold uppercase tracking-wider leading-none">
-                      {month}
-                    </div>
-                    <div className="text-white text-2xl sm:text-3xl font-bold leading-none">
-                      {day}
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Subtle glow effect */}
-                <div className="absolute inset-0 rounded-full bg-primary-400/20 blur-xl scale-110"></div>
+    <div className="flex flex-col gap-4 mb-8">
+      {/* Title/Search and Calendar Row */}
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
+        {/* Left Column: Title and Search */}
+        <div className="flex-1 flex flex-col gap-4 w-full">
+          {/* Agency Branding */}
+          <div className="text-center lg:text-left">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 bg-clip-text text-transparent drop-shadow-sm animate-pulse">
+              The Smith Agency
+            </h1>
+          </div>
+
+          {/* Enhanced Global Search */}
+          <div className="relative group" ref={searchRef}>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <MagnifyingGlassIcon className="h-5 w-5 text-secondary-400 group-focus-within:text-primary-500 transition-colors duration-300" />
               </div>
+              <input
+                ref={inputRef}
+                type="text"
+                value={searchTerm}
+                onChange={handleInputChange}
+                className="block w-full pl-12 pr-12 py-3 sm:py-4 border-2 border-primary-500 rounded-xl bg-white text-secondary-900 placeholder-secondary-400 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-400 shadow-lg hover:shadow-xl hover:border-primary-400 transition-all duration-300 text-sm sm:text-base"
+                placeholder="Search staff, clients, or bookings..."
+              />
+              {searchTerm && (
+                <button
+                  onClick={handleClear}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-secondary-400 hover:text-secondary-600 transition-colors duration-200 hover:scale-110"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              )}
             </div>
             
-            {/* Clean date text */}
-            <div>
-              <p className="text-lg sm:text-xl font-semibold text-secondary-800 tracking-tight">
-                {weekday}
-              </p>
-              <p className="text-sm text-secondary-500 mt-0.5 flex items-center">
-                <span className="inline-block w-1.5 h-1.5 bg-secondary-400 rounded-full mr-2"></span>
-                {time}
-              </p>
-            </div>
+            {/* Enhanced Search Results Dropdown */}
+            {isMounted && isOpen && results.length > 0 && (
+              <SearchResultsPortal />
+            )}
           </div>
+        </div>
+
+        {/* Enhanced Date/Time Card */}
+        <div className="w-full lg:w-auto bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 rounded-xl p-4 sm:p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 relative overflow-hidden">
+          {/* Animated background elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 animate-pulse"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12 animate-pulse delay-1000"></div>
           
-          {/* Search section */}
-          <div className="flex-1 lg:max-w-md xl:max-w-lg">
-            <div className="relative w-full" ref={searchRef}>
-              <div className="relative z-30 animated-search-border hover:shadow-xl transition-shadow duration-300">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MagnifyingGlassIcon className="h-4 w-4 sm:h-5 sm:w-5 text-secondary-500" />
-                </div>
-                <input
-                  ref={inputRef}
-                  type="text"
-                  className="block w-full bg-white pl-9 sm:pl-11 pr-9 sm:pr-11 py-2.5 sm:py-3.5 rounded-xl focus:outline-none text-sm sm:text-base shadow-lg placeholder-secondary-400 transition-all border border-transparent"
-                  placeholder="Search staff, clients, or bookings..."
-                  value={searchTerm}
-                  onChange={handleInputChange}
-                  aria-label="Search across The Smith Agency"
-                />
-                {searchTerm && (
-                  <button
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={handleClear}
-                    aria-label="Clear search"
-                  >
-                    <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5 text-secondary-400 hover:text-secondary-600" />
-                  </button>
-                )}
+          <div className="flex flex-row items-center justify-between">
+            <div className="text-left">
+              <div className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-1 drop-shadow-lg">{day}</div>
+              <div className="text-base sm:text-lg lg:text-xl font-medium mb-1 drop-shadow-md">{month}</div>
+              <div className="text-xs sm:text-sm lg:text-base opacity-90 drop-shadow-sm">{weekday} • {time}</div>
+            </div>
+            <div className="ml-4">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+                <CalendarIcon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
               </div>
             </div>
           </div>
         </div>
-        
-        {/* Decorative elements */}
-        <div className="absolute bottom-0 right-0 w-16 h-16 bg-gradient-to-tl from-primary-500/5 to-transparent rounded-tl-full"></div>
-        <div className="absolute top-0 left-0 w-24 h-24 bg-gradient-to-br from-primary-500/5 to-transparent rounded-br-full"></div>
       </div>
-      
-      {/* Render search results in a portal */}
-      <SearchResultsPortal />
-      
-      {/* Custom styles for animated search border */}
-      <style jsx global>{`
-        @keyframes gradient {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
-
-        .animated-search-border::before {
-          content: "";
-          position: absolute;
-          inset: -2px;
-          z-index: -1;
-          border-radius: 16px;
-          background: linear-gradient(
-            -45deg, 
-            #ff3366, 
-            #ff9933, 
-            #ffcc33, 
-            #33ccff, 
-            #9966ff
-          );
-          background-size: 400% 400%;
-          animation: gradient 8s ease infinite;
-          opacity: 0.7;
-          transition: opacity 0.3s ease;
-        }
-
-        .animated-search-border:focus-within::before {
-          opacity: 1;
-        }
-
-        .search-results-dropdown {
-          z-index: 9999 !important;
-          position: absolute !important;
-        }
-      `}</style>
     </div>
   );
 } 

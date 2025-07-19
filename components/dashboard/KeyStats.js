@@ -139,40 +139,47 @@ export default function KeyStats() {
         <Link 
           href={stat.link}
           key={stat.id}
-          className={`relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl ${getShadowClass(stat.accentColor)} transition-all duration-300 transform hover:-translate-y-1 group overflow-hidden border border-white/70`}
+          className={`relative bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl ${getShadowClass(stat.accentColor)} transition-all duration-500 transform hover:-translate-y-2 group overflow-hidden border border-white/80 hover:border-white/90`}
         >
           {/* Gradient top border */}
-          <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${stat.gradient}`}></div>
+          <div className={`absolute inset-x-0 top-0 h-2 bg-gradient-to-r ${stat.gradient} group-hover:h-3 transition-all duration-300`}></div>
           
-          <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-5 sm:pb-6 flex flex-col h-full">
+          <div className="px-5 sm:px-6 pt-6 sm:pt-7 pb-5 sm:pb-6 flex flex-col h-full relative">
             <div className="flex items-start justify-between">
-              <div className={`relative p-3 sm:p-4 rounded-xl bg-gradient-to-br ${stat.iconGradient} shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110`}>
+              <div className={`relative p-3 sm:p-4 rounded-xl bg-gradient-to-br ${stat.iconGradient} shadow-lg group-hover:shadow-xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3`}>
                 <stat.icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 
                 {/* Subtle shine effect */}
-                <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 rounded-xl bg-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                
+                {/* Animated ring effect */}
+                <div className={`absolute inset-0 rounded-xl border-2 border-white/30 opacity-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-700`}></div>
               </div>
               
-              <span className={`text-4xl opacity-10 ${getAccentColorClass(stat.accentColor)} font-bold group-hover:opacity-20 transition-opacity duration-300`}>
+              <span className={`text-4xl opacity-5 ${getAccentColorClass(stat.accentColor)} font-bold group-hover:opacity-15 group-hover:scale-110 transition-all duration-500`}>
                 {stat.decoration}
               </span>
             </div>
             
-            <div className="mt-4 sm:mt-6 flex-grow flex flex-col justify-end">
+            <div className="mt-5 sm:mt-6 flex-grow flex flex-col justify-end">
               <div className="flex items-end justify-between">
-                <h3 className={`text-3xl sm:text-4xl font-bold ${getAccentColorClass(stat.accentColor)} transition-all duration-300 group-hover:scale-105`}>
+                <h3 className={`text-3xl sm:text-4xl font-bold ${getAccentColorClass(stat.accentColor)} transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-lg`}>
                   {stat.value}
                 </h3>
-                <div className={`h-8 w-8 rounded-full flex items-center justify-center ${getAccentBgClass(stat.accentColor)} transition-colors`}>
-                  <ArrowRightIcon className={`h-4 w-4 ${getAccentIconClass(stat.accentColor)} opacity-70 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-0.5`} />
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${getAccentBgClass(stat.accentColor)} transition-all duration-300 group-hover:scale-110 group-hover:shadow-md`}>
+                  <ArrowRightIcon className={`h-5 w-5 ${getAccentIconClass(stat.accentColor)} opacity-70 group-hover:opacity-100 transition-all duration-500 group-hover:translate-x-1 group-hover:rotate-12`} />
                 </div>
               </div>
-              <p className="text-secondary-500 text-sm mt-1 font-medium">{stat.name}</p>
+              <p className="text-secondary-600 text-sm mt-2 font-semibold group-hover:text-secondary-700 transition-colors duration-300">{stat.name}</p>
             </div>
             
             {/* Decorative elements */}
-            <div className={`absolute -bottom-6 -right-6 w-24 h-24 rounded-full bg-gradient-to-tl ${getGradientBgClass(stat.accentColor)} to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-300`}></div>
-            <div className={`absolute -top-6 -left-6 w-20 h-20 rounded-full bg-gradient-to-br ${getGradientBgClass(stat.accentColor)} to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-300`}></div>
+            <div className={`absolute -bottom-8 -right-8 w-32 h-32 rounded-full bg-gradient-to-tl ${getGradientBgClass(stat.accentColor)} to-transparent opacity-30 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700`}></div>
+            <div className={`absolute -top-8 -left-8 w-28 h-28 rounded-full bg-gradient-to-br ${getGradientBgClass(stat.accentColor)} to-transparent opacity-30 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700`}></div>
+            
+            {/* Floating particles effect */}
+            <div className={`absolute top-4 right-4 w-2 h-2 rounded-full ${getAccentColorClass(stat.accentColor)} opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-all duration-700 delay-100`}></div>
+            <div className={`absolute bottom-8 left-6 w-1.5 h-1.5 rounded-full ${getAccentColorClass(stat.accentColor)} opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-all duration-700 delay-200`}></div>
           </div>
         </Link>
       ))}
