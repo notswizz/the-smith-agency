@@ -107,25 +107,25 @@ export default function DashboardLayout({ children }) {
                 </Link>
               ))}
             </nav>
-            {/* TSA Image - Mobile Sidebar */}
-            <div className="flex flex-col items-center mt-0 mb-6 px-2">
-              <a href="https://www.smithagency.app/" target="_blank" rel="noopener noreferrer">
-                <img
-                  src="/tsa.jpeg"
-                  alt="The Smith Agency Logo"
-                  className="w-40 h-40 object-cover rounded-full shadow-lg border-4 border-pink-500 transition-transform duration-300 hover:scale-105"
-                  style={{ background: 'linear-gradient(135deg, #f3f4f6 0%, #e0e7ff 100%)' }}
-                />
-              </a>
-            </div>
-            {/* DateHeader in Sidebar */}
-            <div className="w-full px-2 mb-2 mt-4">
-              <DateHeader sidebar />
-            </div>
           </div>
           
           {/* Footer in mobile sidebar */}
           <div className="flex-shrink-0 flex flex-col border-t border-secondary-100 p-4">
+            {/* TSA Image and DateHeader at bottom */}
+            <div className="flex flex-col items-center mb-4">
+              <a href="https://www.smithagency.app/" target="_blank" rel="noopener noreferrer">
+                <img
+                  src="/tsa.jpeg"
+                  alt="The Smith Agency Logo"
+                  className="w-32 h-32 object-cover rounded-full shadow-lg border-4 border-pink-500 transition-transform duration-300 hover:scale-105 mb-3"
+                  style={{ background: 'linear-gradient(135deg, #f3f4f6 0%, #e0e7ff 100%)' }}
+                />
+              </a>
+              <div className="w-full">
+                <DateHeader sidebar />
+              </div>
+            </div>
+            
             {/* Refresh button */}
             <button 
               onClick={() => window.location.reload()}
