@@ -109,12 +109,14 @@ export default function DashboardLayout({ children }) {
             </nav>
             {/* TSA Image - Mobile Sidebar */}
             <div className="flex flex-col items-center mt-0 mb-6 px-2">
-              <img
-                src="/tsa.jpeg"
-                alt="The Smith Agency Logo"
-                className="w-40 h-40 object-cover rounded-full shadow-lg border-4 border-pink-500 transition-transform duration-300 hover:scale-105"
-                style={{ background: 'linear-gradient(135deg, #f3f4f6 0%, #e0e7ff 100%)' }}
-              />
+              <a href="https://www.smithagency.app/" target="_blank" rel="noopener noreferrer">
+                <img
+                  src="/tsa.jpeg"
+                  alt="The Smith Agency Logo"
+                  className="w-40 h-40 object-cover rounded-full shadow-lg border-4 border-pink-500 transition-transform duration-300 hover:scale-105"
+                  style={{ background: 'linear-gradient(135deg, #f3f4f6 0%, #e0e7ff 100%)' }}
+                />
+              </a>
             </div>
             {/* DateHeader in Sidebar */}
             <div className="w-full px-2 mb-2 mt-4">
@@ -179,12 +181,14 @@ export default function DashboardLayout({ children }) {
               </nav>
               {/* TSA Image - Desktop Sidebar */}
               <div className="flex flex-col items-center mt-0 mb-6 px-3">
-                <img
-                  src="/tsa.jpeg"
-                  alt="The Smith Agency Logo"
-                  className="w-52 h-52 object-cover rounded-full shadow-lg border-4 border-pink-500 transition-transform duration-300 hover:scale-105"
-                  style={{ background: 'linear-gradient(135deg, #f3f4f6 0%, #e0e7ff 100%)' }}
-                />
+                <a href="https://www.smithagency.app/" target="_blank" rel="noopener noreferrer">
+                  <img
+                    src="/tsa.jpeg"
+                    alt="The Smith Agency Logo"
+                    className="w-52 h-52 object-cover rounded-full shadow-lg border-4 border-pink-500 transition-transform duration-300 hover:scale-105"
+                    style={{ background: 'linear-gradient(135deg, #f3f4f6 0%, #e0e7ff 100%)' }}
+                  />
+                </a>
               </div>
               {/* DateHeader in Sidebar */}
               <div className="w-full px-3 mb-2 mt-4">

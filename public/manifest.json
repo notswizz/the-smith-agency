@@ -1,7 +1,7 @@
 {
   "name": "The Smith Agency",
-  "short_name": "Smith Agency",
-  "description": "Booking management platform for The Smith Agency",
+  "short_name": "TSA",
+  "description": "Professional booking management platform for The Smith Agency",
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/",
@@ -9,6 +9,16 @@
   "background_color": "#ffffff",
   "theme_color": "#FF69B4",
   "icons": [
+    {
+      "src": "/icons/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
     {
       "src": "/icons/icon-72x72.png",
       "sizes": "72x72",

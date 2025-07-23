@@ -12,8 +12,15 @@ export default function Dashboard() {
     <>
       <Head>
         <title>Dashboard | The Smith Agency</title>
-        <meta name="description" content="The Smith Agency management dashboard" />
-        <link rel="icon" href="/favicon.ico" />
+        <meta name="description" content="The Smith Agency management dashboard - Streamline your bookings, staff, and client relationships" />
+        <meta name="keywords" content="dashboard, booking management, staff management, The Smith Agency, TSA" />
+        <link rel="icon" href="/favicon.png" />
+        
+        {/* Open Graph for Dashboard */}
+        <meta property="og:title" content="Dashboard | The Smith Agency" />
+        <meta property="og:description" content="The Smith Agency management dashboard - Streamline your bookings, staff, and client relationships" />
+        <meta property="og:image" content="https://thesmithagency.com/tsa-social.jpeg" />
+        <meta property="og:type" content="website" />
       </Head>
 
       <DashboardLayout>
