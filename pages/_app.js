@@ -1,6 +1,7 @@
 import "@/styles/globals.css";
 import { Geist, Geist_Mono } from "next/font/google";
 import { useEffect, useState } from "react";
+import { Analytics } from "@vercel/analytics/next";
 import useStore from "@/lib/hooks/useStore";
 import SplashScreen from "@/components/SplashScreen";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
@@ -43,6 +44,7 @@ export default function App({ Component, pageProps }) {
       {showSplash && <SplashScreen />}
       <Component {...pageProps} isPWA={isStandalone} />
       <PWAInstallPrompt />
+      <Analytics />
     </main>
   );
 }
