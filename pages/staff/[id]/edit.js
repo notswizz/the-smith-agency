@@ -16,6 +16,8 @@ export default function EditStaffMember() {
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [showInterviewModal, setShowInterviewModal] = useState(false);
   
   useEffect(() => {
     if (id) {
@@ -41,8 +43,8 @@ export default function EditStaffMember() {
     }
   }, [id, getStaffById, router]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
+  const handleInputChange = async (e) => {
+    const { name, value, type, checked } = e.target;
     
     if (name.startsWith('sizes.')) {
       const sizeKey = name.split('.')[1];
@@ -56,10 +58,89 @@ export default function EditStaffMember() {
       return;
     }
     
+    // Handle form approval toggles
+    if (name.startsWith('formApproval.')) {
+      const formType = name.split('.')[1];
+      
+      // Update the individual approval fields
+      const updatedFormData = {
+        ...formData,
+        [`${formType}FormApproved`]: checked,
+        [`${formType}FormApprovedDate`]: checked ? new Date().toISOString() : null,
+      };
+      
+      // Also update the completedForms array structure for portal compatibility
+      if (updatedFormData.completedForms && Array.isArray(updatedFormData.completedForms) && updatedFormData.completedForms.length > 0) {
+        updatedFormData.completedForms = updatedFormData.completedForms.map(form => {
+          if (form.formType === formType) {
+            // If approving application, make sure it's marked as completed if it was submitted
+            const isCompleted = formType === 'application' && checked && formData.applicationFormCompleted 
+              ? true 
+              : form.completed;
+            
+            return {
+              ...form,
+              completed: isCompleted,
+              enabled: checked,
+              dateEnabled: checked ? new Date().toISOString() : null
+            };
+          }
+          // When approving application, also enable the interview form
+          if (formType === 'application' && checked && form.formType === 'interview') {
+            return {
+              ...form,
+              enabled: true,
+              dateEnabled: new Date().toISOString()
+            };
+          }
+          return form;
+        });
+      } else {
+        // Create completedForms array if it doesn't exist (only application and interview)
+        updatedFormData.completedForms = [
+          {
+            completed: formData.applicationFormCompleted || false,
+            dateCompleted: null,
+            dateEnabled: "2025-07-27T02:48:43.018Z",
+            enabled: true,
+            formType: 'application'
+          },
+          {
+            completed: formData.interviewFormCompleted || false,
+            dateCompleted: null,
+            dateEnabled: (formType === 'application' && checked) || (formType === 'interview' && checked) ? new Date().toISOString() : null,
+            enabled: (formType === 'application' && checked) || (formType === 'interview' && checked),
+            formType: 'interview'
+          }
+        ];
+      }
+      
+      setFormData(updatedFormData);
+      
+      // Auto-save the form approval changes to Firebase immediately
+      try {
+        const submitData = { ...updatedFormData };
+        delete submitData.firstName;
+        delete submitData.lastName;
+        
+        console.log(`Saving ${formType} approval to Firebase:`, {
+          [`${formType}FormApproved`]: submitData[`${formType}FormApproved`],
+          completedForms: submitData.completedForms
+        });
+        
+        await updateStaff(id, submitData);
+        console.log(`${formType} form approval saved to Firebase successfully`);
+      } catch (error) {
+        console.error('Error auto-saving form approval:', error);
+      }
+      
+      return;
+    }
+    
     // Simple field update
     setFormData({
       ...formData,
-      [name]: value,
+      [name]: type === 'checkbox' ? checked : value,
     });
   };
 
@@ -356,6 +437,124 @@ export default function EditStaffMember() {
                 </div>
               </Card>
 
+              <Card title="Form Approvals">
+                <div className="space-y-6">
+                  <p className="text-sm text-secondary-600 mb-4">
+                    Control which forms this staff member can access and complete. Enable forms progressively as they complete each step.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    {/* Application Form */}
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <h4 className="text-sm font-semibold text-blue-900">Application Form</h4>
+                          <p className="text-xs text-blue-600">Initial staff application</p>
+                        </div>
+                        <div className="text-lg">
+                          {formData.applicationFormCompleted ? '✅' : '📝'}
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="text-xs text-blue-700">
+                          <span className="font-medium">Status:</span> {formData.applicationFormCompleted ? 'Completed' : 'Pending'}
+                        </div>
+                        
+                        {formData.applicationFormCompleted && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  name="formApproval.application"
+                                  checked={formData.applicationFormApproved || false}
+                                  onChange={handleInputChange}
+                                  className="rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="text-xs font-medium text-blue-700">Approve Application</span>
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => setShowApplicationModal(true)}
+                                className="px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-medium rounded transition-colors duration-200"
+                              >
+                                Review
+                              </button>
+                            </div>
+                            {formData.applicationFormApproved && (
+                              <p className="text-xs text-green-600 mt-1">✓ Enables Interview Form</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Interview Form */}
+                    <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <h4 className="text-sm font-semibold text-green-900">Interview Form</h4>
+                          <p className="text-xs text-green-600">Interview scheduling & details</p>
+                        </div>
+                        <div className="text-lg">
+                          {formData.interviewFormCompleted ? '✅' : 
+                           formData.applicationFormApproved ? '🎤' : '🔒'}
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="text-xs text-green-700">
+                          <span className="font-medium">Status:</span> 
+                          {!formData.applicationFormApproved ? 'Locked' :
+                           formData.interviewFormCompleted ? 'Completed' : 'Available'}
+                        </div>
+                        
+                        {formData.interviewFormCompleted && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  name="formApproval.interview"
+                                  checked={formData.interviewFormApproved || false}
+                                  onChange={handleInputChange}
+                                  className="rounded border-green-300 text-green-600 focus:ring-green-500"
+                                />
+                                <span className="text-xs font-medium text-green-700">Approve Interview</span>
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => setShowInterviewModal(true)}
+                                className="px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 text-xs font-medium rounded transition-colors duration-200"
+                              >
+                                Review
+                              </button>
+                            </div>
+                            {formData.interviewFormApproved && (
+                              <p className="text-xs text-green-600 mt-1">✓ Completes Onboarding Process</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                  </div>
+                  
+                  <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                    <div className="flex items-start space-x-2">
+                      <div className="text-yellow-600 mt-0.5">⚠️</div>
+                      <div>
+                        <h5 className="text-sm font-medium text-yellow-800">Progressive Form Flow</h5>
+                        <p className="text-xs text-yellow-700 mt-1">
+                          Forms are unlocked progressively. Staff members must complete and get approval for each form before the next one becomes available in their portal.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
               <div className="flex justify-end space-x-3">
                 <Link href={`/staff/${id}`}>
                   <Button variant="secondary" type="button">
@@ -373,6 +572,124 @@ export default function EditStaffMember() {
             </div>
           </form>
         </div>
+
+        {/* Application Review Modal */}
+        {showApplicationModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+              <div className="bg-blue-500 px-6 py-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white">Application Review</h3>
+                <button
+                  onClick={() => setShowApplicationModal(false)}
+                  className="text-white hover:text-blue-200 transition-colors"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto max-h-96">
+                {formData.applicationFormData ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                      <p className="text-gray-900 bg-gray-50 p-3 rounded-md">{formData.applicationFormData.name || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                      <p className="text-gray-900 bg-gray-50 p-3 rounded-md">{formData.applicationFormData.location || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">College</label>
+                      <p className="text-gray-900 bg-gray-50 p-3 rounded-md">{formData.applicationFormData.college || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Size</label>
+                      <p className="text-gray-900 bg-gray-50 p-3 rounded-md">{formData.applicationFormData.size || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Instagram Handle</label>
+                      <p className="text-gray-900 bg-gray-50 p-3 rounded-md">{formData.applicationFormData.instagram || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">How did you hear about us?</label>
+                      <p className="text-gray-900 bg-gray-50 p-3 rounded-md">{formData.applicationFormData.referral || 'Not provided'}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-8">No application data available</p>
+                )}
+              </div>
+              <div className="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowApplicationModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Interview Review Modal */}
+        {showInterviewModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+              <div className="bg-green-500 px-6 py-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white">Interview Review</h3>
+                <button
+                  onClick={() => setShowInterviewModal(false)}
+                  className="text-white hover:text-green-200 transition-colors"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto max-h-96">
+                {formData.interviewFormData ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Interview Date</label>
+                      <p className="text-gray-900 bg-gray-50 p-3 rounded-md">{formData.interviewFormData.interviewDate || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Time</label>
+                      <p className="text-gray-900 bg-gray-50 p-3 rounded-md">{formData.interviewFormData.interviewTime || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Interview Format Preference</label>
+                      <p className="text-gray-900 bg-gray-50 p-3 rounded-md">{formData.interviewFormData.interviewFormat || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Why do you want to work with The Smith Agency?</label>
+                      <p className="text-gray-900 bg-gray-50 p-3 rounded-md whitespace-pre-wrap">{formData.interviewFormData.motivation || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Previous Experience</label>
+                      <p className="text-gray-900 bg-gray-50 p-3 rounded-md whitespace-pre-wrap">{formData.interviewFormData.experience || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Questions for Us</label>
+                      <p className="text-gray-900 bg-gray-50 p-3 rounded-md whitespace-pre-wrap">{formData.interviewFormData.questions || 'Not provided'}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-8">No interview data available</p>
+                )}
+              </div>
+              <div className="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowInterviewModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </DashboardLayout>
     </>
   );

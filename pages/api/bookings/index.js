@@ -4,23 +4,66 @@ import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore
 export default async function handler(req, res) {
   const { method } = req;
 
+  // Add CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
   switch (method) {
     case 'GET':
       try {
-        const bookingsCollection = collection(db, 'bookings');
-        const snapshot = await getDocs(bookingsCollection);
-        const bookings = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+        console.log('Fetching bookings from Firestore...');
         
+        if (!db) {
+          console.error('Database connection not initialized');
+          return res.status(500).json({ error: 'Database connection failed' });
+        }
+
+        const bookingsCollection = collection(db, 'bookings');
+        console.log('Collection reference created');
+        
+        const snapshot = await getDocs(bookingsCollection);
+        console.log(`Found ${snapshot.size} booking documents`);
+        
+        const bookings = snapshot.docs.map(doc => {
+          const data = doc.data();
+          // Convert Firestore timestamps to ISO strings
+          const processedData = {};
+          Object.keys(data).forEach(key => {
+            if (data[key] && typeof data[key].toDate === 'function') {
+              processedData[key] = data[key].toDate().toISOString();
+            } else {
+              processedData[key] = data[key];
+            }
+          });
+          
+          return {
+            id: doc.id,
+            ...processedData
+          };
+        });
+        
+        console.log('Successfully processed bookings data');
         res.status(200).json({
           type: "bookings",
           items: bookings
         });
       } catch (error) {
-        console.error('Error fetching bookings:', error);
-        res.status(500).json({ error: 'An error occurred while fetching bookings' });
+        console.error('Detailed error fetching bookings:', {
+          message: error.message,
+          stack: error.stack,
+          code: error.code,
+          details: error.details
+        });
+        res.status(500).json({ 
+          error: 'An error occurred while fetching bookings',
+          details: error.message
+        });
       }
       break;
       
