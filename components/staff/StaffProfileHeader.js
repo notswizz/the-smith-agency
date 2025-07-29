@@ -31,28 +31,50 @@ export default function StaffProfileHeader({ staffMember, totalDaysWorked, booki
 
   // Determine application process step
   const getApplicationStep = () => {
+    // Try to use completedForms array first (matches portal logic), fallback to individual fields
+    let applicationCompleted = false;
+    let applicationApproved = false;
+    let interviewCompleted = false;
+    let interviewApproved = false;
+    
+    if (staffMember.completedForms && Array.isArray(staffMember.completedForms)) {
+      const appForm = staffMember.completedForms.find(f => f.formType === 'application');
+      const intForm = staffMember.completedForms.find(f => f.formType === 'interview');
+      
+      applicationCompleted = appForm?.completed || false;
+      interviewCompleted = intForm?.completed || false;
+    } else {
+      // Fallback to individual fields
+      applicationCompleted = staffMember.applicationFormCompleted || false;
+      interviewCompleted = staffMember.interviewFormCompleted || false;
+    }
+    
+    // Always use individual approval fields since these are admin-controlled
+    applicationApproved = staffMember.applicationFormApproved || false;
+    interviewApproved = staffMember.interviewFormApproved || false;
+    
     // Check if staff member has not started application
-    if (!staffMember.applicationFormCompleted && !staffMember.applicationFormApproved) {
+    if (!applicationCompleted && !applicationApproved) {
       return { step: 'Not Started', color: 'bg-gray-100 text-gray-600 border-gray-200', emoji: '⏸️' };
     }
     
     // Application submitted but not approved
-    if (staffMember.applicationFormCompleted && !staffMember.applicationFormApproved) {
+    if (applicationCompleted && !applicationApproved) {
       return { step: 'App Review', color: 'bg-yellow-100 text-yellow-600 border-yellow-200', emoji: '📋' };
     }
     
     // Application approved but interview not completed
-    if (staffMember.applicationFormApproved && !staffMember.interviewFormCompleted) {
+    if (applicationApproved && !interviewCompleted) {
       return { step: 'Interview', color: 'bg-blue-100 text-blue-600 border-blue-200', emoji: '🎤' };
     }
     
     // Interview completed but not approved
-    if (staffMember.interviewFormCompleted && !staffMember.interviewFormApproved) {
+    if (interviewCompleted && !interviewApproved) {
       return { step: 'Final Review', color: 'bg-orange-100 text-orange-600 border-orange-200', emoji: '⏳' };
     }
     
     // Fully onboarded
-    if (staffMember.interviewFormApproved) {
+    if (interviewApproved) {
       return { step: 'Active', color: 'bg-green-100 text-green-600 border-green-200', emoji: '✅' };
     }
     

@@ -10,11 +10,16 @@ import { searchStaff } from '@/utils/filterUtils';
 import { PlusIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
 export default function StaffDirectory() {
-  const { staff, getBookingsForStaff } = useStore();
+  const { staff, getBookingsForStaff, fetchStaff } = useStore();
   const [filters, setFilters] = useState({
     search: ''
   });
   const [scrolled, setScrolled] = useState(false);
+
+  // Load staff data on component mount
+  useEffect(() => {
+    fetchStaff();
+  }, [fetchStaff]);
 
   // Handle scroll event to add shadow to header
   useEffect(() => {
@@ -106,6 +111,18 @@ export default function StaffDirectory() {
                 </div>
               </div>
               
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={async () => {
+                  await fetchStaff();
+                  window.location.reload();
+                }}
+                className="flex items-center mr-3"
+              >
+                <SparklesIcon className="h-4 w-4 mr-1" />
+                Refresh
+              </Button>
               <Link href="/staff/new">
                 <Button variant="primary" size="sm" className="flex items-center pulse-glow">
                   <PlusIcon className="h-4 w-4 mr-1" />

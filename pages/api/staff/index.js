@@ -9,10 +9,17 @@ export default async function handler(req, res) {
       try {
         const staffCollection = collection(db, 'staff');
         const snapshot = await getDocs(staffCollection);
-        const staff = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+        
+        const staff = snapshot.docs.map(doc => {
+          const data = doc.data();
+          const staffRecord = {
+            id: doc.id,
+            ...data
+          };
+          
+          
+          return staffRecord;
+        });
         
         res.status(200).json(staff);
       } catch (error) {

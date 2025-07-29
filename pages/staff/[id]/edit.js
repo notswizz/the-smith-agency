@@ -11,7 +11,7 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 export default function EditStaffMember() {
   const router = useRouter();
   const { id } = router.query;
-  const { getStaffById, updateStaff, deleteStaff } = useStore();
+  const { getStaffById, updateStaff, deleteStaff, fetchStaff } = useStore();
   const [staffMember, setStaffMember] = useState(null);
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
@@ -24,12 +24,27 @@ export default function EditStaffMember() {
       const member = getStaffById(id);
       if (member) {
         setStaffMember(member);
-        // Convert to name-only format
+        // Convert to standardized format
         const initialFormData = { ...member };
         
         // Ensure name field is set
         if (!initialFormData.name && (initialFormData.firstName || initialFormData.lastName)) {
           initialFormData.name = `${initialFormData.firstName || ''} ${initialFormData.lastName || ''}`.trim();
+        }
+        
+        // Handle legacy phone field migration
+        if (!initialFormData.phone && initialFormData.phoneNumber) {
+          initialFormData.phone = initialFormData.phoneNumber;
+        }
+        
+        // Convert legacy sizes object to flat fields
+        if (initialFormData.sizes) {
+          if (!initialFormData.shoeSize && initialFormData.sizes.shoe) {
+            initialFormData.shoeSize = initialFormData.sizes.shoe;
+          }
+          if (!initialFormData.dressSize && initialFormData.sizes.dress) {
+            initialFormData.dressSize = initialFormData.sizes.dress;
+          }
         }
         
         // Remove firstName and lastName fields
@@ -46,14 +61,18 @@ export default function EditStaffMember() {
   const handleInputChange = async (e) => {
     const { name, value, type, checked } = e.target;
     
+    // Handle legacy sizes.* fields by converting to flat structure
     if (name.startsWith('sizes.')) {
       const sizeKey = name.split('.')[1];
+      let flatFieldName = sizeKey;
+      
+      // Convert to standardized field names
+      if (sizeKey === 'shoe') flatFieldName = 'shoeSize';
+      if (sizeKey === 'dress') flatFieldName = 'dressSize';
+      
       setFormData({
         ...formData,
-        sizes: {
-          ...formData.sizes,
-          [sizeKey]: value,
-        },
+        [flatFieldName]: value,
       });
       return;
     }
@@ -73,14 +92,15 @@ export default function EditStaffMember() {
       if (updatedFormData.completedForms && Array.isArray(updatedFormData.completedForms) && updatedFormData.completedForms.length > 0) {
         updatedFormData.completedForms = updatedFormData.completedForms.map(form => {
           if (form.formType === formType) {
-            // If approving application, make sure it's marked as completed if it was submitted
-            const isCompleted = formType === 'application' && checked && formData.applicationFormCompleted 
-              ? true 
-              : form.completed;
+            // When approving a form, ensure it's marked as completed
+            // Check both individual fields and existing completed status
+            const wasCompleted = form.completed || 
+                               (formType === 'application' && formData.applicationFormCompleted) ||
+                               (formType === 'interview' && formData.interviewFormCompleted);
             
             return {
               ...form,
-              completed: isCompleted,
+              completed: wasCompleted,
               enabled: checked,
               dateEnabled: checked ? new Date().toISOString() : null
             };
@@ -100,14 +120,14 @@ export default function EditStaffMember() {
         updatedFormData.completedForms = [
           {
             completed: formData.applicationFormCompleted || false,
-            dateCompleted: null,
+            dateCompleted: formData.applicationFormCompleted ? (formData.applicationFormCompletedDate || new Date().toISOString()) : null,
             dateEnabled: "2025-07-27T02:48:43.018Z",
             enabled: true,
             formType: 'application'
           },
           {
             completed: formData.interviewFormCompleted || false,
-            dateCompleted: null,
+            dateCompleted: formData.interviewFormCompleted ? (formData.interviewFormCompletedDate || new Date().toISOString()) : null,
             dateEnabled: (formType === 'application' && checked) || (formType === 'interview' && checked) ? new Date().toISOString() : null,
             enabled: (formType === 'application' && checked) || (formType === 'interview' && checked),
             formType: 'interview'
@@ -150,10 +170,16 @@ export default function EditStaffMember() {
     setError('');
     
     try {
-      // Ensure firstName and lastName fields are removed
+      // Clean up data before saving
       const submitData = { ...formData };
       delete submitData.firstName;
       delete submitData.lastName;
+      
+      // Remove legacy fields
+      delete submitData.phoneNumber; // Remove old phoneNumber field
+      if (submitData.shoeSize || submitData.dressSize) {
+        delete submitData.sizes; // Remove old sizes object
+      }
       
       await updateStaff(id, submitData);
       router.push(`/staff/${id}`);
@@ -209,6 +235,16 @@ export default function EditStaffMember() {
               <h1 className="text-2xl font-bold text-secondary-900">Edit {formData.name}</h1>
             </div>
             <div className="flex space-x-3">
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={async () => {
+                  await fetchStaff();
+                  window.location.reload(); // Force full reload to clear cache
+                }}
+              >
+                Refresh Data
+              </Button>
               <Button variant="danger" size="sm" onClick={handleDelete}>
                 Delete
               </Button>
@@ -321,115 +357,44 @@ export default function EditStaffMember() {
               </Card>
 
               <Card title="Physical Details">
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <div>
-                    <label htmlFor="sizes.height" className="block text-sm font-medium text-secondary-700">
-                      Height
-                    </label>
-                    <input
-                      type="text"
-                      id="sizes.height"
-                      name="sizes.height"
-                      value={formData.sizes?.height || ''}
-                      onChange={handleInputChange}
-                      className="mt-1 block w-full border border-secondary-200 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                    />
-                  </div>
-
-                  {/* Bust or Chest (depending on gender) */}
-                  <div>
-                    <label htmlFor="sizes.bust" className="block text-sm font-medium text-secondary-700">
-                      Bust/Chest
-                    </label>
-                    <input
-                      type="text"
-                      id="sizes.bust"
-                      name="sizes.bust"
-                      value={formData.sizes?.bust || formData.sizes?.chest || ''}
-                      onChange={handleInputChange}
-                      className="mt-1 block w-full border border-secondary-200 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="sizes.waist" className="block text-sm font-medium text-secondary-700">
-                      Waist
-                    </label>
-                    <input
-                      type="text"
-                      id="sizes.waist"
-                      name="sizes.waist"
-                      value={formData.sizes?.waist || ''}
-                      onChange={handleInputChange}
-                      className="mt-1 block w-full border border-secondary-200 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="sizes.hips" className="block text-sm font-medium text-secondary-700">
-                      Hips
-                    </label>
-                    <input
-                      type="text"
-                      id="sizes.hips"
-                      name="sizes.hips"
-                      value={formData.sizes?.hips || ''}
-                      onChange={handleInputChange}
-                      className="mt-1 block w-full border border-secondary-200 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="sizes.inseam" className="block text-sm font-medium text-secondary-700">
-                      Inseam
-                    </label>
-                    <input
-                      type="text"
-                      id="sizes.inseam"
-                      name="sizes.inseam"
-                      value={formData.sizes?.inseam || ''}
-                      onChange={handleInputChange}
-                      className="mt-1 block w-full border border-secondary-200 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="sizes.dress" className="block text-sm font-medium text-secondary-700">
-                      Dress Size
-                    </label>
-                    <input
-                      type="text"
-                      id="sizes.dress"
-                      name="sizes.dress"
-                      value={formData.sizes?.dress || ''}
-                      onChange={handleInputChange}
-                      className="mt-1 block w-full border border-secondary-200 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="sizes.shoe" className="block text-sm font-medium text-secondary-700">
+                    <label htmlFor="shoeSize" className="block text-sm font-medium text-secondary-700">
                       Shoe Size
                     </label>
                     <input
                       type="text"
-                      id="sizes.shoe"
-                      name="sizes.shoe"
-                      value={formData.sizes?.shoe || ''}
+                      id="shoeSize"
+                      name="shoeSize"
+                      value={formData.shoeSize || formData.sizes?.shoe || ''}
                       onChange={handleInputChange}
                       className="mt-1 block w-full border border-secondary-200 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="sizes.jacket" className="block text-sm font-medium text-secondary-700">
-                      Jacket Size
+                    <label htmlFor="dressSize" className="block text-sm font-medium text-secondary-700">
+                      Dress Size
                     </label>
                     <input
                       type="text"
-                      id="sizes.jacket"
-                      name="sizes.jacket"
-                      value={formData.sizes?.jacket || ''}
+                      id="dressSize"
+                      name="dressSize"
+                      value={formData.dressSize || formData.sizes?.dress || ''}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full border border-secondary-200 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label htmlFor="address" className="block text-sm font-medium text-secondary-700">
+                      Address
+                    </label>
+                    <input
+                      type="text"
+                      id="address"
+                      name="address"
+                      value={formData.address || ''}
                       onChange={handleInputChange}
                       className="mt-1 block w-full border border-secondary-200 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                     />
@@ -442,6 +407,114 @@ export default function EditStaffMember() {
                   <p className="text-sm text-secondary-600 mb-4">
                     Control which forms this staff member can access and complete. Enable forms progressively as they complete each step.
                   </p>
+                  
+                  {/* Manual Status Override */}
+                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                    <div className="flex items-start space-x-2">
+                      <div className="text-red-600 mt-0.5">⚡</div>
+                      <div className="flex-1">
+                        <h5 className="text-sm font-medium text-red-800 mb-2">Manual Status Override</h5>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <div>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                name="formOverride.applicationCompleted"
+                                checked={formData.applicationFormCompleted || false}
+                                      onChange={async (e) => {
+                                  const checked = e.target.checked;
+                                  const now = new Date();
+                                  const updatedFormData = {
+                                    ...formData,
+                                    applicationFormCompleted: checked,
+                                    applicationFormCompletedDate: checked ? now : null,
+                                    // Also update completedForms array to stay in sync
+                                    completedForms: (formData.completedForms || []).map(form => {
+                                      if (form.formType === 'application') {
+                                        return {
+                                          ...form,
+                                          completed: checked,
+                                          dateCompleted: checked ? now.toISOString() : null
+                                        };
+                                      }
+                                      return form;
+                                    })
+                                  };
+                                  
+                                  setFormData(updatedFormData);
+                                  
+                                  // Auto-save immediately to prevent losing changes
+                                  try {
+                                    const submitData = { ...updatedFormData };
+                                    delete submitData.firstName;
+                                    delete submitData.lastName;
+                                    delete submitData.phoneNumber;
+                                    if (submitData.shoeSize || submitData.dressSize) {
+                                      delete submitData.sizes;
+                                    }
+                                    
+                                    await updateStaff(id, submitData);
+                                  } catch (error) {
+                                    console.error('Error auto-saving application completion:', error);
+                                  }
+                                }}
+                                className="rounded border-red-300 text-red-600 focus:ring-red-500"
+                              />
+                              <span className="text-xs font-medium text-red-700">Force Application Completed</span>
+                            </label>
+                          </div>
+                          <div>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                name="formOverride.interviewCompleted"
+                                checked={formData.interviewFormCompleted || false}
+                                onChange={async (e) => {
+                                  const checked = e.target.checked;
+                                  const now = new Date();
+                                  const updatedFormData = {
+                                    ...formData,
+                                    interviewFormCompleted: checked,
+                                    interviewFormCompletedDate: checked ? now : null,
+                                    // Also update completedForms array to stay in sync
+                                    completedForms: (formData.completedForms || []).map(form => {
+                                      if (form.formType === 'interview') {
+                                        return {
+                                          ...form,
+                                          completed: checked,
+                                          dateCompleted: checked ? now.toISOString() : null
+                                        };
+                                      }
+                                      return form;
+                                    })
+                                  };
+                                  
+                                  setFormData(updatedFormData);
+                                  
+                                  // Auto-save immediately to prevent losing changes
+                                  try {
+                                    const submitData = { ...updatedFormData };
+                                    delete submitData.firstName;
+                                    delete submitData.lastName;
+                                    delete submitData.phoneNumber;
+                                    if (submitData.shoeSize || submitData.dressSize) {
+                                      delete submitData.sizes;
+                                    }
+                                    
+                                    await updateStaff(id, submitData);
+                                  } catch (error) {
+                                    console.error('Error auto-saving interview completion:', error);
+                                  }
+                                }}
+                                className="rounded border-red-300 text-red-600 focus:ring-red-500"
+                              />
+                              <span className="text-xs font-medium text-red-700">Force Interview Completed</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     {/* Application Form */}
@@ -539,18 +612,6 @@ export default function EditStaffMember() {
                       </div>
                     </div>
 
-                  </div>
-                  
-                  <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                    <div className="flex items-start space-x-2">
-                      <div className="text-yellow-600 mt-0.5">⚠️</div>
-                      <div>
-                        <h5 className="text-sm font-medium text-yellow-800">Progressive Form Flow</h5>
-                        <p className="text-xs text-yellow-700 mt-1">
-                          Forms are unlocked progressively. Staff members must complete and get approval for each form before the next one becomes available in their portal.
-                        </p>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </Card>
