@@ -21,6 +21,7 @@ import {
   StarIcon,
   UserGroupIcon
 } from '@heroicons/react/24/outline';
+import { useAdminLogger } from '@/components/LoggingWrapper';
 
 export default function ClientProfile() {
   const router = useRouter();
@@ -35,6 +36,7 @@ export default function ClientProfile() {
     getShowById,
     shows 
   } = useStore();
+  const { logUpdate, logDelete } = useAdminLogger();
   const [client, setClient] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [formData, setFormData] = useState({});
@@ -150,11 +152,22 @@ export default function ClientProfile() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    updateClient(id, formData);
-    setClient(formData);
-    setIsEditing(false);
+    try {
+      await updateClient(id, formData);
+      
+      // Log the update
+      await logUpdate('client', id, {
+        name: formData.name || client?.name || 'Unknown',
+        changes: Object.keys(formData).filter(key => formData[key] !== client[key]).join(', ')
+      });
+      
+      setClient(formData);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating client:', error);
+    }
   };
 
   // Get the gradient for this client

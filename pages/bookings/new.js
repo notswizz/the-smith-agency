@@ -10,11 +10,13 @@ import { ArrowLeftIcon, CheckCircleIcon, XMarkIcon, UserGroupIcon, BuildingOffic
 import StaffDatePicker from '@/components/StaffDatePicker';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
+import { useAdminLogger } from '@/components/LoggingWrapper';
 
 export default function NewBooking() {
   const router = useRouter();
   const { showId } = router.query;
   const { shows, staff, clients, bookings, availability = [], fetchStaff, fetchShows, fetchAvailability } = useStore();
+  const { logCreate, logCustomAction } = useAdminLogger();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -243,6 +245,15 @@ export default function NewBooking() {
     
     try {
       const docRef = await addDoc(collection(db, 'bookings'), newBooking);
+      
+      // Log the creation
+      await logCreate('booking', docRef.id, {
+        clientName: selectedClient?.name || 'Unknown',
+        showName: selectedShow?.name || 'Unknown',
+        datesCount: formData.datesNeeded.length,
+        status: formData.status
+      });
+      
       router.push(`/bookings/${docRef.id}`);
     } catch (err) {
       alert('Failed to create booking: ' + err.message);

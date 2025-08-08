@@ -7,11 +7,31 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import useStore from '@/lib/hooks/useStore';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { useAdminLogger } from '@/components/LoggingWrapper';
 
 export default function EditStaffMember() {
   const router = useRouter();
   const { id } = router.query;
   const { getStaffById, updateStaff, deleteStaff, fetchStaff } = useStore();
+  const { logUpdate, logDelete } = useAdminLogger();
+
+  // Available badges
+  const availableBadges = [
+    'Travel Team',
+    'Solo Worker', 
+    'Training Complete',
+    '10 Shows Worked',
+    '25 Shows Worked',
+    '50 Shows Worked',
+    '100 Shows Worked',
+    'Lead Staff',
+    'Mentor',
+    'Emergency Contact',
+    'Vehicle Owner',
+    'Specialty Skills',
+    'Reliable Attendance',
+    'Customer Favorite'
+  ];
   const [staffMember, setStaffMember] = useState(null);
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
@@ -47,6 +67,14 @@ export default function EditStaffMember() {
           }
         }
         
+        // Ensure new fields have defaults
+        if (!initialFormData.payRate) {
+          initialFormData.payRate = 15; // Default pay rate
+        }
+        if (!initialFormData.badges || !Array.isArray(initialFormData.badges)) {
+          initialFormData.badges = []; // Default empty badges array
+        }
+        
         // Remove firstName and lastName fields
         delete initialFormData.firstName;
         delete initialFormData.lastName;
@@ -74,6 +102,13 @@ export default function EditStaffMember() {
         ...formData,
         [flatFieldName]: value,
       });
+      return;
+    }
+
+    // Handle pay rate with validation
+    if (name === 'payRate') {
+      const rate = Math.max(15, Math.min(22, parseFloat(value) || 15));
+      setFormData({ ...formData, [name]: rate });
       return;
     }
     
@@ -164,6 +199,15 @@ export default function EditStaffMember() {
     });
   };
 
+  const handleBadgeToggle = (badge) => {
+    const currentBadges = formData.badges || [];
+    const updatedBadges = currentBadges.includes(badge)
+      ? currentBadges.filter(b => b !== badge)
+      : [...currentBadges, badge];
+    
+    setFormData({ ...formData, badges: updatedBadges });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -182,6 +226,13 @@ export default function EditStaffMember() {
       }
       
       await updateStaff(id, submitData);
+      
+      // Log the update
+      await logUpdate('staff', id, {
+        name: submitData.name || staffMember?.name || 'Unknown',
+        changes: Object.keys(submitData).join(', ')
+      });
+      
       router.push(`/staff/${id}`);
     } catch (err) {
       setError('Failed to update staff member.');
@@ -193,6 +244,11 @@ export default function EditStaffMember() {
   const handleDelete = async () => {
     if (confirm('Are you sure you want to delete this staff member?')) {
       try {
+        // Log the deletion before removing
+        await logDelete('staff', id, {
+          name: staffMember?.name || 'Unknown'
+        });
+        
         await deleteStaff(id);
         router.push('/staff');
       } catch (err) {
@@ -352,6 +408,54 @@ export default function EditStaffMember() {
                       <option value="Intermediate">Intermediate</option>
                       <option value="Advanced">Advanced</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="payRate" className="block text-sm font-medium text-secondary-700">
+                      Pay Rate ($15-$22/hour)
+                    </label>
+                    <input
+                      type="number"
+                      id="payRate"
+                      name="payRate"
+                      value={formData.payRate || 15}
+                      onChange={handleInputChange}
+                      min="15"
+                      max="22"
+                      step="0.25"
+                      className="mt-1 block w-full border border-secondary-200 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                    />
+                    <div className="mt-1 text-sm text-gray-500">
+                      Current rate: ${formData.payRate || 15}/hour
+                    </div>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-secondary-700 mb-2">
+                      Badges
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-48 overflow-y-auto border border-secondary-200 rounded-md p-3 bg-gray-50">
+                      {availableBadges.map(badge => (
+                        <label key={badge} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-1 rounded text-sm">
+                          <input
+                            type="checkbox"
+                            checked={(formData.badges || []).includes(badge)}
+                            onChange={() => handleBadgeToggle(badge)}
+                            className="rounded text-primary-600 focus:ring-primary-500"
+                          />
+                          <span>{badge}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {(formData.badges || []).length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {(formData.badges || []).map(badge => (
+                          <span key={badge} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {badge}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </Card>

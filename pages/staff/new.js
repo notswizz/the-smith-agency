@@ -14,6 +14,8 @@ export default function NewStaff() {
     phone: '',
     instagram: '',
     experience: 'Beginner',
+    payRate: 15, // Default to minimum
+    badges: [], // Array of badge names
     sizes: {
       height: '',
       bust: '', // or chest
@@ -25,6 +27,24 @@ export default function NewStaff() {
       shoe: '',
     },
   });
+
+  // Available badges
+  const availableBadges = [
+    'Travel Team',
+    'Solo Worker', 
+    'Training Complete',
+    '10 Shows Worked',
+    '25 Shows Worked',
+    '50 Shows Worked',
+    '100 Shows Worked',
+    'Lead Staff',
+    'Mentor',
+    'Emergency Contact',
+    'Vehicle Owner',
+    'Specialty Skills',
+    'Reliable Attendance',
+    'Customer Favorite'
+  ];
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -39,9 +59,22 @@ export default function NewStaff() {
           [sizeKey]: value,
         },
       });
+    } else if (name === 'payRate') {
+      // Ensure pay rate is within valid range
+      const rate = Math.max(15, Math.min(22, parseFloat(value) || 15));
+      setFormData({ ...formData, [name]: rate });
     } else {
       setFormData({ ...formData, [name]: value });
     }
+  };
+
+  const handleBadgeToggle = (badge) => {
+    const currentBadges = formData.badges || [];
+    const updatedBadges = currentBadges.includes(badge)
+      ? currentBadges.filter(b => b !== badge)
+      : [...currentBadges, badge];
+    
+    setFormData({ ...formData, badges: updatedBadges });
   };
 
   const handleSubmit = async (e) => {
@@ -90,6 +123,51 @@ export default function NewStaff() {
               <option value="Intermediate">Intermediate</option>
               <option value="Advanced">Advanced</option>
             </select>
+          </div>
+          
+          {/* Pay Rate */}
+          <div className="mb-4">
+            <label className="block mb-1 font-medium">Pay Rate ($15-$22/hour)</label>
+            <input 
+              type="number" 
+              name="payRate" 
+              value={formData.payRate} 
+              onChange={handleChange} 
+              min="15" 
+              max="22" 
+              step="0.25"
+              className="w-full border rounded p-2" 
+            />
+            <div className="text-sm text-gray-500 mt-1">
+              Current rate: ${formData.payRate}/hour
+            </div>
+          </div>
+
+          {/* Badges */}
+          <div className="mb-6">
+            <label className="block mb-2 font-medium">Badges</label>
+            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded p-3 bg-gray-50">
+              {availableBadges.map(badge => (
+                <label key={badge} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
+                  <input
+                    type="checkbox"
+                    checked={formData.badges.includes(badge)}
+                    onChange={() => handleBadgeToggle(badge)}
+                    className="rounded"
+                  />
+                  <span className="text-sm">{badge}</span>
+                </label>
+              ))}
+            </div>
+            {formData.badges.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {formData.badges.map(badge => (
+                  <span key={badge} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {badge}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           <div className="mb-4">
             <label className="block mb-1 font-medium">Height</label>

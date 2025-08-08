@@ -14,6 +14,7 @@ import {
   ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline';
 import DateHeader from '../dashboard/DateHeader';
+import adminLogger from '@/lib/utils/adminLogger';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon, shortName: 'Home' },
@@ -23,7 +24,7 @@ const navigation = [
   { name: 'Bookings', href: '/bookings', icon: ClipboardDocumentListIcon, shortName: 'Bookings' },
 ];
 
-export default function DashboardLayout({ children }) {
+export default function DashboardLayout({ children, onLogout }) {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
@@ -126,6 +127,20 @@ export default function DashboardLayout({ children }) {
               </div>
             </div>
             
+            {/* Logout button */}
+            {onLogout && (
+              <button 
+                onClick={onLogout}
+                className="mb-2 flex items-center justify-center p-1.5 rounded-md bg-red-50 hover:bg-red-100 transition-colors text-red-600 hover:text-red-700"
+                aria-label="Logout"
+              >
+                <svg className="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span className="text-xs font-medium">Logout</span>
+              </button>
+            )}
+            
             {/* Refresh button */}
             <button 
               onClick={() => window.location.reload()}
@@ -198,6 +213,20 @@ export default function DashboardLayout({ children }) {
             
             {/* Footer element on sidebar */}
             <div className="flex-shrink-0 flex flex-col border-t border-secondary-100 p-4">
+              {/* Logout button */}
+              {onLogout && (
+                <button 
+                  onClick={onLogout}
+                  className="mb-2 flex items-center justify-center p-1.5 rounded-md bg-red-50 hover:bg-red-100 transition-colors text-red-600 hover:text-red-700"
+                  aria-label="Logout"
+                >
+                  <svg className="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  <span className="text-xs font-medium">Logout</span>
+                </button>
+              )}
+              
               {/* Refresh button */}
               <button 
                 onClick={() => window.location.reload()}

@@ -10,6 +10,7 @@ import {
   IdentificationIcon,
   CalendarIcon,
   StatusOnlineIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -121,6 +122,18 @@ function StaffCard({ staffMember }) {
     );
   });
 
+  // Compute hourly rate for display
+  const computedHourlyRate = (() => {
+    const pay = typeof staffMember.payRate === 'number' ? staffMember.payRate : parseFloat(staffMember.payRate);
+    if (!Number.isNaN(pay) && pay > 0) return Math.round(pay);
+    const day = typeof staffMember.dayRate === 'number' ? staffMember.dayRate : parseFloat(staffMember.dayRate);
+    if (!Number.isNaN(day) && day > 0) return Math.round(day / 8);
+    return null;
+  })();
+
+  // Badge count for compact display
+  const badgeCount = Array.isArray(staffMember.badges) ? staffMember.badges.length : 0;
+
   return (
     <Link href={`/staff/${staffMember.id}`} className="block snap-start snap-always">
       <div className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl relative transition-all duration-300 border border-gray-100 h-full group hover:scale-[1.02] hover:border-gray-200 hover:shadow-2xl">
@@ -148,9 +161,9 @@ function StaffCard({ staffMember }) {
           )}
         </div>
 
-        {/* Working Today Indicator */}
+        {/* Working Today Indicator - placed under rate to avoid overlap */}
         {isActivelyWorking && (
-          <div className="absolute top-4 right-4 z-30">
+          <div className="absolute top-32 right-4 z-30">
             <div className="flex items-center gap-2 bg-green-50 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-green-200 shadow-sm">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -170,12 +183,33 @@ function StaffCard({ staffMember }) {
           </Link>
         </div>
 
+        {/* Badge count - below rate in top-right */}
+        {badgeCount > 0 && (
+          <div className="absolute top-24 right-4 z-20">
+            <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 text-xs font-semibold border border-purple-200 shadow-sm">
+              <span className="mr-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-white text-purple-600 ring-1 ring-purple-200">
+                <SparklesIcon className="h-3 w-3" />
+              </span>
+              <span>{badgeCount}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Hourly Rate - below status in top-right */}
+        {computedHourlyRate && (
+          <div className="absolute top-14 right-4 z-20">
+            <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-xs font-semibold border border-green-200 shadow-sm">
+              <span>${computedHourlyRate}/hr</span>
+            </div>
+          </div>
+        )}
+
         {/* Card Content */}
-        <div className="px-6 pt-16 pb-6 text-center">
-          {/* Profile Image */}
-          <div className="flex flex-col items-center mb-4">
-            <div className="relative">
-              <div className="h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center text-xl font-bold overflow-hidden border-3 border-white shadow-lg ring-4 ring-gray-50 group-hover:ring-gray-100 transition-all duration-300">
+        <div className="px-5 pt-12 pb-14 text-center">
+          {/* Profile, name, college - centered */}
+          <div className="flex flex-col items-center mb-3">
+            <div className="relative mb-1.5">
+              <div className="h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center text-lg font-bold overflow-hidden border-3 border-white shadow-lg ring-4 ring-gray-50 group-hover:ring-gray-100 transition-all duration-300">
                 {profileImage ? (
                   <img 
                     src={profileImage} 
@@ -192,24 +226,18 @@ function StaffCard({ staffMember }) {
                 )}
               </div>
             </div>
-          </div>
-
-          {/* Name */}
-          <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors duration-300">
-            {name}
-          </h3>
-
-          {/* College */}
-          {staffMember.college && (
-            <div className="mb-4">
-              <div className="inline-flex items-center px-3 py-1 rounded-full bg-gray-50 text-gray-600 text-sm font-medium border border-gray-100">
-                <svg className="h-4 w-4 mr-1.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
-                </svg>
-                {staffMember.college}
+            <h3 className="text-base font-semibold text-gray-900 mb-1.5 group-hover:text-gray-700 transition-colors duration-300">{name}</h3>
+            {staffMember.college && (
+              <div className="mb-0.5">
+                <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gray-50 text-gray-600 text-xs font-medium border border-gray-100">
+                  <svg className="h-4 w-4 mr-1.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
+                  </svg>
+                  {staffMember.college}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Contact Buttons */}
           <div className="flex justify-center space-x-3">
@@ -217,20 +245,20 @@ function StaffCard({ staffMember }) {
               <Link 
                 href={`mailto:${staffMember.email}`}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-gray-100 text-gray-700 hover:bg-pink-100 p-3 rounded-xl flex items-center justify-center transition-all duration-200 border border-gray-200 w-11 h-11 hover:border-pink-300 shadow-sm hover:scale-110"
+                className="bg-gray-100 text-gray-700 hover:bg-pink-100 p-2.5 rounded-xl flex items-center justify-center transition-all duration-200 border border-gray-200 w-10 h-10 hover:border-pink-300 shadow-sm hover:scale-110"
                 title={`Email ${name}`}
               >
-                <EnvelopeIcon className="h-5 w-5 text-pink-500" />
+                <EnvelopeIcon className="h-4 w-4 text-pink-500" />
               </Link>
             )}
             {staffMember.phone && (
               <Link 
                 href={`tel:${staffMember.phone}`}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-gray-100 text-gray-700 hover:bg-blue-100 p-3 rounded-xl flex items-center justify-center transition-all duration-200 border border-gray-200 w-11 h-11 hover:border-blue-300 shadow-sm hover:scale-110"
+                className="bg-gray-100 text-gray-700 hover:bg-blue-100 p-2.5 rounded-xl flex items-center justify-center transition-all duration-200 border border-gray-200 w-10 h-10 hover:border-blue-300 shadow-sm hover:scale-110"
                 title={`Call ${name}`}
               >
-                <PhoneIcon className="h-5 w-5 text-blue-500" />
+                <PhoneIcon className="h-4 w-4 text-blue-500" />
               </Link>
             )}
           </div>
@@ -238,4 +266,4 @@ function StaffCard({ staffMember }) {
       </div>
     </Link>
   );
-} 
+}

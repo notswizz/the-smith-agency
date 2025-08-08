@@ -17,11 +17,13 @@ import {
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import StaffAvailabilityModal from '@/components/bookings/StaffAvailabilityModal';
+import { useAdminLogger } from '@/components/LoggingWrapper';
 
 export default function StaffAssignment() {
   const router = useRouter();
   const { bookingId } = router.query;
   const { bookings, clients, shows, updateBooking, staff, availability, getBookingsForStaff } = useStore();
+  const { logUpdate } = useAdminLogger();
   const [formData, setFormData] = useState(null);
   const [showDateRange, setShowDateRange] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -233,16 +235,25 @@ export default function StaffAssignment() {
           </div>
         </div>
 
-        <form id="staff-form" onSubmit={(e) => {
+        <form id="staff-form" onSubmit={async (e) => {
           e.preventDefault();
           setSaving(true);
-          updateBooking(bookingId, { ...formData })
-            .then(() => router.push(`/bookings/${bookingId}`))
-            .catch(err => {
-              console.error('Failed to update staff assignments:', err);
-              setSaving(false);
-              alert('Failed to update staff assignments. Please try again.');
+          try {
+            await updateBooking(bookingId, { ...formData });
+            
+            // Log the booking update
+            await logUpdate('booking', bookingId, {
+              clientName: clients.find(c => c.id === formData?.clientId)?.name || 'Unknown',
+              showName: shows.find(s => s.id === formData?.showId)?.name || 'Unknown',
+              changes: 'Staff assignments updated'
             });
+            
+            router.push(`/bookings/${bookingId}`);
+          } catch (err) {
+            console.error('Failed to update staff assignments:', err);
+            setSaving(false);
+            alert('Failed to update staff assignments. Please try again.');
+          }
         }}>
         
         {/* Staff Assignment */}

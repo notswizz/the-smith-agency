@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import useStore from '@/lib/hooks/useStore';
 import { searchStaff } from '@/utils/filterUtils';
 import { PlusIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import adminLogger from '@/lib/utils/adminLogger';
 
 export default function StaffDirectory() {
   const { staff, getBookingsForStaff, fetchStaff } = useStore();

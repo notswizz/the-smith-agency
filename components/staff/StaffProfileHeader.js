@@ -174,7 +174,31 @@ export default function StaffProfileHeader({ staffMember, totalDaysWorked, booki
                     <span className="text-sm font-medium">{staffMember.location}</span>
                   </div>
                 )}
+                {staffMember.payRate && (
+                  <div className="flex items-center bg-green-50 text-green-700 px-3 py-1.5 rounded-full border border-green-200 shadow-sm">
+                    <svg className="h-4 w-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    </svg>
+                    <span className="text-sm font-medium">${staffMember.payRate}/hr</span>
+                  </div>
+                )}
               </div>
+
+              {/* Badges */}
+              {staffMember.badges && staffMember.badges.length > 0 && (
+                <div className="mb-4">
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                    {staffMember.badges.map((badge, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200"
+                      >
+                        {badge}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Contact Buttons */}
               <div className="flex justify-center md:justify-start gap-3">

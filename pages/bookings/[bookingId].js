@@ -25,6 +25,76 @@ export default function BookingDetail() {
   const [loading, setLoading] = useState(true);
   const { staff = [], clients = [], shows = [] } = useStore();
 
+  // Payment state (moved above early returns)
+  const [isCharging, setIsCharging] = useState(false);
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Preview modal state
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewData, setPreviewData] = useState(null);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [chargeResponse, setChargeResponse] = useState(null);
+
+  const formatCurrency = (cents) => {
+    if (typeof cents !== 'number') return '--';
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
+  };
+
+  const previewFinalCharge = async () => {
+    setErrorMessage('');
+    setPreviewData(null);
+    setChargeResponse(null);
+    setIsPreviewing(true);
+    try {
+      const response = await fetch('/api/charge-final-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId, dryRun: true }),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json?.error || 'Preview failed');
+      }
+      setPreviewData(json);
+      setIsPreviewOpen(true);
+    } catch (err) {
+      setErrorMessage(err.message || 'Request failed');
+    } finally {
+      setIsPreviewing(false);
+    }
+  };
+
+  const chargeFinalPayment = async () => {
+    setErrorMessage('');
+    setIsConfirming(true);
+    setChargeResponse(null);
+    try {
+      const response = await fetch('/api/charge-final-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId, dryRun: false }),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json?.error || 'Charge failed');
+      }
+      if (json?.requiresAction && json?.url) {
+        try {
+          window.open(json.url, '_blank', 'noopener,noreferrer');
+        } catch (_) {
+          // Fallback: assign if popup blocked
+          window.location.href = json.url;
+        }
+      }
+      setChargeResponse(json);
+    } catch (err) {
+      setErrorMessage(err.message || 'Request failed');
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
   const sortedDatesNeeded = useMemo(() => {
     if (!booking?.datesNeeded) return [];
     return [...booking.datesNeeded].sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -129,7 +199,7 @@ export default function BookingDetail() {
       case 'confirmed': return { badge: 'bg-emerald-100 text-emerald-700', icon: CheckCircleIcon };
       case 'pending': return { badge: 'bg-amber-100 text-amber-700', icon: ClockIcon };
       case 'cancelled': return { badge: 'bg-red-100 text-red-700', icon: XMarkIcon };
-      default: return { badge: 'bg-secondary-100 text-secondary-700', icon: InformationCircleIcon };
+      default: return { badge: 'bg-secondary-100 text-secondary-700', icon: ExclamationTriangleIcon };
     }
   };
   const currentStatusStyles = getStatusStyles(booking.status);
@@ -159,11 +229,75 @@ export default function BookingDetail() {
                 Manage Staff
               </Button>
             </Link>
+            {/* Final Payment Actions */}
+            <Button
+              variant="white"
+              size="sm"
+              disabled={isPreviewing}
+              onClick={previewFinalCharge}
+            >
+              {isPreviewing ? 'Previewing…' : 'Preview Final Charge'}
+            </Button>
           </div>
         </div>
 
+        {/* Error banner */}
+        {errorMessage && (
+          <div className="mb-4 p-3 rounded border border-red-200 bg-red-50 text-red-700 text-sm">{errorMessage}</div>
+        )}
+
+        {/* Preview Modal */}
+        {isPreviewOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/40" onClick={() => !isConfirming && setIsPreviewOpen(false)}></div>
+            <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6 z-10">
+              <h3 className="text-lg font-semibold text-secondary-900 mb-4">Final Payment</h3>
+              {previewData ? (
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-secondary-600">Rate</span>
+                    <span className="font-medium">{formatCurrency(previewData?.computed?.rateCents)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-secondary-600">Staff-days</span>
+                    <span className="font-medium">{previewData?.computed?.staffDays ?? '--'}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-secondary-600">Total</span>
+                    <span className="font-semibold text-secondary-900">{formatCurrency(previewData?.computed?.totalCents ?? previewData?.amountToChargeCents)}</span>
+                  </div>
+                  {chargeResponse && (
+                    <pre className="text-[11px] bg-secondary-50 p-2 rounded border border-secondary-200 max-h-40 overflow-auto">{JSON.stringify(chargeResponse, null, 2)}</pre>
+                  )}
+                  <div className="mt-4 flex justify-end gap-2">
+                    <Button variant="white" size="sm" disabled={isConfirming} onClick={() => setIsPreviewOpen(false)}>Cancel</Button>
+                    <Button variant="gradient" size="sm" disabled={isConfirming} onClick={chargeFinalPayment}>
+                      {isConfirming ? 'Charging…' : 'Charge Final Payment'}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-secondary-600">No preview data available.</div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Key Information */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-secondary-200">
+          {/* Display results/errors if any */}
+          {(chargeResponse || errorMessage) && (
+            <div className="mb-4">
+              {errorMessage && (
+                <div className="mb-2 text-sm text-red-600">{errorMessage}</div>
+              )}
+              {chargeResponse && (
+                <pre className="text-xs bg-secondary-50 p-3 rounded border border-secondary-200 overflow-auto max-h-48">
+{JSON.stringify(chargeResponse, null, 2)}
+                </pre>
+              )}
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center text-primary-500">
