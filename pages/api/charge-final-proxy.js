@@ -17,18 +17,20 @@ export default async function handler(req, res) {
   }
 
   try {
+    const debugFlag = (req.query && req.query.debug === '1') || (isPost && req.body && req.body.debug === true);
     const { bookingId, finalFeeCents, dryRun, overrideRateCents } = isPost ? (req.body || {}) : (req.query || {});
 
     if (!bookingId) {
       return res.status(400).json({ error: 'bookingId is required' });
     }
 
-    let base = process.env.COMPANION_BASE_URL || 'https://your-domain.com';
+    // Resolve base portal origin from env
+    let base = process.env.COMPANION_BASE_URL
+      || process.env.NEXT_PUBLIC_COMPANION_BASE_URL
+      || 'https://your-domain.com';
     try {
-      // Ensure we only use scheme + host, ignoring any provided path
-      base = new URL(base).origin;
+      base = new URL(base).origin; // ensure origin only
     } catch (_) {
-      // If invalid URL, fallback to default
       base = 'https://your-domain.com';
     }
     const targetUrl = `${base}/api/stripe/charge-final`;
@@ -75,27 +77,41 @@ export default async function handler(req, res) {
       json = { raw: text };
     }
 
+    // Attach debug info on demand or when non-OK
+    const debugInfo = {
+      targetUrl,
+      base,
+      upstreamStatus: response.status,
+      upstreamOk: response.ok,
+      preview: typeof text === 'string' ? text.slice(0, 160) : null,
+      sent: {
+        hasCookie: Boolean(incomingCookieHeader),
+        hasInternalKey: Boolean(process.env.INTERNAL_ADMIN_API_KEY),
+        body: { ...forwardBody, bookingId: '[redacted]' },
+      },
+    };
+
+    if (!response.ok) {
+      return res.status(response.status).json({ error: json?.message || json?.error || 'Upstream error', details: json, debug: debugInfo });
+    }
+
     // Validate upstream response to catch misconfigured COMPANION_BASE_URL or missing keys
     try {
-      const contentType = response.headers.get && response.headers.get('content-type') ? response.headers.get('content-type') : '';
       const responseLooksValid = json && (json.dryRun === true || json.success === true || json.requiresAction === true || (json.computed && typeof json.computed === 'object'));
-      if (response.ok && !responseLooksValid) {
+      if (!responseLooksValid) {
         return res.status(502).json({
           error: 'Invalid response from portal. Check COMPANION_BASE_URL, PORTAL_ORIGIN, and INTERNAL_ADMIN_API_KEY.',
-          details: {
-            targetUrl,
-            contentType: contentType || null,
-            preview: typeof text === 'string' ? text.slice(0, 160) : null,
-          },
+          details: json,
+          debug: debugInfo,
         });
       }
     } catch (_) {
       // ignore validation failure and fall through
     }
 
-    return res.status(response.status).json(json);
+    return res.status(response.status).json(debugFlag ? { ...json, debug: debugInfo } : json);
   } catch (error) {
     console.error('charge-final proxy error:', error);
-    return res.status(500).json({ error: 'Failed to proxy charge-final request' });
+    return res.status(500).json({ error: 'Failed to proxy charge-final request', details: error?.message || String(error) });
   }
 } 
