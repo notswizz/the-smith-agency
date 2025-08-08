@@ -56,6 +56,9 @@ export default function BookingDetail() {
       if (!response.ok) {
         throw new Error(json?.error || 'Preview failed');
       }
+      if (!json?.computed) {
+        throw new Error('Invalid preview response from portal. Please verify COMPANION_BASE_URL, PORTAL_ORIGIN, and INTERNAL_ADMIN_API_KEY.');
+      }
       setPreviewData(json);
       setIsPreviewOpen(true);
     } catch (err) {
