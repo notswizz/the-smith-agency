@@ -1,10 +1,23 @@
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
+  // Basic CORS for robustness (same-origin normally, but helps during local/dev)
+  const origin = req.headers.origin || process.env.PORTAL_ORIGIN || 'https://your-domain.com';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, HEAD');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Vary', 'Origin');
+
+  if (req.method === 'OPTIONS' || req.method === 'HEAD') {
+    return res.status(204).end();
+  }
+
+  const isPost = req.method === 'POST';
+  const isGet = req.method === 'GET';
+  if (!isPost && !isGet) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { bookingId, finalFeeCents, dryRun, overrideRateCents } = req.body || {};
+    const { bookingId, finalFeeCents, dryRun, overrideRateCents } = isPost ? (req.body || {}) : (req.query || {});
 
     if (!bookingId) {
       return res.status(400).json({ error: 'bookingId is required' });
@@ -32,7 +45,7 @@ export default async function handler(req, res) {
     const forwardBody = {
       bookingId,
       ...(typeof finalFeeCents === 'number' ? { finalFeeCents } : {}),
-      ...(typeof dryRun === 'boolean' ? { dryRun } : {}),
+      ...(typeof dryRun !== 'undefined' ? { dryRun: String(dryRun) === 'true' || dryRun === true } : {}),
       ...(typeof overrideRateCents === 'number' ? { overrideRateCents } : {}),
     };
 
@@ -47,7 +60,7 @@ export default async function handler(req, res) {
     }
 
     const response = await fetch(targetUrl, {
-      method: 'POST',
+      method: 'POST', // always POST upstream
       headers,
       body: JSON.stringify(forwardBody),
     });
