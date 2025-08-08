@@ -22,6 +22,7 @@ const navigation = [
   { name: 'Clients', href: '/clients', icon: BuildingOffice2Icon, shortName: 'Clients' },
   { name: 'Shows', href: '/shows', icon: CalendarIcon, shortName: 'Shows' },
   { name: 'Bookings', href: '/bookings', icon: ClipboardDocumentListIcon, shortName: 'Bookings' },
+  { name: 'Board', href: '/board', icon: ChatBubbleLeftRightIcon, shortName: 'Board' },
 ];
 
 export default function DashboardLayout({ children, onLogout }) {
