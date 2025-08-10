@@ -50,10 +50,12 @@ export default function BookingDetail() {
       const response = await fetch('/api/charge-final-proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookingId, dryRun: true }),
+        body: JSON.stringify({ bookingId, dryRun: true, debug: true }),
       });
       const json = await response.json();
       if (!response.ok) {
+        // Surface upstream debug info in console for troubleshooting
+        if (json?.debug) console.error('charge-final preview debug:', json.debug);
         throw new Error(json?.error || 'Preview failed');
       }
       if (!json?.computed) {
@@ -76,10 +78,12 @@ export default function BookingDetail() {
       const response = await fetch('/api/charge-final-proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookingId, dryRun: false }),
+        body: JSON.stringify({ bookingId, dryRun: false, debug: true }),
       });
       const json = await response.json();
       if (!response.ok) {
+        // Surface upstream debug info in console for troubleshooting
+        if (json?.debug) console.error('charge-final charge debug:', json.debug);
         throw new Error(json?.error || 'Charge failed');
       }
       if (json?.requiresAction && json?.url) {
