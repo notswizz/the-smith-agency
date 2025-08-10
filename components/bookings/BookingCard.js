@@ -64,7 +64,10 @@ const BookingCard = ({
   const statusLabels = {
     'confirmed': 'Confirmed',
     'pending': 'Pending',
-    'cancelled': 'Cancelled'
+    'cancelled': 'Cancelled',
+    'paid': 'Paid',
+    'final_paid': 'Paid',
+    'deposit_paid': 'Deposit Paid',
   };
   
   const statusStyles = {
@@ -91,6 +94,30 @@ const BookingCard = ({
       icon: <XCircleIcon className="h-4 w-4 mr-1.5" />,
       gradient: 'from-red-500 to-rose-400',
       fillColor: 'bg-red-500'
+    },
+    'paid': {
+      bg: 'bg-emerald-50',
+      text: 'text-emerald-700',
+      border: 'border-emerald-300',
+      icon: <CheckCircleIcon className="h-4 w-4 mr-1.5" />,
+      gradient: 'from-emerald-500 to-green-400',
+      fillColor: 'bg-emerald-500'
+    },
+    'final_paid': {
+      bg: 'bg-emerald-50',
+      text: 'text-emerald-700',
+      border: 'border-emerald-300',
+      icon: <CheckCircleIcon className="h-4 w-4 mr-1.5" />,
+      gradient: 'from-emerald-500 to-green-400',
+      fillColor: 'bg-emerald-500'
+    },
+    'deposit_paid': {
+      bg: 'bg-blue-50',
+      text: 'text-blue-700',
+      border: 'border-blue-300',
+      icon: <CheckCircleIcon className="h-4 w-4 mr-1.5" />,
+      gradient: 'from-blue-500 to-indigo-400',
+      fillColor: 'bg-blue-500'
     }
   };
   
@@ -135,6 +162,21 @@ const BookingCard = ({
     return 'bg-red-400 group-hover:bg-red-500';
   }
 
+  // Derived staffing/payment statuses
+  const staffingStatus = totalStaffNeeded > 0 && totalStaffAssigned >= totalStaffNeeded ? 'filled' : 'unfilled';
+  const paymentStatus = booking.paymentStatus || (booking.status === 'paid' ? 'paid' : 'payment_pending');
+
+  const paymentLabel = paymentStatus === 'paid' ? 'Paid' : 'Payment Pending';
+  const staffingLabel = staffingStatus === 'filled' ? 'Filled' : 'Unfilled';
+
+  const paymentBadge = paymentStatus === 'paid'
+    ? { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-300', dot: 'bg-emerald-500' }
+    : { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-300', dot: 'bg-amber-500' };
+
+  const staffingBadge = staffingStatus === 'filled'
+    ? { bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-300', dot: 'bg-sky-500' }
+    : { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-300', dot: 'bg-rose-500' };
+
   return (
     <div
       className="group relative overflow-hidden rounded-lg bg-white transition-all duration-300 hover:shadow-xl border border-secondary-200 hover:border-primary-300 flex flex-col cursor-pointer transform hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2"
@@ -148,11 +190,17 @@ const BookingCard = ({
       <div className={`h-2 w-full bg-gradient-to-r ${currentStatusStyle.gradient}`}></div>
       
       <div className="p-4 flex-grow flex flex-col space-y-3">
-        {/* Top section with status and edit button */}
+        {/* Top section with statuses and edit button */}
         <div className="flex justify-between items-start">
-          <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${currentStatusStyle.bg} ${currentStatusStyle.text} border ${currentStatusStyle.border}`}>
-            {currentStatusStyle.icon}
-            {statusLabels[booking.status] || booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+          <div className="flex items-center gap-2">
+            <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${paymentBadge.bg} ${paymentBadge.text} border ${paymentBadge.border}`}>
+              <span className={`w-2 h-2 rounded-full mr-1.5 ${paymentBadge.dot}`}></span>
+              {paymentLabel}
+            </div>
+            <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${staffingBadge.bg} ${staffingBadge.text} border ${staffingBadge.border}`}>
+              <span className={`w-2 h-2 rounded-full mr-1.5 ${staffingBadge.dot}`}></span>
+              {staffingLabel}
+            </div>
           </div>
           <button
             onClick={(e) => {

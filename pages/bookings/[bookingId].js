@@ -247,7 +247,16 @@ export default function BookingDetail() {
                 Manage Staff
               </Button>
             </Link>
-            {/* Final Payment Actions hidden per request */}
+            {!(booking.status === 'paid' || booking.status === 'final_paid') && (
+              <Button
+                variant="white"
+                size="sm"
+                disabled={isPreviewing}
+                onClick={previewFinalCharge}
+              >
+                {isPreviewing ? 'Previewing…' : 'Preview Final Charge'}
+              </Button>
+            )}
           </div>
         </div>
 
