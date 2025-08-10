@@ -94,6 +94,11 @@ export default function BookingDetail() {
           window.location.href = json.url;
         }
       }
+      if (json?.success === true) {
+        // Optimistically reflect paid status in UI
+        setBooking(prev => (prev ? { ...prev, status: 'paid' } : prev));
+        setIsPreviewOpen(false);
+      }
       setChargeResponse(json);
     } catch (err) {
       setErrorMessage(err.message || 'Request failed');
@@ -191,7 +196,7 @@ export default function BookingDetail() {
     );
   }
 
-  const statusLabels = { 'confirmed': 'Confirmed', 'pending': 'Pending', 'cancelled': 'Cancelled' };
+  const statusLabels = { 'confirmed': 'Confirmed', 'pending': 'Pending', 'cancelled': 'Cancelled', 'paid': 'Paid', 'final_paid': 'Paid', 'deposit_paid': 'Deposit Paid' };
   const firstDate = sortedDatesNeeded.length > 0 ? new Date(sortedDatesNeeded[0].date) : null;
   const lastDate = sortedDatesNeeded.length > 0 ? new Date(sortedDatesNeeded[sortedDatesNeeded.length - 1].date) : null;
   
@@ -203,10 +208,15 @@ export default function BookingDetail() {
 
   const getStatusStyles = (status) => {
     switch(status) {
-      case 'confirmed': return { badge: 'bg-emerald-100 text-emerald-700', icon: CheckCircleIcon };
-      case 'pending': return { badge: 'bg-amber-100 text-amber-700', icon: ClockIcon };
-      case 'cancelled': return { badge: 'bg-red-100 text-red-700', icon: XMarkIcon };
-      default: return { badge: 'bg-secondary-100 text-secondary-700', icon: ExclamationTriangleIcon };
+      case 'confirmed': return { badge: 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200', dot: 'bg-indigo-500', icon: CheckCircleIcon };
+      case 'pending': return { badge: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200', dot: 'bg-amber-500', icon: ClockIcon };
+      case 'cancelled': return { badge: 'bg-red-50 text-red-700 ring-1 ring-red-200', dot: 'bg-red-500', icon: XMarkIcon };
+      case 'paid':
+      case 'final_paid':
+        return { badge: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200', dot: 'bg-emerald-500', icon: CheckCircleIcon };
+      case 'deposit_paid':
+        return { badge: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200', dot: 'bg-blue-500', icon: CheckCircleIcon };
+      default: return { badge: 'bg-secondary-50 text-secondary-700 ring-1 ring-secondary-200', dot: 'bg-secondary-400', icon: ExclamationTriangleIcon };
     }
   };
   const currentStatusStyles = getStatusStyles(booking.status);
@@ -226,7 +236,8 @@ export default function BookingDetail() {
             <h1 className="text-2xl font-bold text-secondary-900">Booking Overview</h1>
           </div>
           <div className="flex items-center gap-3">
-            <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${currentStatusStyles.badge}`}>
+            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${currentStatusStyles.badge}`}>
+              <span className={`inline-block w-2 h-2 rounded-full ${currentStatusStyles.dot}`}></span>
               <StatusIcon className="w-4 h-4" />
               {statusLabels[booking.status] || booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
             </div>
@@ -236,15 +247,7 @@ export default function BookingDetail() {
                 Manage Staff
               </Button>
             </Link>
-            {/* Final Payment Actions */}
-            <Button
-              variant="white"
-              size="sm"
-              disabled={isPreviewing}
-              onClick={previewFinalCharge}
-            >
-              {isPreviewing ? 'Previewing…' : 'Preview Final Charge'}
-            </Button>
+            {/* Final Payment Actions hidden per request */}
           </div>
         </div>
 
@@ -453,7 +456,7 @@ export default function BookingDetail() {
                                 return (
                                   <div key={slotIndex} 
                                        className={`p-3 rounded-lg border
-                                                  ${staffId ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
+                                                   ${staffId ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
                                     <div className="flex items-center">
                                       <UserGroupIcon className={`w-4 h-4 mr-2 flex-shrink-0 ${staffId ? 'text-emerald-600' : 'text-amber-600'}`} />
                                       {staffId ? (
