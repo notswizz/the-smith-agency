@@ -248,19 +248,31 @@ export default function BookingsDirectory() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 p-3 sm:p-6 md:grid-flow-row-dense">
               {/* For mobile: Separate sections for pending and confirmed */}
               <div className="sm:hidden w-full space-y-6">
-                {/* Pending bookings section */}
-                {filteredBookings.some(booking => booking.status === 'pending') && (
+                {/* Unfilled bookings section */}
+                {filteredBookings.some(booking => {
+                  const totalNeeded = booking.datesNeeded?.reduce((total, date) => total + (date.staffCount || 0), 0) || 0;
+                  const totalAssigned = booking.datesNeeded?.reduce((total, date) => total + ((date.staffIds?.filter(Boolean).length) || 0), 0) || 0;
+                  return !(totalNeeded > 0 && totalAssigned >= totalNeeded);
+                }) && (
                   <div className="space-y-2">
                     <div className="flex items-center px-3">
                       <ClockIcon className="h-3.5 w-3.5 text-amber-500 mr-1.5" />
-                      <h2 className="text-sm font-medium text-secondary-600 uppercase tracking-wide">Pending</h2>
+                      <h2 className="text-sm font-medium text-secondary-600 uppercase tracking-wide">Unfilled</h2>
                       <span className="ml-1.5 text-xs text-secondary-500 bg-secondary-50 px-1.5 py-0.5 rounded-full">
-                        {filteredBookings.filter(booking => booking.status === 'pending').length}
+                        {filteredBookings.filter(booking => {
+                          const totalNeeded = booking.datesNeeded?.reduce((total, date) => total + (date.staffCount || 0), 0) || 0;
+                          const totalAssigned = booking.datesNeeded?.reduce((total, date) => total + ((date.staffIds?.filter(Boolean).length) || 0), 0) || 0;
+                          return !(totalNeeded > 0 && totalAssigned >= totalNeeded);
+                        }).length}
                       </span>
                     </div>
                     <div className="overflow-x-auto pb-4 snap-x snap-mandatory scroll-p-4 scroll-smooth flex gap-3">
                       {filteredBookings
-                        .filter(booking => booking.status === 'pending')
+                        .filter(booking => {
+                          const totalNeeded = booking.datesNeeded?.reduce((total, date) => total + (date.staffCount || 0), 0) || 0;
+                          const totalAssigned = booking.datesNeeded?.reduce((total, date) => total + ((date.staffIds?.filter(Boolean).length) || 0), 0) || 0;
+                          return !(totalNeeded > 0 && totalAssigned >= totalNeeded);
+                        })
                         .map(booking => {
                           const client = clients.find(c => c.id === booking.clientId);
                           const show = shows.find(s => s.id === booking.showId);
@@ -282,53 +294,31 @@ export default function BookingsDirectory() {
                   </div>
                 )}
                 
-                {/* Confirmed bookings section */}
-                {filteredBookings.some(booking => booking.status === 'confirmed') && (
+                {/* Filled bookings section */}
+                {filteredBookings.some(booking => {
+                  const totalNeeded = booking.datesNeeded?.reduce((total, date) => total + (date.staffCount || 0), 0) || 0;
+                  const totalAssigned = booking.datesNeeded?.reduce((total, date) => total + ((date.staffIds?.filter(Boolean).length) || 0), 0) || 0;
+                  return totalNeeded > 0 && totalAssigned >= totalNeeded;
+                }) && (
                   <div className="space-y-2">
                     <div className="flex items-center px-3">
                       <CheckCircleIcon className="h-3.5 w-3.5 text-emerald-500 mr-1.5" />
-                      <h2 className="text-sm font-medium text-secondary-600 uppercase tracking-wide">Confirmed</h2>
+                      <h2 className="text-sm font-medium text-secondary-600 uppercase tracking-wide">Filled</h2>
                       <span className="ml-1.5 text-xs text-secondary-500 bg-secondary-50 px-1.5 py-0.5 rounded-full">
-                        {filteredBookings.filter(booking => booking.status === 'confirmed').length}
+                        {filteredBookings.filter(booking => {
+                          const totalNeeded = booking.datesNeeded?.reduce((total, date) => total + (date.staffCount || 0), 0) || 0;
+                          const totalAssigned = booking.datesNeeded?.reduce((total, date) => total + ((date.staffIds?.filter(Boolean).length) || 0), 0) || 0;
+                          return totalNeeded > 0 && totalAssigned >= totalNeeded;
+                        }).length}
                       </span>
                     </div>
                     <div className="overflow-x-auto pb-4 snap-x snap-mandatory scroll-p-4 scroll-smooth flex gap-3">
                       {filteredBookings
-                        .filter(booking => booking.status === 'confirmed')
-                        .map(booking => {
-                          const client = clients.find(c => c.id === booking.clientId);
-                          const show = shows.find(s => s.id === booking.showId);
-                          
-                          return (
-                            <div key={booking.id} className="snap-center min-w-[85%] first:ml-3 last:mr-3">
-                              <BookingCard
-                                booking={booking}
-                                staff={staff}
-                                client={client}
-                                show={show}
-                                showTooltip={showTooltip}
-                                hideTooltip={hideTooltip}
-                              />
-                            </div>
-                          );
-                        })}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Cancelled bookings section */}
-                {filteredBookings.some(booking => booking.status === 'cancelled') && (
-                  <div className="space-y-2">
-                    <div className="flex items-center px-3">
-                      <XMarkIcon className="h-3.5 w-3.5 text-red-500 mr-1.5" />
-                      <h2 className="text-sm font-medium text-secondary-600 uppercase tracking-wide">Cancelled</h2>
-                      <span className="ml-1.5 text-xs text-secondary-500 bg-secondary-50 px-1.5 py-0.5 rounded-full">
-                        {filteredBookings.filter(booking => booking.status === 'cancelled').length}
-                      </span>
-                    </div>
-                    <div className="overflow-x-auto pb-4 snap-x snap-mandatory scroll-p-4 scroll-smooth flex gap-3">
-                      {filteredBookings
-                        .filter(booking => booking.status === 'cancelled')
+                        .filter(booking => {
+                          const totalNeeded = booking.datesNeeded?.reduce((total, date) => total + (date.staffCount || 0), 0) || 0;
+                          const totalAssigned = booking.datesNeeded?.reduce((total, date) => total + ((date.staffIds?.filter(Boolean).length) || 0), 0) || 0;
+                          return totalNeeded > 0 && totalAssigned >= totalNeeded;
+                        })
                         .map(booking => {
                           const client = clients.find(c => c.id === booking.clientId);
                           const show = shows.find(s => s.id === booking.showId);
