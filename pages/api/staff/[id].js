@@ -1,5 +1,30 @@
 import { db } from '@/lib/firebase/config';
 import { doc, getDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import twilio from 'twilio';
+
+// Twilio credentials from environment
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+
+// Basic formatter to E.164 (+1 for 10-digit US numbers)
+function formatToE164(phone) {
+  if (!phone) return null;
+  const digits = String(phone).replace(/[^\d+]/g, '');
+  if (digits.startsWith('+')) {
+    // Assume already E.164-ish
+    return digits;
+  }
+  // If 11+ digits, assume already includes country code without plus
+  if (digits.length > 10) {
+    return `+${digits}`;
+  }
+  // If 10 digits, default to US country code
+  if (digits.length === 10) {
+    return `+1${digits}`;
+  }
+  return null;
+}
 
 export default async function handler(req, res) {
   const { method } = req;
@@ -38,12 +63,59 @@ export default async function handler(req, res) {
           return res.status(404).json({ error: 'Staff member not found' });
         }
         
+        const previousData = staffDoc.data() || {};
+        
         const updatedStaff = {
           ...req.body,
           updatedAt: serverTimestamp()
         };
         
+        // Detect approval transitions (false -> true)
+        const applicationJustApproved = Boolean(!previousData.applicationFormApproved && updatedStaff.applicationFormApproved);
+        const interviewJustApproved = Boolean(!previousData.interviewFormApproved && updatedStaff.interviewFormApproved);
+        
         await updateDoc(staffRef, updatedStaff);
+        
+        // Fire-and-forget SMS notifications (do not block response)
+        (async () => {
+          try {
+            // Only proceed if we have something to notify and Twilio is configured
+            if (!(applicationJustApproved || interviewJustApproved)) return;
+            if (!accountSid || !authToken || !twilioPhoneNumber) {
+              console.warn('Twilio not configured; skipping SMS notifications');
+              return;
+            }
+            
+            const client = twilio(accountSid, authToken);
+            const staffName = updatedStaff.name || previousData.name || 'there';
+            const rawPhone = updatedStaff.phone || previousData.phone || updatedStaff.phoneNumber || previousData.phoneNumber;
+            const to = formatToE164(rawPhone);
+            if (!to) {
+              console.warn(`No valid phone number for staff ${id}; skipping SMS.`);
+              return;
+            }
+            
+            // Application approved notification
+            if (applicationJustApproved) {
+              const appMsg = `Hi ${staffName}, your application has been approved! Please log in to your staff portal to proceed to the interview step.`;
+              await client.messages.create({ body: appMsg, from: twilioPhoneNumber, to });
+            }
+            
+            // Interview approved/confirmed notification
+            if (interviewJustApproved) {
+              const interviewData = updatedStaff.interviewFormData || previousData.interviewFormData || {};
+              const prettyDate = interviewData.interviewDate || '';
+              const prettyTime = interviewData.interviewTime || '';
+              const when = [prettyDate, prettyTime].filter(Boolean).join(' at ');
+              const intMsg = when
+                ? `Hi ${staffName}, your interview has been confirmed for ${when}.`
+                : `Hi ${staffName}, your interview has been confirmed.`;
+              await client.messages.create({ body: intMsg, from: twilioPhoneNumber, to });
+            }
+          } catch (notifyErr) {
+            console.error('Error sending approval SMS notification:', notifyErr);
+          }
+        })();
         
         res.status(200).json({
           id,

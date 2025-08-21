@@ -306,9 +306,10 @@ export default function DateHeader({ sidebar }) {
         <div className="flex-1 flex flex-col gap-6 w-full">
           {/* Agency Branding */}
           <div className="text-center lg:text-left">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 bg-clip-text text-transparent drop-shadow-sm">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-black-950">
               The Smith Agency
             </h1>
+            <div className="mt-1 h-1 w-20 bg-primary-500 mx-auto lg:mx-0 rounded-full"></div>
             <p className="text-secondary-600 text-sm sm:text-base mt-2 font-medium">Premier Boutique Staffing</p>
           </div>
 
@@ -343,32 +344,22 @@ export default function DateHeader({ sidebar }) {
           </div>
         </div>
 
-        {/* Enhanced Date/Time Card */}
-        <div className="w-full lg:w-auto bg-gradient-to-br from-pink-500 via-rose-500 to-fuchsia-600 rounded-2xl p-5 sm:p-6 text-white shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-1 relative overflow-hidden group">
-          {/* Animated background elements */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 animate-pulse"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12 animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 right-1/4 w-16 h-16 bg-white/5 rounded-full animate-pulse delay-500"></div>
-          
+        {/* Enhanced Date/Time Card (matches black + pink accent theme) */}
+        <div className="w-full lg:w-auto relative rounded-2xl p-5 sm:p-6 bg-white/95 text-secondary-900 shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-1 overflow-hidden border border-white/80">
+          {/* Solid top accent bar */}
+          <div className="absolute inset-x-0 top-0 h-2 bg-black-900"></div>
+
           <div className="flex flex-row items-center justify-between relative z-10">
             <div className="text-left">
-              <div className="text-4xl sm:text-5xl lg:text-6xl font-black mb-2 drop-shadow-lg leading-none">{day}</div>
-              <div className="text-lg sm:text-xl lg:text-2xl font-semibold mb-2 drop-shadow-md tracking-wide">{month}</div>
-              <div className="text-sm sm:text-base lg:text-lg opacity-90 drop-shadow-sm font-medium">{weekday} • {time}</div>
+              <div className="text-4xl sm:text-5xl lg:text-6xl font-black mb-2 leading-none text-black-950">{day}</div>
+              <div className="text-lg sm:text-xl lg:text-2xl font-semibold mb-2 tracking-wide text-secondary-800">{month}</div>
+              <div className="text-sm sm:text-base lg:text-lg font-medium text-secondary-600">{weekday} • {time}</div>
             </div>
             <div className="ml-6">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 shadow-lg group-hover:bg-white/25 transition-all duration-300">
-                <CalendarIcon className="h-7 w-7 sm:h-8 sm:w-8 text-white drop-shadow-sm" />
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white flex items-center justify-center border border-black-900/10 shadow-lg transition-all duration-300">
+                <CalendarIcon className="h-7 w-7 sm:h-8 sm:w-8 text-primary-500" />
               </div>
             </div>
-          </div>
-          
-          {/* Subtle wave pattern overlay */}
-          <div className="absolute inset-0 opacity-5">
-            <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <path d="M0,50 Q25,40 50,50 T100,50 L100,100 L0,100 Z" fill="white"/>
-              <path d="M0,60 Q25,70 50,60 T100,60 L100,100 L0,100 Z" fill="white"/>
-            </svg>
           </div>
         </div>
       </div>

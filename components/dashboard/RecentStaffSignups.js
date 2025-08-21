@@ -52,17 +52,17 @@ export default function RecentStaffSignups() {
 
   return (
     <div>
-      {/* Enhanced Header */}
+      {/* Enhanced Header (theme-aligned) */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center mr-3 shadow-sm">
-            <UserPlusIcon className="h-4 w-4 text-white" />
+          <div className="w-8 h-8 rounded-lg bg-white border border-black-900/10 flex items-center justify-center mr-3 shadow-sm">
+            <UserPlusIcon className="h-4 w-4 text-primary-500" />
           </div>
-          <h3 className="text-lg font-semibold text-secondary-900">Recent Staff Signups</h3>
+          <h3 className="text-lg font-semibold text-black-950">Recent Staff Signups</h3>
         </div>
         <Link 
           href="/staff" 
-          className="text-sm text-violet-600 hover:text-violet-800 flex items-center group transition-colors"
+          className="text-sm text-primary-600 hover:text-primary-700 flex items-center group transition-colors"
         >
           View all
           <ArrowRightIcon className="ml-1 h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
@@ -95,11 +95,11 @@ export default function RecentStaffSignups() {
               <Link 
                 key={member.id || index} 
                 href={`/staff/${member.id}`}
-                className="group block p-4 rounded-xl bg-gradient-to-r from-violet-50 to-violet-100/50 border border-violet-200/50 hover:from-violet-100 hover:to-violet-200/70 hover:border-violet-300/70 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
+                className="group block p-4 rounded-xl bg-white/95 border border-secondary-100 hover:border-secondary-200 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
               >
                 <div className="flex items-center">
                   {/* Enhanced Avatar */}
-                  <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 mr-4 shadow-lg border border-violet-300/30 group-hover:scale-105 transition-transform">
+                  <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 mr-4 shadow-lg border border-black-900/10 group-hover:scale-105 transition-transform">
                     {profileImage ? (
                       <Image
                         src={profileImage}
@@ -127,20 +127,20 @@ export default function RecentStaffSignups() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between mb-2">
                       <div className="min-w-0 flex-1">
-                        <h4 className="font-semibold text-secondary-900 text-base leading-tight group-hover:text-violet-700 transition-colors">
+                        <h4 className="font-semibold text-black-950 text-base leading-tight group-hover:text-secondary-800 transition-colors">
                           {displayName}
                         </h4>
                         {member.location && (
                           <div className="flex items-center text-sm text-secondary-600 mt-0.5">
-                            <MapPinIcon className="h-3 w-3 mr-1 text-violet-500" />
+                            <MapPinIcon className="h-3 w-3 mr-1 text-primary-500" />
                             <span className="leading-tight">{member.location}</span>
                           </div>
                         )}
                       </div>
                       
                       {/* Signup Date */}
-                      <div className="flex items-center px-3 py-1.5 rounded-full bg-violet-100 border border-violet-200 ml-3 flex-shrink-0">
-                        <span className="text-xs font-medium text-violet-700">
+                      <div className="flex items-center px-3 py-1.5 rounded-full bg-primary-50 border border-primary-200 ml-3 flex-shrink-0">
+                        <span className="text-xs font-medium text-primary-700">
                           {signupDate}
                         </span>
                       </div>
@@ -159,7 +159,7 @@ export default function RecentStaffSignups() {
           })}
         </div>
       ) : (
-        <div className="text-center py-8 px-6 bg-gradient-to-br from-secondary-50 to-secondary-100/50 rounded-xl border border-secondary-200/50">
+        <div className="text-center py-8 px-6 bg-white/95 rounded-xl border border-secondary-200/50">
           <div className="w-16 h-16 rounded-full bg-secondary-200 flex items-center justify-center mx-auto mb-4">
             <UserGroupIcon className="h-8 w-8 text-secondary-400" />
           </div>

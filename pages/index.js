@@ -54,12 +54,14 @@ export default function Dashboard() {
             {/* Right Column: Recent Sections */}
             <div className="space-y-6 sm:space-y-8">
               {/* Recent Bookings */}
-              <div className="bg-white/95 rounded-2xl shadow-xl shadow-emerald-500/5 p-5 sm:p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/10 border border-white/80">
+              <div className="relative bg-white/95 rounded-2xl shadow-xl p-5 sm:p-6 transition-all duration-300 hover:shadow-2xl border border-white/80">
+                <div className="absolute inset-x-0 top-0 h-2 bg-black-900"></div>
                 <RecentBookings />
               </div>
               
               {/* Recent Staff Signups */}
-              <div className="bg-white/95 rounded-2xl shadow-xl shadow-violet-500/5 p-5 sm:p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-violet-500/10 border border-white/80">
+              <div className="relative bg-white/95 rounded-2xl shadow-xl p-5 sm:p-6 transition-all duration-300 hover:shadow-2xl border border-white/80">
+                <div className="absolute inset-x-0 top-0 h-2 bg-black-900"></div>
                 <RecentStaffSignups />
               </div>
             </div>

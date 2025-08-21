@@ -106,17 +106,17 @@ export default function RecentBookings() {
 
   return (
     <div>
-      {/* Enhanced Header */}
+      {/* Enhanced Header (theme-aligned) */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center mr-3 shadow-md">
-            <BookOpenIcon className="h-4 w-4 text-white" />
+          <div className="w-8 h-8 rounded-lg bg-white border border-black-900/10 flex items-center justify-center mr-3 shadow-sm">
+            <BookOpenIcon className="h-4 w-4 text-primary-500" />
           </div>
-          <h3 className="text-lg font-semibold text-secondary-900">Recent Bookings</h3>
+          <h3 className="text-lg font-semibold text-black-950">Recent Bookings</h3>
         </div>
         <Link 
           href="/bookings" 
-          className="text-sm text-violet-600 hover:text-violet-800 flex items-center group transition-all duration-300 hover:scale-105"
+          className="text-sm text-primary-600 hover:text-primary-700 flex items-center group transition-all duration-300 hover:scale-105"
         >
           View all
           <ArrowRightIcon className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
@@ -137,25 +137,23 @@ export default function RecentBookings() {
               <Link 
                 key={booking.id || index} 
                 href={`/bookings/${booking.id}`}
-                className="group block p-5 rounded-xl bg-gradient-to-r from-violet-50 to-violet-100/50 border border-violet-200/50 hover:from-violet-100 hover:to-violet-200/70 hover:border-violet-300/70 transition-all duration-500 hover:shadow-xl hover:-translate-y-2 relative overflow-hidden"
+                className="group block p-5 rounded-xl bg-white/95 border border-secondary-100 hover:border-secondary-200 transition-all duration-300 hover:shadow-md hover:-translate-y-1 relative overflow-hidden"
               >
-                {/* Animated background elements */}
-                <div className="absolute top-0 right-0 w-24 h-24 bg-violet-200/20 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-700"></div>
-                <div className="absolute bottom-0 left-0 w-16 h-16 bg-violet-200/10 rounded-full -ml-8 -mb-8 group-hover:scale-150 transition-transform duration-700 delay-200"></div>
+                {/* Decorative elements removed for cleaner theme */}
                 
                 <div className="flex items-start">
                   {/* Enhanced Icon */}
-                  <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 mr-4 bg-gradient-to-br from-violet-500 to-violet-600 text-white flex items-center justify-center font-medium text-sm shadow-lg border border-violet-300/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 relative">
-                    <BuildingOffice2Icon className="h-6 w-6 text-white" />
+                  <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 mr-4 bg-white text-primary-500 flex items-center justify-center font-medium text-sm shadow-md border border-black-900/10 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 relative">
+                    <BuildingOffice2Icon className="h-6 w-6 text-primary-500" />
                     {/* Shine effect */}
-                    <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
                   
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between mb-2">
                       <div className="min-w-0 flex-1">
-                        <h4 className="font-semibold text-secondary-900 text-base leading-tight group-hover:text-violet-700 transition-colors duration-300">
+                        <h4 className="font-semibold text-black-950 text-base leading-tight group-hover:text-secondary-800 transition-colors duration-300">
                           {clientName}
                         </h4>
                         <p className="text-sm text-secondary-600 mt-0.5 leading-tight group-hover:text-secondary-700 transition-colors duration-300">
@@ -174,7 +172,7 @@ export default function RecentBookings() {
                     
                     {/* Date Range */}
                     <div className="flex items-center text-sm text-secondary-500 group-hover:text-secondary-600 transition-colors duration-300">
-                      <CalendarIcon className="h-4 w-4 mr-2 text-violet-500" />
+                      <CalendarIcon className="h-4 w-4 mr-2 text-primary-500" />
                       <span className="font-medium">{dateRange}</span>
                     </div>
                   </div>
@@ -184,7 +182,7 @@ export default function RecentBookings() {
           })}
         </div>
       ) : (
-        <div className="text-center py-10 px-6 bg-gradient-to-br from-secondary-50 to-secondary-100/50 rounded-xl border border-secondary-200/50 hover:shadow-md transition-all duration-300">
+        <div className="text-center py-10 px-6 bg-white/95 rounded-xl border border-secondary-200 hover:shadow-md transition-all duration-300">
           <div className="w-16 h-16 rounded-full bg-secondary-200 flex items-center justify-center mx-auto mb-4 hover:scale-110 transition-transform duration-300">
             <BookOpenIcon className="h-8 w-8 text-secondary-400" />
           </div>
