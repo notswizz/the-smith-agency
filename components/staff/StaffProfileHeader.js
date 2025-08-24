@@ -109,7 +109,7 @@ export default function StaffProfileHeader({ staffMember, totalDaysWorked, booki
             className="flex items-center bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
           >
             <PencilSquareIcon className="h-4 w-4 mr-2" />
-            <span>Edit Profile</span>
+            <span>Edit</span>
           </Button>
         </Link>
       </div>

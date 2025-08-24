@@ -18,11 +18,11 @@ import adminLogger from '@/lib/utils/adminLogger';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon, shortName: 'Home' },
+  { name: 'Activity', href: '/activity', icon: ChatBubbleLeftRightIcon, shortName: 'Activity' },
   { name: 'Staff', href: '/staff', icon: UserGroupIcon, shortName: 'Staff' },
   { name: 'Clients', href: '/clients', icon: BuildingOffice2Icon, shortName: 'Clients' },
   { name: 'Shows', href: '/shows', icon: CalendarIcon, shortName: 'Shows' },
   { name: 'Bookings', href: '/bookings', icon: ClipboardDocumentListIcon, shortName: 'Bookings' },
-  { name: 'Board', href: '/board', icon: ChatBubbleLeftRightIcon, shortName: 'Board' },
 ];
 
 export default function DashboardLayout({ children, onLogout }) {
@@ -277,42 +277,7 @@ export default function DashboardLayout({ children, onLogout }) {
             </div>
           </div>
         </main>
-        
-        {/* Bottom mobile navigation */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-secondary-100 shadow-lg">
-          <div className="grid grid-cols-4 h-16">
-            {/* Include Home, Staff, Clients, Bookings */}
-            {navigation
-              .filter(item => 
-                item.href === '/' || 
-                item.href === '/staff' || 
-                item.href === '/clients' || 
-                item.href === '/bookings'
-              )
-              .map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={classNames(
-                    'flex flex-col items-center justify-center py-1',
-                    router.pathname === item.href
-                      ? 'text-primary-600'
-                      : 'text-secondary-500 hover:text-secondary-900'
-                  )}
-                >
-                  <item.icon
-                    className={classNames(
-                      'h-5 w-5 mb-1',
-                      router.pathname === item.href
-                        ? 'text-primary-600'
-                        : 'text-secondary-400'
-                    )}
-                  />
-                  <span className="text-xs font-medium">{item.shortName}</span>
-                </Link>
-              ))}
-          </div>
-        </div>
+
       </div>
     </div>
   );

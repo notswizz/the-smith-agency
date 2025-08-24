@@ -1,45 +1,19 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import Head from 'next/head';
-import DashboardLayout from '@/components/ui/DashboardLayout';
 import adminLogger from '@/lib/utils/adminLogger';
 import useStore from '@/lib/hooks/useStore';
 
-export async function getServerSideProps() {
-  return {
-    redirect: {
-      destination: '/activity',
-      permanent: false,
-    }
-  };
-}
-
-export default function BoardPage() {
-  return (
-    <>
-      <Head>
-        <title>Board | The Smith Agency</title>
-        <meta name="description" content="Admin board for tasks, updates, and collaboration with @mentions" />
-      </Head>
-      <DashboardLayout>
-        <Board />
-      </DashboardLayout>
-    </>
-  );
-}
-
-function Board() {
+export default function Board() {
   const staff = useStore((s) => s.staff);
   const clients = useStore((s) => s.clients);
 
   const [posts, setPosts] = useState([]);
   const [replies, setReplies] = useState([]);
   const [isCreating, setIsCreating] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('open'); // 'open' | 'completed' | 'all'
-  const [mentionFilter, setMentionFilter] = useState(null); // { type, id, label }
+  const [statusFilter, setStatusFilter] = useState('open');
+  const [mentionFilter, setMentionFilter] = useState(null);
 
   const listEndRef = useRef(null);
 
-  // Subscribe to board posts
   useEffect(() => {
     let unsub = null;
     let cancelled = false;
@@ -52,7 +26,7 @@ function Board() {
         const sorted = [...docs].sort((a, b) => {
           const aTs = a.createdAt?.seconds || 0;
           const bTs = b.createdAt?.seconds || 0;
-          return aTs - bTs; // older first for chat scroll
+          return aTs - bTs;
         });
         setPosts(sorted);
       });
@@ -61,7 +35,6 @@ function Board() {
     return () => { cancelled = true; try { unsub && unsub(); } catch (_) {} };
   }, []);
 
-  // Subscribe to board replies
   useEffect(() => {
     let unsub = null;
     let cancelled = false;
@@ -74,7 +47,7 @@ function Board() {
         const sorted = [...docs].sort((a, b) => {
           const aTs = a.createdAt?.seconds || 0;
           const bTs = b.createdAt?.seconds || 0;
-          return aTs - bTs; // chronological within threads
+          return aTs - bTs;
         });
         setReplies(sorted);
       });
@@ -83,7 +56,6 @@ function Board() {
     return () => { cancelled = true; try { unsub && unsub(); } catch (_) {} };
   }, []);
 
-  // Auto scroll to bottom when posts change
   useEffect(() => {
     listEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [posts.length]);
@@ -124,7 +96,6 @@ function Board() {
         mentions: newPost.mentions || [],
         createdBy: adminName,
         completed: false,
-        // createdAt is set by serverTimestamp in create()
       };
       const { default: svc } = await import('@/lib/firebase/firebaseService');
       await svc.create('boardPosts', payload);
@@ -171,7 +142,6 @@ function Board() {
     if (!confirm('Delete this post? This will also remove all its replies.')) return;
     try {
       const { default: svc } = await import('@/lib/firebase/firebaseService');
-      // Find and delete all replies for this post
       const postReplies = await svc.query('boardReplies', [
         { field: 'postId', operator: '==', value: post.id }
       ]);
@@ -191,14 +161,7 @@ function Board() {
     if (!confirm('Delete this reply and its nested replies?')) return;
     try {
       const { default: svc } = await import('@/lib/firebase/firebaseService');
-      // Collect descendants for this reply within the same post
       const allForPost = replies.filter((r) => r.postId === reply.postId);
-      const byParent = new Map();
-      allForPost.forEach((r) => {
-        const list = byParent.get(r.parentId || null) || [];
-        list.push(r);
-        byParent.set(r.parentId || null, list);
-      });
       const toDelete = new Set([reply.id]);
       const stack = [reply.id];
       while (stack.length) {
@@ -264,7 +227,6 @@ function Composer({ onCreate, isSubmitting }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const textareaRef = useRef(null);
 
-  // Pull mentionables from store to avoid prop drilling heavy arrays
   const staff = useStore((s) => s.staff);
   const clients = useStore((s) => s.clients);
 
@@ -299,12 +261,19 @@ function Composer({ onCreate, isSubmitting }) {
     const newText = newBefore + after;
     setText(newText);
     setShowMenu(false);
-    // Reset caret to after inserted mention
     const newPos = newBefore.length;
     requestAnimationFrame(() => {
       el.focus();
       el.setSelectionRange(newPos, newPos);
     });
+  };
+
+  const parseMentions = (value) => {
+    const matches = value.match(/@([\w\s]+)/g) || [];
+    const labels = matches.map((m) => m.slice(1).trim());
+    const uniqLabels = Array.from(new Set(labels));
+    const resolved = uniqLabels.map((label) => mentionables.find((m) => m.label.toLowerCase() === label.toLowerCase()) || { type: 'tag', id: null, label });
+    return resolved;
   };
 
   const handleKeyDown = (e) => {
@@ -317,14 +286,6 @@ function Composer({ onCreate, isSubmitting }) {
         if (item) insertMention(item);
       }
     }
-  };
-
-  const parseMentions = (value) => {
-    const matches = value.match(/@([\w\s]+)/g) || [];
-    const labels = matches.map((m) => m.slice(1).trim());
-    const uniqLabels = Array.from(new Set(labels));
-    const resolved = uniqLabels.map((label) => mentionables.find((m) => m.label.toLowerCase() === label.toLowerCase()) || { type: 'tag', id: null, label });
-    return resolved;
   };
 
   const handleSubmit = async (e) => {
@@ -695,4 +656,6 @@ function Segmented({ options, value, onChange }) {
       ))}
     </div>
   );
-} 
+}
+
+

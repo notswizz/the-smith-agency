@@ -395,7 +395,7 @@ export default function BookingDetail() {
         {/* Two Column Layout with Fixed Heights */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Left Column - Overview */}
-          <div className="lg:col-span-1">
+          <div className="order-2 lg:order-1 lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm p-6 border border-secondary-200 h-[500px] flex flex-col">
               <div className="flex items-center mb-4 flex-shrink-0">
                 <UserGroupIcon className="h-5 w-5 text-primary-500 mr-3" />
@@ -447,7 +447,7 @@ export default function BookingDetail() {
           </div>
 
           {/* Right Column - Daily Schedule */}
-          <div className="lg:col-span-2">
+          <div className="order-1 lg:order-2 lg:col-span-2">
             <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-secondary-200 h-[500px] flex flex-col">
               <div className="p-5 border-b border-secondary-200 bg-secondary-50 flex items-center justify-between flex-shrink-0">
                 <div className="flex items-center">
