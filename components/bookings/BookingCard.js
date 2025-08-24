@@ -164,14 +164,14 @@ const BookingCard = ({
 
   // Derived staffing/payment statuses
   const staffingStatus = totalStaffNeeded > 0 && totalStaffAssigned >= totalStaffNeeded ? 'filled' : 'unfilled';
-  const paymentStatus = booking.paymentStatus || (booking.status === 'paid' ? 'paid' : 'payment_pending');
+  const paymentStatus = booking.paymentStatus || ((booking.status === 'paid' || booking.status === 'final_paid') ? 'paid' : 'deposit_paid');
 
-  const paymentLabel = paymentStatus === 'paid' ? 'Paid' : 'Payment Pending';
+  const paymentLabel = paymentStatus === 'paid' ? 'Paid' : 'Deposit Paid';
   const staffingLabel = staffingStatus === 'filled' ? 'Filled' : 'Unfilled';
 
   const paymentBadge = paymentStatus === 'paid'
     ? { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-300', dot: 'bg-emerald-500' }
-    : { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-300', dot: 'bg-amber-500' };
+    : { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-300', dot: 'bg-blue-500' };
 
   const staffingBadge = staffingStatus === 'filled'
     ? { bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-300', dot: 'bg-sky-500' }

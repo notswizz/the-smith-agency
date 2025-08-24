@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { PaperAirplaneIcon, CheckIcon, XMarkIcon, UserIcon } from '@heroicons/react/24/outline';
+import { PaperAirplaneIcon, CheckIcon, XMarkIcon, UserIcon, ClipboardIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 export default function ChatInterface() {
   const [messages, setMessages] = useState([]);
@@ -9,10 +9,13 @@ export default function ChatInterface() {
   const [showMentions, setShowMentions] = useState(false);
   const [mentionSearch, setMentionSearch] = useState('');
   const [staffMembers, setStaffMembers] = useState([]);
+  const [shows, setShows] = useState([]);
   const [filteredStaff, setFilteredStaff] = useState([]);
+  const [filteredShows, setFilteredShows] = useState([]);
   const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const LOCAL_STORAGE_KEY = 'adminChatMessages';
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -20,6 +23,31 @@ export default function ChatInterface() {
 
   useEffect(() => {
     scrollToBottom();
+  }, [messages]);
+
+  // Load and persist chat history
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const stored = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) setMessages(parsed);
+        }
+      }
+    } catch (e) {
+      // ignore malformed storage
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(messages));
+      }
+    } catch (e) {
+      // ignore storage errors
+    }
   }, [messages]);
 
   // Fetch staff members on component mount
@@ -60,39 +88,70 @@ export default function ChatInterface() {
     };
 
     fetchStaffDirect();
+
+    // Fetch shows
+    const fetchShows = async () => {
+      try {
+        const res = await fetch('/api/shows');
+        if (res.ok) {
+          const data = await res.json();
+          setShows(Array.isArray(data) ? data : []);
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+    fetchShows();
   }, []);
 
-  // Handle @ mention detection and filtering
+  // Handle @ and # mention detection and filtering
   useEffect(() => {
-    const lastAtIndex = input.lastIndexOf('@');
-    if (lastAtIndex >= 0) {
-      const textAfterAt = input.slice(lastAtIndex + 1);
-      const spaceIndex = textAfterAt.indexOf(' ');
-      const searchTerm = spaceIndex === -1 ? textAfterAt : textAfterAt.slice(0, spaceIndex);
-      
-      if (searchTerm.length >= 0 && spaceIndex === -1) {
+    const atIdx = input.lastIndexOf('@');
+    const hashIdx = input.lastIndexOf('#');
+    const useAt = atIdx > hashIdx;
+    const triggerIdx = Math.max(atIdx, hashIdx);
+    if (triggerIdx >= 0) {
+      const textAfter = input.slice(triggerIdx + 1);
+      const spaceIndex = textAfter.indexOf(' ');
+      const searchTerm = spaceIndex === -1 ? textAfter : textAfter.slice(0, spaceIndex);
+      // Only show dropdown while typing the token (no space yet)
+      if (spaceIndex === -1) {
         setMentionSearch(searchTerm);
-        const filtered = staffMembers.filter(staff => 
-          staff.name && staff.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setFilteredStaff(filtered);
-        setShowMentions(filtered.length > 0);
+        if (useAt) {
+          const filtered = staffMembers.filter(staff => staff.name && staff.name.toLowerCase().includes(searchTerm.toLowerCase()));
+          setFilteredStaff(filtered);
+          setFilteredShows([]);
+          setShowMentions(filtered.length > 0);
+        } else {
+          const filtered = shows.filter(show => show.name && show.name.toLowerCase().includes(searchTerm.toLowerCase()));
+          setFilteredShows(filtered);
+          setFilteredStaff([]);
+          setShowMentions(filtered.length > 0);
+        }
         setSelectedMentionIndex(0);
       } else {
+        // A space after the trigger closes the dropdown
         setShowMentions(false);
+        setFilteredStaff([]);
+        setFilteredShows([]);
       }
     } else {
       setShowMentions(false);
+      setFilteredStaff([]);
+      setFilteredShows([]);
     }
-  }, [input, staffMembers]);
+  }, [input, staffMembers, shows]);
 
   // Handle mention selection
-  const selectMention = (staff) => {
-    const lastAtIndex = input.lastIndexOf('@');
-    const beforeAt = input.slice(0, lastAtIndex);
-    const afterMention = input.slice(lastAtIndex + 1 + mentionSearch.length);
-    
-    setInput(`${beforeAt}@${staff.name} ${afterMention}`);
+  const selectMention = (entity, isShow = false) => {
+    const trigger = isShow ? '#' : '@';
+    const triggerIdx = isShow ? input.lastIndexOf('#') : input.lastIndexOf('@');
+    const before = input.slice(0, triggerIdx);
+    const after = input.slice(triggerIdx + 1 + mentionSearch.length);
+    const name = entity.name || '';
+    // For shows, insert plain name (no '#') so tagging symbol goes away after selection
+    const insertion = isShow ? `${name}` : `${trigger}${name}`;
+    setInput(`${before}${insertion} ${after}`);
     setShowMentions(false);
     setMentionSearch('');
     
@@ -100,7 +159,7 @@ export default function ChatInterface() {
     setTimeout(() => {
       if (inputRef.current) {
         inputRef.current.focus();
-        const newPosition = beforeAt.length + staff.name.length + 2;
+        const newPosition = before.length + name.length + 2;
         inputRef.current.setSelectionRange(newPosition, newPosition);
       }
     }, 0);
@@ -108,22 +167,34 @@ export default function ChatInterface() {
 
   // Handle keyboard navigation for mentions
   const handleKeyDown = (e) => {
-    if (showMentions && filteredStaff.length > 0) {
+    if (showMentions && (filteredStaff.length > 0 || filteredShows.length > 0)) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setSelectedMentionIndex(prev => 
-          prev < filteredStaff.length - 1 ? prev + 1 : prev
-        );
+        const maxIndex = (filteredStaff.length > 0 ? filteredStaff.length : filteredShows.length) - 1;
+        setSelectedMentionIndex(prev => prev < maxIndex ? prev + 1 : prev);
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         setSelectedMentionIndex(prev => prev > 0 ? prev - 1 : prev);
       } else if (e.key === 'Enter') {
         e.preventDefault();
-        selectMention(filteredStaff[selectedMentionIndex]);
+        if (filteredStaff.length > 0) {
+          selectMention(filteredStaff[selectedMentionIndex], false);
+        } else if (filteredShows.length > 0) {
+          selectMention(filteredShows[selectedMentionIndex], true);
+        }
         return;
       } else if (e.key === 'Escape') {
         setShowMentions(false);
         return;
+      }
+    }
+
+    // Submit on Enter, allow Shift+Enter for newline
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (input.trim() && !isLoading) {
+        // trigger form submit
+        sendMessage(e);
       }
     }
   };
@@ -173,6 +244,7 @@ export default function ChatInterface() {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+    setShowMentions(false);
 
     try {
       const response = await fetch('/api/chat/openai', {
@@ -193,7 +265,8 @@ export default function ChatInterface() {
       const assistantMessage = {
         role: 'assistant',
         content: data.message,
-        actions: data.actions || null
+        actions: data.actions || null,
+        preview: data.preview || null
       };
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
@@ -207,11 +280,55 @@ export default function ChatInterface() {
     }
   };
 
+  const handleCopyTranscript = async () => {
+    try {
+      const text = messages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n');
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      }
+    } catch (e) {
+      // no-op
+    }
+  };
+
+  const handleClearChat = () => {
+    setMessages([]);
+    try {
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(LOCAL_STORAGE_KEY);
+      }
+    } catch (e) {}
+  };
+
   return (
     <div className="flex flex-col h-[600px] bg-white rounded-lg shadow-lg">
       <div className="bg-blue-600 text-white p-4 rounded-t-lg">
-        <h2 className="text-xl font-semibold">Smith Agency AI Assistant</h2>
-        <p className="text-blue-100 text-sm">Ask me about bookings, staff, clients, or shows</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold">Smith Agency AI Assistant</h2>
+            <p className="text-blue-100 text-sm">Ask me about bookings, staff, clients, or shows</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={handleCopyTranscript}
+              className="px-2 py-1 bg-blue-500 hover:bg-blue-400 text-white rounded flex items-center space-x-1 text-sm"
+              title="Copy transcript"
+            >
+              <ClipboardIcon className="w-4 h-4" />
+              <span>Copy</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleClearChat}
+              className="px-2 py-1 bg-blue-500 hover:bg-blue-400 text-white rounded flex items-center space-x-1 text-sm"
+              title="Clear chat"
+            >
+              <TrashIcon className="w-4 h-4" />
+              <span>Clear</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -241,6 +358,28 @@ export default function ChatInterface() {
               }`}
             >
               <p className="whitespace-pre-wrap">{message.content}</p>
+              {message.preview && (
+                <div className="mt-3 text-xs bg-white border border-gray-200 rounded p-3 text-gray-700">
+                  {message.preview.current || message.preview.updates ? (
+                    <div className="space-y-2">
+                      {message.preview.current && (
+                        <div>
+                          <div className="font-semibold mb-1">Current</div>
+                          <pre className="bg-gray-50 p-2 rounded overflow-auto max-h-40">{JSON.stringify(message.preview.current, null, 2)}</pre>
+                        </div>
+                      )}
+                      {message.preview.updates && (
+                        <div>
+                          <div className="font-semibold mb-1">Updates</div>
+                          <pre className="bg-gray-50 p-2 rounded overflow-auto max-h-40">{JSON.stringify(message.preview.updates, null, 2)}</pre>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <pre className="bg-gray-50 p-2 rounded overflow-auto max-h-40">{JSON.stringify(message.preview, null, 2)}</pre>
+                  )}
+                </div>
+              )}
               
               {/* Action buttons */}
               {message.actions && message.actions.length > 0 && (
@@ -309,24 +448,31 @@ export default function ChatInterface() {
       <form onSubmit={sendMessage} className="p-4 border-t relative">
         <div className="flex space-x-2">
           <div className="flex-1 relative">
-            <input
+            <textarea
               ref={inputRef}
-              type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                setInput(e.target.value);
+                // auto-resize
+                if (inputRef.current) {
+                  inputRef.current.style.height = 'auto';
+                  inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+                }
+              }}
               onKeyDown={handleKeyDown}
               placeholder="Ask me anything about your Smith Agency data... (type @ to mention staff)"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              rows={1}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               disabled={isLoading}
             />
             
             {/* Mention Dropdown */}
-            {showMentions && filteredStaff.length > 0 && (
+            {showMentions && (filteredStaff.length > 0 || filteredShows.length > 0) && (
               <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto z-50">
-                {filteredStaff.map((staff, index) => (
+                {(filteredStaff.length > 0 ? filteredStaff : filteredShows).map((item, index) => (
                   <div
-                    key={staff.id}
-                    onClick={() => selectMention(staff)}
+                    key={item.id}
+                    onClick={() => selectMention(item, filteredShows.length > 0)}
                     className={`px-4 py-2 cursor-pointer flex items-center space-x-3 ${
                       index === selectedMentionIndex 
                         ? 'bg-blue-50 border-l-4 border-blue-500' 
@@ -335,9 +481,9 @@ export default function ChatInterface() {
                   >
                     <UserIcon className="w-5 h-5 text-gray-400" />
                     <div>
-                      <div className="font-medium text-gray-900">{staff.name}</div>
-                      {staff.role && (
-                        <div className="text-sm text-gray-500">{staff.role}</div>
+                      <div className="font-medium text-gray-900">{item.name}</div>
+                      {item.role && (
+                        <div className="text-sm text-gray-500">{item.role}</div>
                       )}
                     </div>
                   </div>
@@ -355,10 +501,10 @@ export default function ChatInterface() {
           </button>
         </div>
         
-        {/* Hint about @ mentions */}
-        {staffMembers.length > 0 && !showMentions && (
+        {/* Hint about @ and # mentions */}
+        {(staffMembers.length > 0 || shows.length > 0) && !showMentions && (
           <div className="mt-2 text-xs text-gray-500">
-            💡 Type @ to mention and select staff members for editing
+            💡 Type @ to mention staff, # to mention shows
           </div>
         )}
       </form>

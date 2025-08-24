@@ -195,11 +195,11 @@ function StaffCard({ staffMember }) {
           </div>
         )}
 
-        {/* Hourly Rate - below status in top-right */}
+        {/* Hourly Rate - below status in top-right (no /hr) */}
         {computedHourlyRate && (
           <div className="absolute top-14 right-4 z-20">
             <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-xs font-semibold border border-green-200 shadow-sm">
-              <span>${computedHourlyRate}/hr</span>
+              <span>${computedHourlyRate}</span>
             </div>
           </div>
         )}

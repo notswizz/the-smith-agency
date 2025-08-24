@@ -35,6 +35,7 @@ export default function BookingDetail() {
   const [previewData, setPreviewData] = useState(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [chargeResponse, setChargeResponse] = useState(null);
+  const [editedTotalCents, setEditedTotalCents] = useState(null);
 
   const formatCurrency = (cents) => {
     if (typeof cents !== 'number') return '--';
@@ -62,6 +63,11 @@ export default function BookingDetail() {
         throw new Error('Invalid preview response from portal. Please verify COMPANION_BASE_URL, PORTAL_ORIGIN, and INTERNAL_ADMIN_API_KEY.');
       }
       setPreviewData(json);
+      setEditedTotalCents(
+        typeof json?.computed?.totalCents === 'number'
+          ? json.computed.totalCents
+          : (typeof json?.amountToChargeCents === 'number' ? json.amountToChargeCents : 0)
+      );
       setIsPreviewOpen(true);
     } catch (err) {
       setErrorMessage(err.message || 'Request failed');
@@ -78,7 +84,7 @@ export default function BookingDetail() {
       const response = await fetch('/api/charge-final-proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookingId, dryRun: false, debug: true }),
+        body: JSON.stringify({ bookingId, dryRun: false, debug: true, overrideAmountCents: editedTotalCents }),
       });
       const json = await response.json();
       if (!response.ok) {
@@ -269,26 +275,58 @@ export default function BookingDetail() {
         {isPreviewOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/40" onClick={() => !isConfirming && setIsPreviewOpen(false)}></div>
-            <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6 z-10">
-              <h3 className="text-lg font-semibold text-secondary-900 mb-4">Final Payment</h3>
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-0 z-10 overflow-hidden border border-secondary-200">
+              <div className="px-6 pt-5 pb-4 bg-secondary-50 border-b border-secondary-200">
+                <h3 className="text-lg font-semibold text-secondary-900">Preview Final Charge</h3>
+                <p className="text-xs text-secondary-500 mt-1">Adjust the final total if needed before charging.</p>
+              </div>
               {previewData ? (
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-secondary-600">Rate</span>
-                    <span className="font-medium">{formatCurrency(previewData?.computed?.rateCents)}</span>
+                <div className="p-6 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="rounded-lg border border-secondary-200 p-3 bg-white">
+                      <div className="text-2xs text-secondary-500">Rate</div>
+                      <div className="text-sm font-semibold">{formatCurrency(previewData?.computed?.rateCents)}</div>
+                    </div>
+                    <div className="rounded-lg border border-secondary-200 p-3 bg-white">
+                      <div className="text-2xs text-secondary-500">Staff-days</div>
+                      <div className="text-sm font-semibold">{previewData?.computed?.staffDays ?? '--'}</div>
+                    </div>
+                    <div className="rounded-lg border border-secondary-200 p-3 bg-white">
+                      <div className="text-2xs text-secondary-500">Calculated Total</div>
+                      <div className="text-sm font-semibold">{formatCurrency(previewData?.computed?.totalCents ?? previewData?.amountToChargeCents)}</div>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-secondary-600">Staff-days</span>
-                    <span className="font-medium">{previewData?.computed?.staffDays ?? '--'}</span>
+
+                  <div>
+                    <label className="block text-xs font-medium text-secondary-700 mb-1">Final total to charge (USD)</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-secondary-400">$</div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        disabled={isConfirming}
+                        className="pl-6 pr-3 py-2 w-full rounded-md border border-secondary-300 focus:ring-primary-500 focus:border-primary-500 text-sm"
+                        value={typeof editedTotalCents === 'number' ? (editedTotalCents / 100).toFixed(2) : ''}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          const num = parseFloat(v);
+                          if (Number.isFinite(num) && num >= 0) {
+                            setEditedTotalCents(Math.round(num * 100));
+                          } else if (v === '') {
+                            setEditedTotalCents(0);
+                          }
+                        }}
+                      />
+                    </div>
+                    <p className="text-[11px] text-secondary-500 mt-1">Tip: Taxes/fees, if any, should be included in this total.</p>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-secondary-600">Total</span>
-                    <span className="font-semibold text-secondary-900">{formatCurrency(previewData?.computed?.totalCents ?? previewData?.amountToChargeCents)}</span>
-                  </div>
+
                   {chargeResponse && (
                     <pre className="text-[11px] bg-secondary-50 p-2 rounded border border-secondary-200 max-h-40 overflow-auto">{JSON.stringify(chargeResponse, null, 2)}</pre>
                   )}
-                  <div className="mt-4 flex justify-end gap-2">
+
+                  <div className="flex justify-end gap-2 pt-2">
                     <Button variant="white" size="sm" disabled={isConfirming} onClick={() => setIsPreviewOpen(false)}>Cancel</Button>
                     <Button variant="gradient" size="sm" disabled={isConfirming} onClick={chargeFinalPayment}>
                       {isConfirming ? 'Charging…' : 'Charge Final Payment'}

@@ -105,10 +105,9 @@ export default function EditStaffMember() {
       return;
     }
 
-    // Handle pay rate with validation
+    // Regular numeric input handling for pay rate (no clamping)
     if (name === 'payRate') {
-      const rate = Math.max(15, Math.min(22, parseFloat(value) || 15));
-      setFormData({ ...formData, [name]: rate });
+      setFormData({ ...formData, [name]: value });
       return;
     }
     
@@ -412,22 +411,23 @@ export default function EditStaffMember() {
 
                   <div>
                     <label htmlFor="payRate" className="block text-sm font-medium text-secondary-700">
-                      Pay Rate ($15-$22/hour)
+                      Pay Rate (hourly)
                     </label>
                     <input
                       type="number"
                       id="payRate"
                       name="payRate"
-                      value={formData.payRate || 15}
+                      value={formData.payRate ?? ''}
                       onChange={handleInputChange}
-                      min="15"
-                      max="22"
-                      step="0.25"
+                      min="0"
+                      step="0.01"
                       className="mt-1 block w-full border border-secondary-200 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                     />
-                    <div className="mt-1 text-sm text-gray-500">
-                      Current rate: ${formData.payRate || 15}/hour
-                    </div>
+                    {formData.payRate !== undefined && formData.payRate !== '' && (
+                      <div className="mt-1 text-sm text-gray-500">
+                        Current rate: ${formData.payRate}/hour
+                      </div>
+                    )}
                   </div>
 
                   <div className="sm:col-span-2">

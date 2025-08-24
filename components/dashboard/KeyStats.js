@@ -69,7 +69,7 @@ export default function KeyStats() {
       id: 'days',
       name: 'Days Booked',
       value: totalStaffDays,
-      icon: UserGroupIcon,
+      icon: CalendarIcon,
       gradient: 'from-primary-500 to-black-900',
       iconGradient: 'from-black-900 to-primary-700',
       accentColor: 'primary-500',
