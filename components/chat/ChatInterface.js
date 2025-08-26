@@ -313,8 +313,8 @@ export default function ChatInterface() {
               <SparklesIcon className="w-5 h-5 text-pink-400" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold tracking-tight text-zinc-50">Smith Agency Assistant</h2>
-              <p className="text-zinc-400 text-sm">Bookings • Staff • Clients • Shows</p>
+              <h2 className="text-xl font-semibold tracking-tight text-zinc-50">Smith AI</h2>
+              <p className="text-zinc-400 text-sm">Bookings • Staff • Clients</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
