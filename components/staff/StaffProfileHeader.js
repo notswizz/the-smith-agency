@@ -101,17 +101,7 @@ export default function StaffProfileHeader({ staffMember, totalDaysWorked, booki
           <h1 className="text-2xl font-bold text-gray-900">{name}</h1>
         </div>
         
-        {/* Edit Button - Top Right */}
-        <Link href={`/staff/${staffMember.id}/edit`}>
-          <Button
-            variant="primary"
-            size="sm"
-            className="flex items-center bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
-          >
-            <PencilSquareIcon className="h-4 w-4 mr-2" />
-            <span>Edit</span>
-          </Button>
-        </Link>
+        {/* Edit Button removed in favor of sticky mobile action */}
       </div>
 
       {/* Main Profile Card */}
@@ -148,12 +138,7 @@ export default function StaffProfileHeader({ staffMember, totalDaysWorked, booki
                   </div>
                 )}
               </div>
-              {/* Edit Button */}
-              <Link href={`/staff/${staffMember.id}/edit`} className="absolute -bottom-2 -right-2">
-                <button className="bg-gray-900 hover:bg-gray-800 text-white p-2.5 rounded-full shadow-lg transition-all duration-200 hover:scale-105">
-                  <PencilSquareIcon className="h-4 w-4" />
-                </button>
-              </Link>
+              {/* Inline edit button removed in favor of sticky mobile action */}
             </div>
 
             {/* Profile Info */}

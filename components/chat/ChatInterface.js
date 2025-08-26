@@ -16,6 +16,7 @@ export default function ChatInterface() {
   const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const typedDoneRef = useRef(new Set());
   const LOCAL_STORAGE_KEY = 'adminChatMessages';
 
   const scrollToBottom = () => {
@@ -334,8 +335,8 @@ export default function ChatInterface() {
       <div className="flex-1 overflow-y-auto p-5 space-y-5 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950">
         {messages.length === 0 && (
           <div className="text-center text-zinc-300 mt-8">
-            <p className="text-base">👋 Welcome. Ask anything about your Smith Agency data.</p>
-            <p className="mt-2 text-sm">Use <span className="text-pink-400 font-medium">@</span> for staff and <span className="text-pink-400 font-medium">#</span> for shows.</p>
+            <p className="text-base">👋 Welcome. I am your AI assistant for The Smith Agency</p>
+            <p className="mt-2 text-sm">Use <span className="text-pink-400 font-medium">@</span> for staff and <span className="text-pink-400 font-medium">#</span> for shows</p>
           </div>
         )}
 
@@ -346,6 +347,7 @@ export default function ChatInterface() {
           if (!isUser && ui && (ui.type === 'staff_card' || ui.type === 'staff_list' || ui.type === 'booking_card' || ui.type === 'booking_list')) {
             displayText = '';
           }
+          const shouldType = !isUser && index === messages.length - 1 && displayText && displayText.length > 0 && !typedDoneRef.current.has(index);
           return (
             <div key={index} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
               <div className={`flex items-end max-w-full ${isUser ? 'flex-row-reverse' : ''}`}>
@@ -363,7 +365,16 @@ export default function ChatInterface() {
                   }`}
                 >
                   {displayText ? (
-                    <p className="whitespace-pre-wrap leading-7 text-[15px]">{displayText}</p>
+                    shouldType ? (
+                      <TypewriterText 
+                        text={displayText} 
+                        onStep={scrollToBottom}
+                        onDone={() => { typedDoneRef.current.add(index); scrollToBottom(); }}
+                        className="whitespace-pre-wrap leading-7 text-[15px]"
+                      />
+                    ) : (
+                      <p className="whitespace-pre-wrap leading-7 text-[15px]">{displayText}</p>
+                    )
                   ) : null}
 
                   {message.preview && (
@@ -532,6 +543,42 @@ export default function ChatInterface() {
 // Lazy-load staff list to avoid bundling overhead
 const StaffList = dynamic(() => import('@/components/staff/StaffList'), { ssr: false });
 const BookingCard = dynamic(() => import('@/components/bookings/BookingCard'), { ssr: false });
+
+function TypewriterText({ text = '', speed = 18, onStep, onDone, className = '' }) {
+  const [display, setDisplay] = useState('');
+  const indexRef = useRef(0);
+
+  useEffect(() => {
+    setDisplay('');
+    indexRef.current = 0;
+    if (!text) return;
+    let rafId;
+    let last = 0;
+    const step = (now) => {
+      if (!last) last = now;
+      const elapsed = now - last;
+      const charsToAdd = Math.max(1, Math.floor(elapsed / speed));
+      last = now;
+      if (indexRef.current < text.length) {
+        indexRef.current = Math.min(text.length, indexRef.current + charsToAdd);
+        setDisplay(text.slice(0, indexRef.current));
+        if (typeof onStep === 'function') onStep();
+        rafId = requestAnimationFrame(step);
+      } else {
+        if (typeof onDone === 'function') onDone();
+      }
+    };
+    rafId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(rafId);
+  }, [text, speed, onStep, onDone]);
+
+  return (
+    <p className={className}>
+      {display}
+      <span className="inline-block w-2 h-4 align-baseline ml-0.5 bg-pink-400/80 animate-pulse" />
+    </p>
+  );
+}
 
 function StaffPreview({ items = [] }) {
   if (!Array.isArray(items) || items.length === 0) {

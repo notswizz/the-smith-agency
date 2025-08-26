@@ -218,8 +218,8 @@ export default function ClientProfile() {
               <div className="absolute top-0 right-0 w-32 sm:w-40 h-32 sm:h-40 bg-gray-200/50 rounded-full -mr-16 sm:-mr-20 -mt-16 sm:-mt-20"></div>
               <div className="absolute bottom-0 left-0 w-20 sm:w-24 h-20 sm:h-24 bg-gray-200/50 rounded-full -ml-10 sm:-ml-12 -mb-10 sm:-mb-12"></div>
               
-              {/* Action buttons */}
-              <div className="absolute top-3 sm:top-6 right-3 sm:right-6 flex gap-2">
+              {/* Action buttons (hidden on mobile; sticky actions shown instead) */}
+              <div className="hidden sm:flex absolute top-3 sm:top-6 right-3 sm:right-6 gap-2">
                 {isEditing ? (
                   <>
                     <Button variant="white" size="sm" onClick={() => setIsEditing(false)}>
@@ -783,10 +783,44 @@ export default function ClientProfile() {
             </div>
           )}
 
-          {/* Bottom buffer to prevent content from being covered by the menu */}
+          {/* Bottom buffer to prevent content from being covered by the sticky bar */}
           <div className="h-20 md:h-16"></div>
         </div>
       </DashboardLayout>
+
+      {/* Mobile sticky actions */}
+      {!isEditing ? (
+        <div className="sm:hidden fixed inset-x-0 bottom-0 z-40 border-t border-black/20 bg-pink-600">
+          <div className="max-w-7xl mx-auto px-4 py-3">
+            <Button
+              variant="white"
+              size="lg"
+              className="w-full text-black border border-black/80"
+              onClick={() => setIsEditing(true)}
+              aria-label="Edit client"
+            >
+              Edit
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="sm:hidden fixed inset-x-0 bottom-0 z-40 border-t border-secondary-200 bg-white/95 backdrop-blur">
+          <div className="max-w-7xl mx-auto px-4 py-3">
+            <div className="grid grid-cols-2 gap-3">
+              <Button variant="white" size="lg" className="w-full" type="button" onClick={() => setIsEditing(false)}>Cancel</Button>
+              <Button
+                variant="gradient"
+                size="lg"
+                className="w-full"
+                onClick={(e) => { e.preventDefault(); handleSubmit(e); }}
+                aria-label="Save client"
+              >
+                Save
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 } 

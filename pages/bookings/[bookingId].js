@@ -239,7 +239,10 @@ export default function BookingDetail() {
                 <ArrowLeftIcon className="h-4 w-4" />
               </Button>
             </Link>
-            <h1 className="text-2xl font-bold text-secondary-900">{client?.name || 'Booking'}</h1>
+            <h1 className="text-2xl font-bold text-secondary-900">
+              {client?.name || 'Booking'}
+              <span className="hidden sm:inline text-secondary-500 text-sm ml-2">({show?.name || 'Unknown Show'})</span>
+            </h1>
           </div>
           <div className="flex items-center gap-3">
             <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${currentStatusStyles.badge}`}>
@@ -341,38 +344,12 @@ export default function BookingDetail() {
           </div>
         )}
 
-        {/* Key Information */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-secondary-200 hidden sm:block">
-          {/* Display results/errors if any */}
-          {(chargeResponse || errorMessage) && (
-            <div className="mb-4">
-              {errorMessage && (
-                <div className="mb-2 text-sm text-red-600">{errorMessage}</div>
-              )}
-              {chargeResponse && (
-                <pre className="text-xs bg-secondary-50 p-3 rounded border border-secondary-200 overflow-auto max-h-48">
-{JSON.stringify(chargeResponse, null, 2)}
-                </pre>
-              )}
-            </div>
-          )}
-          <div className="grid grid-cols-1 gap-6">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
-                <CalendarIcon className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-secondary-500 mb-1">Show</p>
-                <p className="font-semibold text-secondary-900">{show?.name || 'Unknown'}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Key Information card removed on desktop; show name moved into header */}
 
         {/* Two Column Layout with Fixed Heights */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Left Column - Overview */}
-          <div className="order-2 lg:order-1 lg:col-span-1">
+          <div className="order-2 lg:order-1 lg:col-span-1 hidden sm:block">
             <div className="bg-white rounded-lg shadow-sm p-6 border border-secondary-200 h-[500px] flex flex-col">
               <div className="flex items-center mb-4 flex-shrink-0">
                 <UserGroupIcon className="h-5 w-5 text-primary-500 mr-3" />

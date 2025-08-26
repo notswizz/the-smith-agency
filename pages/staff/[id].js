@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import useStore from '@/lib/hooks/useStore';
 import DashboardLayout from '@/components/ui/DashboardLayout';
+import Button from '@/components/ui/Button';
 
 // Import our components
 import StaffProfileHeader from '@/components/staff/StaffProfileHeader';
@@ -133,6 +134,21 @@ export default function StaffProfile() {
           <div className="h-20 md:h-16"></div>
         </div>
       </DashboardLayout>
+
+      {/* Mobile sticky action: Edit Staff */}
+      <div className="sm:hidden fixed inset-x-0 bottom-0 z-40 border-t border-black/20 bg-pink-600">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <Button
+            variant="white"
+            size="lg"
+            className="w-full text-black border border-black/80"
+            onClick={() => router.push(`/staff/${id}/edit`)}
+            aria-label="Edit staff"
+          >
+            Edit
+          </Button>
+        </div>
+      </div>
     </>
   );
 } 

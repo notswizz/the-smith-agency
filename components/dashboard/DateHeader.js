@@ -344,8 +344,8 @@ export default function DateHeader({ sidebar }) {
           </div>
         </div>
 
-        {/* Enhanced Date/Time Card (matches black + pink accent theme) */}
-        <div className="w-full lg:w-auto relative rounded-2xl p-5 sm:p-6 bg-white/95 text-secondary-900 shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-1 overflow-hidden border border-white/80">
+        {/* Enhanced Date/Time Card (hidden on mobile, visible on lg+) */}
+        <div className="hidden lg:block lg:w-auto relative rounded-2xl p-5 sm:p-6 bg-white/95 text-secondary-900 shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-1 overflow-hidden border border-white/80">
           {/* Solid top accent bar */}
           <div className="absolute inset-x-0 top-0 h-2 bg-black-900"></div>
 

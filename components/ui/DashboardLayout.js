@@ -18,7 +18,7 @@ import adminLogger from '@/lib/utils/adminLogger';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon, shortName: 'Home' },
-  { name: 'Activity', href: '/activity', icon: ChatBubbleLeftRightIcon, shortName: 'Activity' },
+  // { name: 'Activity', href: '/activity', icon: ChatBubbleLeftRightIcon, shortName: 'Activity' },
   { name: 'Staff', href: '/staff', icon: UserGroupIcon, shortName: 'Staff' },
   { name: 'Clients', href: '/clients', icon: BuildingOffice2Icon, shortName: 'Clients' },
   { name: 'Shows', href: '/shows', icon: CalendarIcon, shortName: 'Shows' },

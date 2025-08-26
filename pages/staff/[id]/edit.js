@@ -856,6 +856,27 @@ export default function EditStaffMember() {
           </div>
         )}
       </DashboardLayout>
+
+      {/* Mobile sticky action: Save */}
+      <div className="sm:hidden fixed inset-x-0 bottom-0 z-40 border-t border-secondary-200 bg-white/95 backdrop-blur">
+        <div className="max-w-4xl mx-auto px-4 py-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Link href={`/staff/${id}`}>
+              <Button variant="white" size="lg" className="w-full" type="button">Cancel</Button>
+            </Link>
+            <Button
+              variant="gradient"
+              size="lg"
+              className="w-full"
+              onClick={(e) => { e.preventDefault(); handleSubmit(e); }}
+              disabled={loading}
+              aria-label="Save staff"
+            >
+              {loading ? 'Saving…' : 'Save'}
+            </Button>
+          </div>
+        </div>
+      </div>
     </>
   );
 } 

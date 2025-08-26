@@ -25,12 +25,7 @@ export default function RecentActivity() {
     <Card 
       title="Recent Activity" 
       className="h-full"
-      actions={
-        <Link href="/activity" className="text-sm text-primary-600 hover:text-primary-800 flex items-center">
-          View all
-          <ArrowRightIcon className="ml-1 h-4 w-4" />
-        </Link>
-      }
+      actions={null}
     >
       <div className="space-y-4">
         {recentActivity.length > 0 ? (

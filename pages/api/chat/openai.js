@@ -28,7 +28,7 @@ export default async function handler(req, res) {
 
     while (loops < 5) {
       const completion = await openai.chat.completions.create({
-        model: loops === 0 ? 'gpt-5-mini' : 'gpt-4.1-mini',
+        model: loops === 0 ? 'gpt-5-nano' : 'gpt-4.1-mini',
         messages: convo,
         functions: functionDefinitions,
         function_call: 'auto',

@@ -177,9 +177,16 @@ const BookingCard = ({
     ? { bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-300', dot: 'bg-sky-500' }
     : { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-300', dot: 'bg-rose-500' };
 
+  // Combined trim color logic: green if paid AND filled, yellow if exactly one, red if neither
+  const isPaid = paymentStatus === 'paid';
+  const isFilled = staffingStatus === 'filled';
+  const trimState = isPaid && isFilled ? 'green' : (isPaid || isFilled) ? 'yellow' : 'red';
+  const trimBarColor = trimState === 'green' ? 'bg-emerald-500' : trimState === 'yellow' ? 'bg-amber-500' : 'bg-rose-500';
+  const trimBorderColor = trimState === 'green' ? 'border-emerald-300 hover:border-emerald-400' : trimState === 'yellow' ? 'border-amber-300 hover:border-amber-400' : 'border-rose-300 hover:border-rose-400';
+
   return (
     <div
-      className="group relative overflow-hidden rounded-lg bg-white transition-all duration-300 hover:shadow-xl border border-secondary-200 hover:border-primary-300 flex flex-col cursor-pointer transform hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2"
+      className={`group relative overflow-hidden rounded-lg bg-white transition-all duration-300 hover:shadow-xl border ${trimBorderColor} flex flex-col cursor-pointer transform hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2`}
       onClick={() => router.push(`/bookings/${booking.id}`)}
       tabIndex={0}
       role="button"
@@ -187,7 +194,7 @@ const BookingCard = ({
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') router.push(`/bookings/${booking.id}`); }}
     >
       {/* Gradient header based on status */}
-      <div className={`h-2 w-full bg-gradient-to-r ${currentStatusStyle.gradient}`}></div>
+      <div className={`h-2 w-full ${trimBarColor}`}></div>
       
       <div className="p-4 flex-grow flex flex-col space-y-3">
         {/* Top section with statuses and edit button */}
@@ -277,9 +284,10 @@ const BookingCard = ({
               const daysWithStaff = sortedDates.filter(day => (day.staffCount || 0) > 0);
               const day = daysWithStaff[i];
               if (!day) return null;
-              const dayStaffIds = day.staffIds || [];
+              const dayStaffIds = Array.isArray(day.staffIds) ? day.staffIds.filter(Boolean) : [];
               const dayStaffCount = day.staffCount || 0;
-              const fullness = Math.min(1, dayStaffIds.length / Math.max(1, dayStaffCount));
+              const filledCount = dayStaffIds.length;
+              const fullness = Math.min(1, filledCount / Math.max(1, dayStaffCount));
               
               return (
                 <div 
@@ -289,7 +297,7 @@ const BookingCard = ({
                   onClick={(e) => (typeof showTooltip === 'function' ? showTooltip(e, i, booking.id) : null)}
                   onMouseEnter={(e) => (typeof showTooltip === 'function' ? showTooltip(e, i, booking.id) : null)}
                   onMouseLeave={(e) => (typeof hideTooltip === 'function' ? hideTooltip(e) : null)}
-                  title={`${formatDate(day.date)}: ${dayStaffIds.length}/${dayStaffCount} staff`}
+                  title={`${formatDate(day.date)}: ${filledCount}/${dayStaffCount} staff`}
                 ></div>
               );
             })}

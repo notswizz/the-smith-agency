@@ -7,7 +7,7 @@ import useStore from '@/lib/hooks/useStore';
 export async function getServerSideProps() {
   return {
     redirect: {
-      destination: '/activity',
+      destination: '/',
       permanent: false,
     }
   };

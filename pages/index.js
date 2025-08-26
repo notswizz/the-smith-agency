@@ -4,8 +4,7 @@ import DashboardLayout from '@/components/ui/DashboardLayout';
 import DateHeader from '@/components/dashboard/DateHeader';
 import KeyStats from '@/components/dashboard/KeyStats';
 import ShowsCalendar from '@/components/dashboard/ShowsCalendar';
-import RecentStaffSignups from '@/components/dashboard/RecentStaffSignups';
-import RecentBookings from '@/components/dashboard/RecentBookings';
+import ActivityFeed from '@/components/dashboard/ActivityFeed';
 import dynamic from 'next/dynamic';
 import { SparklesIcon } from '@heroicons/react/24/outline';
 
@@ -48,26 +47,22 @@ export default function Dashboard() {
           
           {/* Dashboard Content Grid - Two Even Columns */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 mb-8">
-            {/* Left Column: Calendar */}
-            <div className="space-y-6 sm:space-y-8">
+            {/* Left Column: Calendar (second on mobile) */}
+            <div className="space-y-6 sm:space-y-8 order-2 lg:order-1">
               {/* Calendar - Enhanced with better borders and shadows */}
               <div className="bg-white/95 rounded-2xl shadow-xl shadow-primary-500/5 p-5 sm:p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-primary-500/10 border border-white/80">
                 <ShowsCalendar />
               </div>
             </div>
             
-            {/* Right Column: Recent Sections */}
-            <div className="space-y-6 sm:space-y-8">
-              {/* Recent Bookings */}
+            {/* Right Column: Activity Feed replacing recent sections (first on mobile) */}
+            <div className="space-y-6 sm:space-y-8 order-1 lg:order-2">
               <div className="relative bg-white/95 rounded-2xl shadow-xl p-5 sm:p-6 transition-all duration-300 hover:shadow-2xl border border-white/80">
                 <div className="absolute inset-x-0 top-0 h-2 bg-black-900"></div>
-                <RecentBookings />
-              </div>
-              
-              {/* Recent Staff Signups */}
-              <div className="relative bg-white/95 rounded-2xl shadow-xl p-5 sm:p-6 transition-all duration-300 hover:shadow-2xl border border-white/80">
-                <div className="absolute inset-x-0 top-0 h-2 bg-black-900"></div>
-                <RecentStaffSignups />
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-black-950">Activity</h3>
+                </div>
+                <ActivityFeed />
               </div>
             </div>
           </div>
