@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Head from 'next/head';
 import DashboardLayout from '@/components/ui/DashboardLayout';
 import DateHeader from '@/components/dashboard/DateHeader';
@@ -6,8 +6,13 @@ import KeyStats from '@/components/dashboard/KeyStats';
 import ShowsCalendar from '@/components/dashboard/ShowsCalendar';
 import RecentStaffSignups from '@/components/dashboard/RecentStaffSignups';
 import RecentBookings from '@/components/dashboard/RecentBookings';
+import dynamic from 'next/dynamic';
+import { SparklesIcon } from '@heroicons/react/24/outline';
+
+const ChatInterface = dynamic(() => import('@/components/chat/ChatInterface'), { ssr: false });
 
 export default function Dashboard() {
+  const [showChat, setShowChat] = useState(false);
   return (
     <>
       <Head>
@@ -70,6 +75,38 @@ export default function Dashboard() {
           {/* Bottom padding to account for mobile navigation */}
           <div className="h-20 md:h-0"></div>
         </div>
+
+        {/* Floating Chat Button - Dashboard only */}
+        <button
+          type="button"
+          onClick={() => setShowChat(true)}
+          className="fixed bottom-6 right-6 z-50 rounded-full bg-pink-600 hover:bg-pink-700 text-white shadow-lg border border-pink-500/50 w-14 h-14 flex items-center justify-center"
+          title="Open Assistant"
+          aria-label="Open Assistant"
+        >
+          <SparklesIcon className="w-7 h-7" />
+        </button>
+
+        {showChat && (
+          <div className="fixed inset-0 z-50">
+            <div className="absolute inset-0 bg-black/50" onClick={() => setShowChat(false)} />
+            <div className="absolute bottom-8 right-8">
+              <div className="bg-transparent">
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowChat(false)}
+                    className="absolute -top-3 -right-3 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-full w-8 h-8 text-sm shadow"
+                    title="Close"
+                  >
+                    ×
+                  </button>
+                  <ChatInterface />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </DashboardLayout>
       
       {/* Add custom animations */}

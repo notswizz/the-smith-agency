@@ -222,10 +222,10 @@ const BookingCard = ({
             </div>
             <div>
               <h3 className="text-sm font-bold text-secondary-800 group-hover:text-primary-600 transition-colors leading-tight">
-                {client?.name || '[Unknown Client]'}
+                {client?.name || booking?.clientName || '[Unknown Client]'}
               </h3>
               <h4 className="text-xs text-secondary-500">
-                {show?.name || '[Unknown Show]'}
+                {show?.name || booking?.showName || '[Unknown Show]'}
               </h4>
             </div>
           </div>
@@ -286,9 +286,9 @@ const BookingCard = ({
                   key={i} 
                   className={`flex-1 rounded-sm cursor-pointer transition-all duration-150 border border-white/50 ${getDayBarFillColor(fullness)}`}
                   style={{ height: `${30 + fullness * 70}%` }} // Scale from 30% to 100% height
-                  onClick={(e) => showTooltip(e, i, booking.id)}
-                  onMouseEnter={(e) => showTooltip(e, i, booking.id)}
-                  onMouseLeave={hideTooltip}
+                  onClick={(e) => (typeof showTooltip === 'function' ? showTooltip(e, i, booking.id) : null)}
+                  onMouseEnter={(e) => (typeof showTooltip === 'function' ? showTooltip(e, i, booking.id) : null)}
+                  onMouseLeave={(e) => (typeof hideTooltip === 'function' ? hideTooltip(e) : null)}
                   title={`${formatDate(day.date)}: ${dayStaffIds.length}/${dayStaffCount} staff`}
                 ></div>
               );

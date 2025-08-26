@@ -16,7 +16,18 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import useStore from '@/lib/hooks/useStore';
 
-export default function StaffList({ staff = [] }) {
+export default function StaffList({ staff = [], variant = 'grid', cardWidthClass }) {
+  if (variant === 'chat') {
+    return (
+      <div className="overflow-x-auto overflow-y-hidden px-1" style={{ overscrollBehaviorX: 'contain', overscrollBehavior: 'contain', touchAction: 'pan-x' }}>
+        <div className="flex gap-4 snap-x snap-mandatory pb-1">
+          {staff && staff.map((staffMember) => (
+            <StaffCard key={staffMember.id} staffMember={staffMember} widthClass={`${cardWidthClass || 'min-w-[320px]'} snap-start snap-always`} />
+          ))}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3 snap-y snap-mandatory overflow-y-auto sm:overflow-visible">
@@ -28,7 +39,7 @@ export default function StaffList({ staff = [] }) {
   );
 }
 
-function StaffCard({ staffMember }) {
+function StaffCard({ staffMember, widthClass }) {
   const { getBookingsForStaff, bookings } = useStore();
   
   // Ensure we have a name
@@ -135,7 +146,7 @@ function StaffCard({ staffMember }) {
   const badgeCount = Array.isArray(staffMember.badges) ? staffMember.badges.length : 0;
 
   return (
-    <Link href={`/staff/${staffMember.id}`} className="block snap-start snap-always">
+    <Link href={`/staff/${staffMember.id}`} className={`block snap-start snap-always ${widthClass || ''}`}>
       <div className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl relative transition-all duration-300 border border-gray-100 h-full group hover:scale-[1.02] hover:border-gray-200 hover:shadow-2xl">
         {/* Application Status - Top Right */}
         <div className="absolute top-4 right-4 z-20">

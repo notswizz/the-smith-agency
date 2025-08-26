@@ -1,5 +1,6 @@
 import { db } from '@/lib/firebase/config';
 import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { normalizeTimestampsDeep } from '@/lib/chat/sanitize';
 
 export default async function handler(req, res) {
   const { method } = req;
@@ -9,10 +10,11 @@ export default async function handler(req, res) {
       try {
         const showsCollection = collection(db, 'shows');
         const snapshot = await getDocs(showsCollection);
-        const shows = snapshot.docs.map(doc => ({
+        const showsRaw = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
+        const shows = normalizeTimestampsDeep(showsRaw);
         
         res.status(200).json(shows);
       } catch (error) {

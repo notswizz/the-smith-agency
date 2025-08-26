@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { PaperAirplaneIcon, CheckIcon, XMarkIcon, UserIcon, ClipboardIcon, TrashIcon } from '@heroicons/react/24/outline';
+import dynamic from 'next/dynamic';
+import { PaperAirplaneIcon, CheckIcon, XMarkIcon, UserIcon, TrashIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
 export default function ChatInterface() {
   const [messages, setMessages] = useState([]);
@@ -301,27 +302,26 @@ export default function ChatInterface() {
   };
 
   return (
-    <div className="flex flex-col h-[600px] bg-white rounded-lg shadow-lg">
-      <div className="bg-blue-600 text-white p-4 rounded-t-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-semibold">Smith Agency AI Assistant</h2>
-            <p className="text-blue-100 text-sm">Ask me about bookings, staff, clients, or shows</p>
+    <div className="flex flex-col h-[680px] bg-zinc-950 rounded-2xl shadow-2xl overflow-hidden border border-zinc-800 w-[520px] max-w-[90vw]">
+      <div className="relative p-4 bg-zinc-950 rounded-t-2xl">
+        <div className="absolute inset-0 pointer-events-none" aria-hidden>
+          <div className="absolute -inset-1 bg-gradient-to-r from-pink-600/20 via-fuchsia-600/20 to-pink-600/20 blur-xl" />
+        </div>
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-9 h-9 rounded-full bg-pink-600/20 border border-pink-500/50 flex items-center justify-center shadow-[0_0_20px_rgba(236,72,153,0.5)]">
+              <SparklesIcon className="w-5 h-5 text-pink-400" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold tracking-tight text-zinc-50">Smith Agency Assistant</h2>
+              <p className="text-zinc-400 text-sm">Bookings • Staff • Clients • Shows</p>
+            </div>
           </div>
           <div className="flex items-center space-x-2">
             <button
               type="button"
-              onClick={handleCopyTranscript}
-              className="px-2 py-1 bg-blue-500 hover:bg-blue-400 text-white rounded flex items-center space-x-1 text-sm"
-              title="Copy transcript"
-            >
-              <ClipboardIcon className="w-4 h-4" />
-              <span>Copy</span>
-            </button>
-            <button
-              type="button"
               onClick={handleClearChat}
-              className="px-2 py-1 bg-blue-500 hover:bg-blue-400 text-white rounded flex items-center space-x-1 text-sm"
+              className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-100 rounded-md flex items-center space-x-2 text-sm transition border border-zinc-700"
               title="Clear chat"
             >
               <TrashIcon className="w-4 h-4" />
@@ -331,112 +331,133 @@ export default function ChatInterface() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-5 space-y-5 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950">
         {messages.length === 0 && (
-          <div className="text-center text-gray-500 mt-8">
-            <p>👋 Hi! I'm your AI assistant for managing Smith Agency data.</p>
-            <p className="mt-2 text-sm">I can help you:</p>
-            <ul className="mt-2 text-sm space-y-1">
-              <li>• View and search bookings, staff, clients, and shows</li>
-              <li>• Create new records</li>
-              <li>• Update existing information</li>
-              <li>• Answer questions about your data</li>
-            </ul>
+          <div className="text-center text-zinc-300 mt-8">
+            <p className="text-base">👋 Welcome. Ask anything about your Smith Agency data.</p>
+            <p className="mt-2 text-sm">Use <span className="text-pink-400 font-medium">@</span> for staff and <span className="text-pink-400 font-medium">#</span> for shows.</p>
           </div>
         )}
 
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                message.role === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-800'
-              }`}
-            >
-              <p className="whitespace-pre-wrap">{message.content}</p>
-              {message.preview && (
-                <div className="mt-3 text-xs bg-white border border-gray-200 rounded p-3 text-gray-700">
-                  {message.preview.current || message.preview.updates ? (
-                    <div className="space-y-2">
-                      {message.preview.current && (
-                        <div>
-                          <div className="font-semibold mb-1">Current</div>
-                          <pre className="bg-gray-50 p-2 rounded overflow-auto max-h-40">{JSON.stringify(message.preview.current, null, 2)}</pre>
+        {messages.map((message, index) => {
+          const isUser = message.role === 'user';
+          const ui = message?.preview?.__ui;
+          let displayText = message.content;
+          if (!isUser && ui && (ui.type === 'staff_card' || ui.type === 'staff_list' || ui.type === 'booking_card' || ui.type === 'booking_list')) {
+            displayText = '';
+          }
+          return (
+            <div key={index} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+              <div className={`flex items-end max-w-full ${isUser ? 'flex-row-reverse' : ''}`}>
+                {/* Avatar */}
+                <div className={`w-9 h-9 rounded-full ${isUser ? 'bg-pink-500/25 border border-pink-500/40' : 'bg-pink-600/25 border border-pink-500/40'} flex items-center justify-center ${isUser ? 'ml-2' : 'mr-2'}`}>
+                  {isUser ? <UserIcon className="w-4 h-4 text-pink-300" /> : <SparklesIcon className="w-4 h-4 text-pink-300" />}
+                </div>
+
+                {/* Bubble */}
+                <div
+                  className={`max-w-2xl px-5 py-4 rounded-2xl shadow ${
+                    isUser
+                      ? 'bg-pink-600 text-white border border-pink-500/40'
+                      : 'bg-zinc-900 text-zinc-100 border border-zinc-800'
+                  }`}
+                >
+                  {displayText ? (
+                    <p className="whitespace-pre-wrap leading-7 text-[15px]">{displayText}</p>
+                  ) : null}
+
+                  {message.preview && (
+                    ui && (ui.type === 'staff_list' || ui.type === 'staff_card' || ui.type === 'booking_list' || ui.type === 'booking_card') ? (
+                      <div className="mt-3">
+                        {ui.type === 'staff_list' ? (
+                          <StaffPreview items={ui.items} />
+                        ) : ui.type === 'staff_card' ? (
+                          <StaffPreviewSingle item={ui.item} />
+                        ) : ui.type === 'booking_list' ? (
+                          <BookingPreview items={ui.items} />
+                        ) : (
+                          <BookingPreviewSingle item={ui.item} />
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-3 text-xs bg-zinc-800/80 border border-zinc-700 rounded-lg p-3 text-zinc-100">
+                        {message.preview.current || message.preview.updates ? (
+                          <div className="space-y-2">
+                            {message.preview.current && (
+                              <div>
+                                <div className="font-semibold mb-1 text-zinc-300">Current</div>
+                                <pre className="bg-black/40 p-2 rounded border border-zinc-700 overflow-auto max-h-40">{JSON.stringify(message.preview.current, null, 2)}</pre>
+                              </div>
+                            )}
+                            {message.preview.updates && (
+                              <div>
+                                <div className="font-semibold mb-1 text-zinc-300">Updates</div>
+                                <pre className="bg-black/40 p-2 rounded border border-zinc-700 overflow-auto max-h-40">{JSON.stringify(message.preview.updates, null, 2)}</pre>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <pre className="bg-black/40 p-2 rounded border border-zinc-700 overflow-auto max-h-40">{JSON.stringify(message.preview, null, 2)}</pre>
+                        )}
+                      </div>
+                    )
+                  )}
+
+                  {/* Action buttons */}
+                  {message.actions && message.actions.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {message.actions.map((action, actionIndex) => (
+                        <div key={actionIndex} className="flex space-x-2">
+                          <button
+                            onClick={() => executeAction(action, action.data)}
+                            disabled={executingAction === action.id}
+                            className="flex items-center space-x-2 px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white text-xs font-medium rounded-md shadow disabled:opacity-50 transition border border-pink-500/40"
+                          >
+                            {executingAction === action.id ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <span>Executing...</span>
+                              </>
+                            ) : (
+                              <>
+                                <CheckIcon className="w-4 h-4" />
+                                <span>{action.label}</span>
+                              </>
+                            )}
+                          </button>
+
+                          {action.cancelable !== false && (
+                            <button
+                              onClick={() => {
+                                setMessages(prev => [...prev, { role: 'assistant', content: 'Action cancelled.' }]);
+                              }}
+                              disabled={executingAction === action.id}
+                              className="flex items-center space-x-2 px-3 py-1.5 bg-zinc-900 text-zinc-100 border border-zinc-700 text-xs font-medium rounded-md hover:bg-zinc-800 disabled:opacity-50 transition"
+                            >
+                              <XMarkIcon className="w-4 h-4" />
+                              <span>Cancel</span>
+                            </button>
+                          )}
                         </div>
-                      )}
-                      {message.preview.updates && (
-                        <div>
-                          <div className="font-semibold mb-1">Updates</div>
-                          <pre className="bg-gray-50 p-2 rounded overflow-auto max-h-40">{JSON.stringify(message.preview.updates, null, 2)}</pre>
-                        </div>
-                      )}
+                      ))}
                     </div>
-                  ) : (
-                    <pre className="bg-gray-50 p-2 rounded overflow-auto max-h-40">{JSON.stringify(message.preview, null, 2)}</pre>
                   )}
                 </div>
-              )}
-              
-              {/* Action buttons */}
-              {message.actions && message.actions.length > 0 && (
-                <div className="mt-3 space-y-2">
-                  {message.actions.map((action, actionIndex) => (
-                    <div key={actionIndex} className="flex space-x-2">
-                      <button
-                        onClick={() => executeAction(action, action.data)}
-                        disabled={executingAction === action.id}
-                        className="flex items-center space-x-2 px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50"
-                      >
-                        {executingAction === action.id ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            <span>Executing...</span>
-                          </>
-                        ) : (
-                          <>
-                            <CheckIcon className="w-4 h-4" />
-                            <span>{action.label}</span>
-                          </>
-                        )}
-                      </button>
-                      
-                      {action.cancelable !== false && (
-                        <button
-                          onClick={() => {
-                            setMessages(prev => [...prev, {
-                              role: 'assistant',
-                              content: 'Action cancelled.'
-                            }]);
-                          }}
-                          disabled={executingAction === action.id}
-                          className="flex items-center space-x-2 px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 disabled:opacity-50"
-                        >
-                          <XMarkIcon className="w-4 h-4" />
-                          <span>Cancel</span>
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg">
+            <div className="bg-zinc-900 border border-zinc-800 text-zinc-100 px-4 py-2 rounded-xl shadow-sm">
               <div className="flex items-center space-x-2">
                 <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-pink-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                 </div>
-                <span className="text-sm">Thinking...</span>
+                <span className="text-sm text-zinc-300">Thinking...</span>
               </div>
             </div>
           </div>
@@ -445,69 +466,119 @@ export default function ChatInterface() {
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={sendMessage} className="p-4 border-t relative">
+      <form onSubmit={sendMessage} className="p-4 border-t border-zinc-800 bg-zinc-950">
         <div className="flex space-x-2">
           <div className="flex-1 relative">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                // auto-resize
-                if (inputRef.current) {
-                  inputRef.current.style.height = 'auto';
-                  inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
-                }
-              }}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask me anything about your Smith Agency data... (type @ to mention staff)"
-              rows={1}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              disabled={isLoading}
-            />
-            
-            {/* Mention Dropdown */}
-            {showMentions && (filteredStaff.length > 0 || filteredShows.length > 0) && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto z-50">
-                {(filteredStaff.length > 0 ? filteredStaff : filteredShows).map((item, index) => (
-                  <div
-                    key={item.id}
-                    onClick={() => selectMention(item, filteredShows.length > 0)}
-                    className={`px-4 py-2 cursor-pointer flex items-center space-x-3 ${
-                      index === selectedMentionIndex 
-                        ? 'bg-blue-50 border-l-4 border-blue-500' 
-                        : 'hover:bg-gray-50'
-                    }`}
-                  >
-                    <UserIcon className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <div className="font-medium text-gray-900">{item.name}</div>
-                      {item.role && (
-                        <div className="text-sm text-gray-500">{item.role}</div>
-                      )}
+            <div className="relative">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  if (inputRef.current) {
+                    inputRef.current.style.height = 'auto';
+                    inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+                  }
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask about bookings, staff, clients, or shows…"
+                rows={1}
+                className="w-full px-4 py-3 border border-zinc-700 bg-zinc-100 text-zinc-900 placeholder-zinc-500 rounded-xl focus:ring-2 focus:ring-pink-600 focus:border-pink-600 resize-none shadow text-base leading-6"
+                disabled={isLoading}
+              />
+              {/* Mention Dropdown */}
+              {showMentions && (filteredStaff.length > 0 || filteredShows.length > 0) && (
+                <div className="absolute bottom-full left-0 right-0 mb-2 bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl max-h-56 overflow-y-auto z-50">
+                  {(filteredStaff.length > 0 ? filteredStaff : filteredShows).map((item, index) => (
+                    <div
+                      key={item.id}
+                      onClick={() => selectMention(item, filteredShows.length > 0)}
+                      className={`px-4 py-2 cursor-pointer flex items-center space-x-3 text-zinc-100 ${
+                        index === selectedMentionIndex 
+                          ? 'bg-pink-600/10 border-l-4 border-pink-600' 
+                          : 'hover:bg-zinc-900'
+                      }`}
+                    >
+                      <UserIcon className="w-5 h-5 text-pink-400" />
+                      <div>
+                        <div className="font-medium text-zinc-100">{item.name}</div>
+                        {item.role && (
+                          <div className="text-sm text-zinc-400">{item.role}</div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          
+
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-3 bg-pink-600 text-white rounded-xl hover:bg-pink-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_14px_rgba(236,72,153,0.35)] border border-pink-500/50 text-sm font-medium"
+            title="Send"
           >
             <PaperAirplaneIcon className="w-5 h-5" />
           </button>
         </div>
-        
-        {/* Hint about @ and # mentions */}
-        {(staffMembers.length > 0 || shows.length > 0) && !showMentions && (
-          <div className="mt-2 text-xs text-gray-500">
-            💡 Type @ to mention staff, # to mention shows
-          </div>
-        )}
+
+       
       </form>
+    </div>
+  );
+}
+
+// Lazy-load staff list to avoid bundling overhead
+const StaffList = dynamic(() => import('@/components/staff/StaffList'), { ssr: false });
+const BookingCard = dynamic(() => import('@/components/bookings/BookingCard'), { ssr: false });
+
+function StaffPreview({ items = [] }) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return <div className="text-zinc-300">No staff found.</div>;
+  }
+  return (
+    <div className="bg-zinc-900/60 border border-zinc-700 rounded-xl p-3">
+      <StaffList staff={items} variant="chat" cardWidthClass="min-w-[360px]" />
+    </div>
+  );
+}
+
+function StaffPreviewSingle({ item }) {
+  if (!item) {
+    return <div className="text-zinc-300">No staff found.</div>;
+  }
+  return (
+    <div className="bg-zinc-900/60 border border-zinc-700 rounded-xl p-3">
+      <StaffList staff={[item]} variant="chat" cardWidthClass="min-w-[360px]" />
+    </div>
+  );
+}
+
+function BookingPreview({ items = [] }) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return <div className="text-zinc-300">No bookings found.</div>;
+  }
+  return (
+    <div className="overflow-x-auto overflow-y-hidden px-1" style={{ overscrollBehaviorX: 'contain', overscrollBehavior: 'contain', touchAction: 'pan-x' }}>
+      <div className="flex gap-4 snap-x snap-mandatory pb-1">
+        {items.map((b) => (
+          <div key={b.id} className="min-w-[360px] snap-start snap-always">
+            <BookingCard booking={b} staff={[]} client={{ name: b.clientName }} show={{ name: b.showName }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BookingPreviewSingle({ item }) {
+  if (!item) return <div className="text-zinc-300">No booking found.</div>;
+  return (
+    <div className="bg-zinc-900/60 border border-zinc-700 rounded-xl p-3">
+      <div className="min-w-[360px]">
+        <BookingCard booking={item} staff={[]} client={{ name: item.clientName }} show={{ name: item.showName }} />
+      </div>
     </div>
   );
 }
