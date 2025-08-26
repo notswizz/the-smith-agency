@@ -9,8 +9,8 @@ import useStore from '@/lib/hooks/useStore';
 import { 
   ArrowLeftIcon, 
   CalendarIcon,
+  CreditCardIcon,
   UserGroupIcon,
-  BuildingOffice2Icon,
   ClockIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
@@ -239,7 +239,7 @@ export default function BookingDetail() {
                 <ArrowLeftIcon className="h-4 w-4" />
               </Button>
             </Link>
-            <h1 className="text-2xl font-bold text-secondary-900">Booking Overview</h1>
+            <h1 className="text-2xl font-bold text-secondary-900">{client?.name || 'Booking'}</h1>
           </div>
           <div className="flex items-center gap-3">
             <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${currentStatusStyles.badge}`}>
@@ -248,7 +248,7 @@ export default function BookingDetail() {
               {statusLabels[booking.status] || booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
             </div>
             <Link href={`/bookings/${bookingId}/edit`}>
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="hidden sm:inline-flex items-center gap-2">
                 <UserGroupIcon className="h-4 w-4" />
                 Manage Staff
               </Button>
@@ -259,6 +259,7 @@ export default function BookingDetail() {
                 size="sm"
                 disabled={isPreviewing}
                 onClick={previewFinalCharge}
+                className="hidden sm:inline-flex"
               >
                 {isPreviewing ? 'Previewing…' : 'Preview Final Charge'}
               </Button>
@@ -341,7 +342,7 @@ export default function BookingDetail() {
         )}
 
         {/* Key Information */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-secondary-200">
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-secondary-200 hidden sm:block">
           {/* Display results/errors if any */}
           {(chargeResponse || errorMessage) && (
             <div className="mb-4">
@@ -355,16 +356,7 @@ export default function BookingDetail() {
               )}
             </div>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center text-primary-500">
-                <BuildingOffice2Icon className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-secondary-500 mb-1">Client</p>
-                <p className="font-semibold text-secondary-900">{client?.name || 'Unknown'}</p>
-              </div>
-            </div>
+          <div className="grid grid-cols-1 gap-6">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
                 <CalendarIcon className="w-4 h-4" />
@@ -372,21 +364,6 @@ export default function BookingDetail() {
               <div>
                 <p className="text-sm font-medium text-secondary-500 mb-1">Show</p>
                 <p className="font-semibold text-secondary-900">{show?.name || 'Unknown'}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500">
-                <CalendarIcon className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-secondary-500 mb-1">Dates</p>
-                <p className="font-semibold text-secondary-900">
-                  {firstDate && lastDate ? 
-                    (firstDate.getTime() === lastDate.getTime() ? 
-                      formatShortDate(firstDate) : 
-                      `${formatShortDate(firstDate)} - ${formatShortDate(lastDate)}`
-                    ) : 'N/A'}
-                </p>
               </div>
             </div>
           </div>
@@ -448,6 +425,19 @@ export default function BookingDetail() {
 
           {/* Right Column - Daily Schedule */}
           <div className="order-1 lg:order-2 lg:col-span-2">
+            {/* Mobile mini staffing summary */}
+            <div className="sm:hidden mb-2">
+              <div className="flex items-center gap-2 text-[11px]">
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-secondary-50 border border-secondary-200 text-secondary-700">
+                  <CalendarIcon className="w-3.5 h-3.5 text-primary-500" />
+                  {staffingSummary.dates} Dates
+                </span>
+                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full border text-secondary-700 ${staffingSummary.complete ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
+                  <UserGroupIcon className={`w-3.5 h-3.5 ${staffingSummary.complete ? 'text-emerald-600' : 'text-amber-600'}`} />
+                  {staffingSummary.assigned}/{staffingSummary.needed} Assigned
+                </span>
+              </div>
+            </div>
             <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-secondary-200 h-[500px] flex flex-col">
               <div className="p-5 border-b border-secondary-200 bg-secondary-50 flex items-center justify-between flex-shrink-0">
                 <div className="flex items-center">
@@ -553,7 +543,56 @@ export default function BookingDetail() {
           </div>
         </div>
         
-        <div className="h-16"></div>
+        {/* Mobile sticky action bar */}
+        {!(booking.status === 'paid' || booking.status === 'final_paid') && (
+          <div className="sm:hidden fixed inset-x-0 bottom-0 z-40 border-t border-secondary-200 bg-white/95 backdrop-blur">
+            <div className="max-w-7xl mx-auto px-4 py-3">
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  variant="gradient"
+                  size="lg"
+                  className="w-full"
+                  disabled={isPreviewing}
+                  onClick={previewFinalCharge}
+                  aria-label="Preview final charge"
+                >
+                  <CreditCardIcon className="h-5 w-5 mr-2" />
+                  {isPreviewing ? 'Previewing…' : 'Preview Final Charge'}
+                </Button>
+                <Link href={`/bookings/${bookingId}/edit`}>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="w-full"
+                    aria-label="Manage staff"
+                  >
+                    <UserGroupIcon className="h-5 w-5 mr-2" />
+                    Manage Staff
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+        {(booking.status === 'paid' || booking.status === 'final_paid') && (
+          <div className="sm:hidden fixed inset-x-0 bottom-0 z-40 border-t border-secondary-200 bg-white/95 backdrop-blur">
+            <div className="max-w-7xl mx-auto px-4 py-3">
+              <Link href={`/bookings/${bookingId}/edit`}>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full"
+                  aria-label="Manage staff"
+                >
+                  <UserGroupIcon className="h-5 w-5 mr-2" />
+                  Manage Staff
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
+
+        <div className="h-24 sm:h-16"></div>
       </div>
     </DashboardLayout>
   );

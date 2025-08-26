@@ -9,7 +9,6 @@ import {
   ArrowLeftIcon, 
   CalendarIcon, 
   UserGroupIcon, 
-  BuildingOffice2Icon,
   CheckCircleIcon,
   CheckIcon,
   ClockIcon,
@@ -180,16 +179,48 @@ export default function StaffAssignment() {
             <h1 className="text-2xl font-bold text-secondary-900">Staff Assignment</h1>
           </div>
           <div className="flex items-center gap-3">
-            <Link href={`/bookings/${bookingId}`}>
-              <Button variant="outline" size="sm">Cancel</Button>
-            </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center"
+              onClick={() => setIsStaffModalOpen(true)}
+            >
+              <EyeIcon className="h-4 w-4 mr-1.5" />
+              Staff Availability
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!confirm('Delete this booking? This cannot be undone.')) return;
+                setIsDeleting(true);
+                try {
+                  await deleteBooking(bookingId);
+                  await logDelete('booking', bookingId, { reason: 'Deleted from edit header' });
+                  router.push('/bookings');
+                } catch (err) {
+                  console.error('Failed to delete booking:', err);
+                  alert('Failed to delete booking. Please try again.');
+                  setIsDeleting(false);
+                }
+              }}
+              variant="danger-outline"
+              size="sm"
+              disabled={isDeleting}
+              className="inline-flex items-center sm:hidden"
+            >
+              {isDeleting ? (
+                <span className="animate-spin h-4 w-4 border-2 border-red-500 border-t-transparent rounded-full mr-1.5" />
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4 mr-1.5"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0 1 15.917 21.75H8.083A2.25 2.25 0 0 1 5.84 19.673L4.772 5.79m14.456 0a48.11 48.11 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201V6.75m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+              )}
+              Delete
+            </Button>
             <Button
               type="submit"
               form="staff-form"
               variant="primary"
               size="sm"
               disabled={saving}
-              className="flex items-center"
+              className="hidden sm:inline-flex items-center"
             >
               {saving ? (
                 <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-1.5" />
@@ -201,40 +232,6 @@ export default function StaffAssignment() {
           </div>
         </div>
 
-        {/* Key Information */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-secondary-200">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center text-primary-500">
-                <BuildingOffice2Icon className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-secondary-500 mb-1">Client</p>
-                <p className="font-semibold text-secondary-900">{selectedClient?.name || 'Unknown'}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
-                <CalendarIcon className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-secondary-500 mb-1">Show</p>
-                <p className="font-semibold text-secondary-900">{selectedShow?.name || 'Unknown'}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500">
-                <StatusIcon className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-secondary-500 mb-1">Status</p>
-                <div className={`px-2 py-1 rounded-full text-xs font-medium inline-flex items-center ${currentStatusStyles.badge}`}>
-                  {formData.status === 'confirmed' ? 'Confirmed' : 'Pending'}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <form id="staff-form" onSubmit={async (e) => {
           e.preventDefault();
@@ -259,122 +256,142 @@ export default function StaffAssignment() {
         
         {/* Staff Assignment */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-secondary-200 mb-6">
-          <div className="p-4 border-b border-secondary-200 bg-secondary-50 flex items-center justify-between">
-            <div className="flex items-center">
-              <UserGroupIcon className="h-5 w-5 text-primary-600 mr-3" />
-              <h3 className="font-semibold text-secondary-900">Assign Staff</h3>
+          {/* Make panel taller and scroll inside */}
+          <style jsx>{`
+            @media (max-width: 639px) {
+              .assign-staff-panel { height: calc(100vh - 260px); }
+            }
+          `}</style>
+          <div className="assign-staff-panel h-[calc(100vh-260px)] flex flex-col">
+            <div className="p-4 border-b border-secondary-200 bg-secondary-50 flex items-center justify-between">
+              <div className="flex items-center">
+                <UserGroupIcon className="h-5 w-5 text-primary-600 mr-3" />
+                <h3 className="font-semibold text-secondary-900">Assign Staff</h3>
+              </div>
+              <span className="text-sm bg-primary-100 text-primary-800 px-3 py-1 rounded-full">
+                {staffRequirementsSummary.dates} date{staffRequirementsSummary.dates !== 1 ? 's' : ''}
+              </span>
             </div>
-            <span className="text-sm bg-primary-100 text-primary-800 px-3 py-1 rounded-full">
-              {staffRequirementsSummary.dates} date{staffRequirementsSummary.dates !== 1 ? 's' : ''}
-            </span>
-          </div>
-          
-          {sortedDatesNeeded.filter(date => (date.staffCount || 0) > 0).length > 0 ? (
-            <div className="p-4 max-h-[calc(100vh-500px)] overflow-y-auto">
-              <div className="space-y-4">
-                {sortedDatesNeeded.filter(date => (date.staffCount || 0) > 0).map(({ date, staffCount = 1, staffIds = [] }) => {
-                  const assignedCount = staffIds.filter(Boolean).length;
-                  const isComplete = assignedCount >= staffCount;
-                  
-                  return (
-                    <div key={date} className={`${isComplete ? 'bg-emerald-50 border-emerald-200' : 'bg-secondary-50 border-secondary-200'} rounded-lg p-4 border`}>
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center">
-                          <CalendarIcon className="h-4 w-4 text-primary-600 mr-2 flex-shrink-0" />
-                          <span className="text-sm font-medium">
-                            {(() => {
-                              const dateObj = new Date(date);
-                              const adjustedDate = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000);
-                              return adjustedDate.toLocaleDateString('en-US', { 
-                                weekday: 'short',
-                                month: 'short',
-                                day: 'numeric',
-                              });
-                            })()}
+            
+            {sortedDatesNeeded.filter(date => (date.staffCount || 0) > 0).length > 0 ? (
+              <div className="p-4 flex-1 overflow-y-auto">
+                <div className="space-y-4">
+                  {sortedDatesNeeded.filter(date => (date.staffCount || 0) > 0).map(({ date, staffCount = 1, staffIds = [] }) => {
+                    const assignedCount = staffIds.filter(Boolean).length;
+                    const isComplete = assignedCount >= staffCount;
+                    
+                    return (
+                      <div key={date} className={`${isComplete ? 'bg-emerald-50 border-emerald-200' : 'bg-secondary-50 border-secondary-200'} rounded-lg p-4 border`}>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center">
+                            <CalendarIcon className="h-4 w-4 text-primary-600 mr-2 flex-shrink-0" />
+                            <span className="text-sm font-medium">
+                              {(() => {
+                                const dateObj = new Date(date);
+                                const adjustedDate = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000);
+                                return adjustedDate.toLocaleDateString('en-US', { 
+                                  weekday: 'short',
+                                  month: 'short',
+                                  day: 'numeric',
+                                });
+                              })()}
+                            </span>
+                          </div>
+                          <span className={`text-sm px-3 py-1 rounded-full flex items-center
+                            ${isComplete 
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+                              : 'bg-amber-100 text-amber-800 border border-amber-200'
+                            }`}
+                          >
+                            {isComplete ? (
+                              <>
+                                <CheckIcon className="h-4 w-4 mr-1" />
+                                Complete
+                              </>
+                            ) : (
+                              <>
+                                <ClockIcon className="h-4 w-4 mr-1" />
+                                {assignedCount}/{staffCount}
+                              </>
+                            )}
                           </span>
                         </div>
-                        <span className={`text-sm px-3 py-1 rounded-full flex items-center
-                          ${isComplete 
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
-                            : 'bg-amber-100 text-amber-800 border border-amber-200'
-                          }`}
-                        >
-                          {isComplete ? (
-                            <>
-                              <CheckIcon className="h-4 w-4 mr-1" />
-                              Complete
-                            </>
-                          ) : (
-                            <>
-                              <ClockIcon className="h-4 w-4 mr-1" />
-                              {assignedCount}/{staffCount}
-                            </>
-                          )}
-                        </span>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        {Array.from({ length: staffCount }).map((_, i) => {
-                          const availableStaff = getAvailableStaffForDate(date, i);
-                          const hasStaffAssigned = staffIds && staffIds[i];
-                          const staffName = getStaffName(staffIds[i]);
-                          
-                          return (
-                            <div key={i} className="flex items-center">
-                              <div className="flex-grow relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                  <UserGroupIcon className={`h-4 w-4 ${hasStaffAssigned ? 'text-emerald-500' : 'text-secondary-400'}`} />
-                                </div>
-                                <select
-                                  className={`pl-10 block w-full text-sm h-10 rounded-lg border shadow-sm focus:border-primary-500 focus:ring-primary-500 transition-colors ${
-                                    hasStaffAssigned 
-                                      ? 'border-emerald-300 bg-emerald-50 text-emerald-900' 
-                                      : 'border-secondary-300'
-                                  }`}
-                                  value={staffIds && staffIds[i] || ''}
-                                  onChange={e => handleStaffSelectChange(date, e.target.value, i)}
-                                >
-                                  <option value="">Select staff member</option>
-                                  {availableStaff.map(member => (
-                                    <option key={member.id} value={member.id}>
-                                      {member.name}
-                                    </option>
-                                  ))}
-                                </select>
-                                {hasStaffAssigned && (
-                                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-                                    <CheckIcon className="h-4 w-4 text-emerald-500" />
+                        
+                        <div className="space-y-2">
+                          {Array.from({ length: staffCount }).map((_, i) => {
+                            const availableStaff = getAvailableStaffForDate(date, i);
+                            const hasStaffAssigned = staffIds && staffIds[i];
+                            const staffName = getStaffName(staffIds[i]);
+                            
+                            return (
+                              <div key={i} className="flex items-center">
+                                <div className="flex-grow relative">
+                                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <UserGroupIcon className={`h-4 w-4 ${hasStaffAssigned ? 'text-emerald-500' : 'text-secondary-400'}`} />
                                   </div>
-                                )}
+                                  <select
+                                    className={`pl-10 pr-10 block w-full text-base h-12 rounded-lg border shadow-sm focus:border-primary-500 focus:ring-primary-500 transition-colors appearance-none ${
+                                      hasStaffAssigned 
+                                        ? 'border-emerald-300 bg-emerald-50 text-emerald-900' 
+                                        : 'border-secondary-300'
+                                    }`}
+                                    value={staffIds && staffIds[i] || ''}
+                                    onChange={e => handleStaffSelectChange(date, e.target.value, i)}
+                                  >
+                                    <option value="">Select staff member</option>
+                                    {availableStaff.map(member => (
+                                      <option key={member.id} value={member.id}>
+                                        {member.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-secondary-400"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                                  </div>
+                                  {hasStaffAssigned && (
+                                    <div className="absolute inset-y-0 right-8 flex items-center pointer-events-none">
+                                      <CheckIcon className="h-4 w-4 text-emerald-500" />
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="p-8 text-center">
-              <CalendarIcon className="w-12 h-12 mx-auto text-secondary-300 mb-3" />
-              <p className="text-secondary-500 text-base">No dates require staff</p>
-              <p className="text-secondary-400 text-sm">All dates are fully staffed or don't need staff</p>
-            </div>
-          )}
+            ) : (
+              <div className="p-8 text-center">
+                <CalendarIcon className="w-12 h-12 mx-auto text-secondary-300 mb-3" />
+                <p className="text-secondary-500 text-base">No dates require staff</p>
+                <p className="text-secondary-400 text-sm">All dates are fully staffed or don't need staff</p>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Staff Availability Button */}
-        <div className="mb-6">
-          <button
-            type="button"
-            onClick={() => setIsStaffModalOpen(true)}
-            className="w-full flex items-center justify-center py-3 px-4 border border-primary-300 text-sm font-medium rounded-lg text-primary-700 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-          >
-            <EyeIcon className="h-4 w-4 mr-2" />
-            View Staff Availability Overview
-          </button>
+        {/* Mobile sticky actions */}
+        <div className="sm:hidden fixed inset-x-0 bottom-0 z-40 border-t border-secondary-200 bg-white/95 backdrop-blur">
+          <div className="max-w-4xl mx-auto px-4 py-3">
+            <div className="grid grid-cols-2 gap-3">
+              <Link href={`/bookings/${bookingId}`}>
+                <Button variant="white" size="lg" className="w-full">Cancel</Button>
+              </Link>
+              <Button
+                type="submit"
+                form="staff-form"
+                variant="gradient"
+                size="lg"
+                className="w-full"
+                disabled={saving}
+              >
+                {saving ? 'Saving…' : 'Save'}
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Staff Availability Modal */}
@@ -421,6 +438,7 @@ export default function StaffAssignment() {
           </Button>
         </div>
         
+        <div className="h-24 sm:h-0"></div>
       </form>
     </div>
   </DashboardLayout>
