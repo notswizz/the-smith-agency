@@ -14,7 +14,16 @@ import {
 } from '@heroicons/react/24/outline';
 import Button from '@/components/ui/Button';
 
-export default function StaffProfileHeader({ staffMember, totalDaysWorked, bookingsCount, togglePhysicalDetails: toggleSizes, isPhysicalDetailsOpen: isSizesOpen }) {
+export default function StaffProfileHeader({
+  staffMember,
+  totalDaysWorked,
+  bookingsCount,
+  togglePhysicalDetails: toggleSizes,
+  isPhysicalDetailsOpen: isSizesOpen,
+  onViewApplication,
+  onApproveApplication,
+  approvingApplication,
+}) {
   const router = useRouter();
 
   // Ensure we have a name to display
@@ -29,57 +38,43 @@ export default function StaffProfileHeader({ staffMember, totalDaysWorked, booki
   // Check if the staff member has physical details
   const hasSizes = staffMember.sizes && Object.keys(staffMember.sizes).some(k => staffMember.sizes[k]);
 
-  // Determine application process step
+  // Determine simple application status (no interview phase)
   const getApplicationStep = () => {
-    // Try to use completedForms array first (matches portal logic), fallback to individual fields
-    let applicationCompleted = false;
-    let applicationApproved = false;
-    let interviewCompleted = false;
-    let interviewApproved = false;
-    
-    if (staffMember.completedForms && Array.isArray(staffMember.completedForms)) {
-      const appForm = staffMember.completedForms.find(f => f.formType === 'application');
-      const intForm = staffMember.completedForms.find(f => f.formType === 'interview');
-      
-      applicationCompleted = appForm?.completed || false;
-      interviewCompleted = intForm?.completed || false;
-    } else {
-      // Fallback to individual fields
-      applicationCompleted = staffMember.applicationFormCompleted || false;
-      interviewCompleted = staffMember.interviewFormCompleted || false;
-    }
-    
-    // Always use individual approval fields since these are admin-controlled
-    applicationApproved = staffMember.applicationFormApproved || false;
-    interviewApproved = staffMember.interviewFormApproved || false;
-    
-    // Check if staff member has not started application
+    const applicationCompleted =
+      staffMember.applicationFormCompleted ||
+      staffMember.applicationCompleted ||
+      Boolean(staffMember.applicationFormData);
+    const applicationApproved = staffMember.applicationFormApproved || false;
+
     if (!applicationCompleted && !applicationApproved) {
-      return { step: 'Not Started', color: 'bg-gray-100 text-gray-600 border-gray-200', emoji: '⏸️' };
+      return {
+        step: 'Not started',
+        color: 'bg-gray-50 text-gray-700 border-gray-200',
+        emoji: '⏸️',
+      };
     }
-    
-    // Application submitted but not approved
+
     if (applicationCompleted && !applicationApproved) {
-      return { step: 'App Review', color: 'bg-yellow-100 text-yellow-600 border-yellow-200', emoji: '📋' };
+      return {
+        step: 'In review',
+        color: 'bg-amber-50 text-amber-800 border-amber-200',
+        emoji: '📋',
+      };
     }
-    
-    // Application approved but interview not completed
-    if (applicationApproved && !interviewCompleted) {
-      return { step: 'Interview', color: 'bg-blue-100 text-blue-600 border-blue-200', emoji: '🎤' };
+
+    if (applicationApproved) {
+      return {
+        step: 'Approved',
+        color: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+        emoji: '✅',
+      };
     }
-    
-    // Interview completed but not approved
-    if (interviewCompleted && !interviewApproved) {
-      return { step: 'Final Review', color: 'bg-orange-100 text-orange-600 border-orange-200', emoji: '⏳' };
-    }
-    
-    // Fully onboarded
-    if (interviewApproved) {
-      return { step: 'Active', color: 'bg-green-100 text-green-600 border-green-200', emoji: '✅' };
-    }
-    
-    // Default fallback
-    return { step: 'Unknown', color: 'bg-gray-100 text-gray-600 border-gray-200', emoji: '❓' };
+
+    return {
+      step: 'Unknown',
+      color: 'bg-gray-50 text-gray-700 border-gray-200',
+      emoji: '❓',
+    };
   };
 
   const applicationStep = getApplicationStep();
@@ -101,7 +96,18 @@ export default function StaffProfileHeader({ staffMember, totalDaysWorked, booki
           <h1 className="text-2xl font-bold text-gray-900">{name}</h1>
         </div>
         
-        {/* Edit Button removed in favor of sticky mobile action */}
+        {/* Desktop Edit button */}
+        <div className="hidden sm:flex items-center space-x-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => router.push(`/staff/${staffMember.id}/edit`)}
+            className="inline-flex items-center"
+          >
+            <PencilSquareIcon className="h-4 w-4 mr-1" />
+            Edit
+          </Button>
+        </div>
       </div>
 
       {/* Main Profile Card */}
@@ -219,27 +225,69 @@ export default function StaffProfileHeader({ staffMember, totalDaysWorked, booki
               </div>
             </div>
 
-            {/* Stats Cards - Compact Horizontal Layout */}
-            <div className="flex gap-3">
-              {/* Application Status */}
-              <div className={`rounded-lg px-3 py-2 text-center shadow-sm border ${applicationStep.color} min-w-[85px]`}>
-                <div className="text-lg font-bold flex items-center justify-center">
-                  <span>{applicationStep.emoji}</span>
+            {/* Stats + application actions - right side */}
+            <div className="flex flex-col items-stretch md:items-end gap-3">
+              <div className="flex gap-3">
+                {/* Application Status */}
+                <div className={`rounded-lg px-3 py-2 text-center shadow-sm border ${applicationStep.color} min-w-[85px]`}>
+                  <div className="text-lg font-bold flex items-center justify-center">
+                    <span>{applicationStep.emoji}</span>
+                  </div>
+                  <div className="text-xs font-semibold">{applicationStep.step}</div>
                 </div>
-                <div className="text-xs font-semibold">{applicationStep.step}</div>
+                
+                {/* Days Worked */}
+                <div className="bg-white rounded-lg px-3 py-2 text-center shadow-sm border border-gray-200 min-w-[70px]">
+                  <div className="text-xl font-bold text-gray-900">{totalDaysWorked}</div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wider font-medium">Days</div>
+                </div>
+                
+                {/* Shows */}
+                <div className="bg-white rounded-lg px-3 py-2 text-center shadow-sm border border-gray-200 min-w-[70px]">
+                  <div className="text-xl font-bold text-gray-900">{bookingsCount}</div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wider font-medium">Shows</div>
+                </div>
               </div>
-              
-              {/* Days Worked */}
-              <div className="bg-white rounded-lg px-3 py-2 text-center shadow-sm border border-gray-200 min-w-[70px]">
-                <div className="text-xl font-bold text-gray-900">{totalDaysWorked}</div>
-                <div className="text-xs text-gray-500 uppercase tracking-wider font-medium">Days</div>
-              </div>
-              
-              {/* Shows */}
-              <div className="bg-white rounded-lg px-3 py-2 text-center shadow-sm border border-gray-200 min-w-[70px]">
-                <div className="text-xl font-bold text-gray-900">{bookingsCount}</div>
-                <div className="text-xs text-gray-500 uppercase tracking-wider font-medium">Shows</div>
-              </div>
+
+              {(staffMember.applicationFormCompleted ||
+                staffMember.applicationFormApproved ||
+                staffMember.applicationFormData) && (
+                <div className="flex flex-wrap items-center justify-center md:justify-end gap-2">
+                  {onViewApplication && (
+                    <button
+                      type="button"
+                      onClick={onViewApplication}
+                      className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-4 py-1.5 text-xs font-medium text-sky-700 shadow-sm hover:bg-sky-50 hover:border-sky-300 transition-colors"
+                    >
+                      <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-sky-100 text-sky-600 text-[10px]">
+                        👁
+                      </span>
+                      <span>View application</span>
+                    </button>
+                  )}
+                  {onApproveApplication && !staffMember.applicationFormApproved && (
+                    <button
+                      type="button"
+                      onClick={onApproveApplication}
+                      disabled={approvingApplication || !staffMember.applicationFormCompleted}
+                      className="inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-500 px-4 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-white/15">
+                        ✓
+                      </span>
+                      <span>{approvingApplication ? 'Approving…' : 'Approve application'}</span>
+                    </button>
+                  )}
+                  {staffMember.applicationFormApproved && (
+                    <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5 text-xs font-medium text-emerald-800">
+                      <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-[10px]">
+                        ✓
+                      </span>
+                      <span>Application approved</span>
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

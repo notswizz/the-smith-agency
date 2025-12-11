@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
   try {
     const debugFlag = (req.query && req.query.debug === '1') || (isPost && req.body && req.body.debug === true);
-    const { bookingId, finalFeeCents, dryRun, overrideRateCents } = isPost ? (req.body || {}) : (req.query || {});
+    const { bookingId, finalFeeCents, dryRun, overrideRateCents, overrideAmountCents } = isPost ? (req.body || {}) : (req.query || {});
 
     if (!bookingId) {
       return res.status(400).json({ error: 'bookingId is required' });
@@ -44,11 +44,18 @@ export default async function handler(req, res) {
           ? `${req.headers['x-forwarded-proto']}://${req.headers.host}`
           : (req.headers.origin || 'https://your-domain.com'));
 
+    const resolvedOverride =
+      typeof overrideRateCents === 'number'
+        ? overrideRateCents
+        : typeof overrideAmountCents === 'number'
+        ? overrideAmountCents
+        : undefined;
+
     const forwardBody = {
       bookingId,
       ...(typeof finalFeeCents === 'number' ? { finalFeeCents } : {}),
       ...(typeof dryRun !== 'undefined' ? { dryRun: String(dryRun) === 'true' || dryRun === true } : {}),
-      ...(typeof overrideRateCents === 'number' ? { overrideRateCents } : {}),
+      ...(typeof resolvedOverride === 'number' ? { overrideAmountCents: resolvedOverride } : {}),
     };
 
     const headers = {

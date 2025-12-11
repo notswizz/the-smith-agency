@@ -45,57 +45,43 @@ function StaffCard({ staffMember, widthClass }) {
   // Ensure we have a name
   const name = staffMember.name || `${staffMember.firstName || ''} ${staffMember.lastName || ''}`.trim() || 'Unknown';
 
-  // Determine application process step
+  // Determine simple application status (no interview phase)
   const getApplicationStep = () => {
-    // Try to use completedForms array first (matches portal logic), fallback to individual fields
-    let applicationCompleted = false;
-    let applicationApproved = false;
-    let interviewCompleted = false;
-    let interviewApproved = false;
-    
-    if (staffMember.completedForms && Array.isArray(staffMember.completedForms)) {
-      const appForm = staffMember.completedForms.find(f => f.formType === 'application');
-      const intForm = staffMember.completedForms.find(f => f.formType === 'interview');
-      
-      applicationCompleted = appForm?.completed || false;
-      interviewCompleted = intForm?.completed || false;
-    } else {
-      // Fallback to individual fields
-      applicationCompleted = staffMember.applicationFormCompleted || false;
-      interviewCompleted = staffMember.interviewFormCompleted || false;
-    }
-    
-    // Always use individual approval fields since these are admin-controlled
-    applicationApproved = staffMember.applicationFormApproved || false;
-    interviewApproved = staffMember.interviewFormApproved || false;
-    
-    // Check if staff member has not started application
+    const applicationCompleted =
+      staffMember.applicationFormCompleted ||
+      staffMember.applicationCompleted ||
+      Boolean(staffMember.applicationFormData);
+    const applicationApproved = staffMember.applicationFormApproved || false;
+
     if (!applicationCompleted && !applicationApproved) {
-      return { step: 'Not Started', color: 'bg-gray-100 text-gray-700 border-gray-200', emoji: '⏸️' };
+      return {
+        step: 'Not started',
+        color: 'bg-gray-50 text-gray-700 border-gray-200',
+        emoji: '⏸️',
+      };
     }
-    
-    // Application submitted but not approved
+
     if (applicationCompleted && !applicationApproved) {
-      return { step: 'Application Review', color: 'bg-yellow-100 text-yellow-700 border-yellow-200', emoji: '📋' };
+      return {
+        step: 'Application review',
+        color: 'bg-amber-50 text-amber-800 border-amber-200',
+        emoji: '📋',
+      };
     }
-    
-    // Application approved but interview not completed
-    if (applicationApproved && !interviewCompleted) {
-      return { step: 'Interview Pending', color: 'bg-blue-100 text-blue-700 border-blue-200', emoji: '🎤' };
+
+    if (applicationApproved) {
+      return {
+        step: 'Approved',
+        color: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+        emoji: '✅',
+      };
     }
-    
-    // Interview completed but not approved
-    if (interviewCompleted && !interviewApproved) {
-      return { step: 'Interview Review', color: 'bg-orange-100 text-orange-700 border-orange-200', emoji: '⏳' };
-    }
-    
-    // Fully onboarded
-    if (interviewApproved) {
-      return { step: 'Active', color: 'bg-green-100 text-green-700 border-green-200', emoji: '✅' };
-    }
-    
-    // Default fallback
-    return { step: 'Unknown', color: 'bg-gray-100 text-gray-700 border-gray-200', emoji: '❓' };
+
+    return {
+      step: 'Unknown',
+      color: 'bg-gray-50 text-gray-700 border-gray-200',
+      emoji: '❓',
+    };
   };
 
   const applicationStep = getApplicationStep();

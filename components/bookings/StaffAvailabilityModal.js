@@ -62,7 +62,12 @@ export default function StaffAvailabilityModal({
     
     // Process each staff member
     return staff.map(member => {
-      const availRecord = showAvailability.find(a => a.staffId === member.id);
+      // Match availability records either by staff document ID or by email (for legacy records)
+      const availRecord = showAvailability.find(a => 
+        a.staffId === member.id ||
+        (member.email && a.staffId === member.email) ||
+        (member.email && a.staffEmail === member.email)
+      );
       if (!availRecord) return null; // Staff member hasn't signed up for this show
       
       const availableDates = availRecord.availableDates || [];

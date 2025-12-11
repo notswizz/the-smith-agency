@@ -70,9 +70,10 @@ export default async function handler(req, res) {
           updatedAt: serverTimestamp()
         };
         
-        // Detect approval transitions (false -> true)
-        const applicationJustApproved = Boolean(!previousData.applicationFormApproved && updatedStaff.applicationFormApproved);
-        const interviewJustApproved = Boolean(!previousData.interviewFormApproved && updatedStaff.interviewFormApproved);
+        // Detect application approval transition (false -> true)
+        const applicationJustApproved = Boolean(
+          !previousData.applicationFormApproved && updatedStaff.applicationFormApproved
+        );
         
         await updateDoc(staffRef, updatedStaff);
         
@@ -80,7 +81,7 @@ export default async function handler(req, res) {
         (async () => {
           try {
             // Only proceed if we have something to notify and Twilio is configured
-            if (!(applicationJustApproved || interviewJustApproved)) return;
+            if (!applicationJustApproved) return;
             if (!accountSid || !authToken || !twilioPhoneNumber) {
               console.warn('Twilio not configured; skipping SMS notifications');
               return;
@@ -97,20 +98,8 @@ export default async function handler(req, res) {
             
             // Application approved notification
             if (applicationJustApproved) {
-              const appMsg = `Hi ${staffName}, your application has been approved! Please log in to your staff portal to proceed to the interview step.`;
+              const appMsg = `Hi ${staffName}, your application has been approved! You can now log in to your staff portal to view shows and share availability.`;
               await client.messages.create({ body: appMsg, from: twilioPhoneNumber, to });
-            }
-            
-            // Interview approved/confirmed notification
-            if (interviewJustApproved) {
-              const interviewData = updatedStaff.interviewFormData || previousData.interviewFormData || {};
-              const prettyDate = interviewData.interviewDate || '';
-              const prettyTime = interviewData.interviewTime || '';
-              const when = [prettyDate, prettyTime].filter(Boolean).join(' at ');
-              const intMsg = when
-                ? `Hi ${staffName}, your interview has been confirmed for ${when}.`
-                : `Hi ${staffName}, your interview has been confirmed.`;
-              await client.messages.create({ body: intMsg, from: twilioPhoneNumber, to });
             }
           } catch (notifyErr) {
             console.error('Error sending approval SMS notification:', notifyErr);
