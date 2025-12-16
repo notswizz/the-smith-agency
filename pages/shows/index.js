@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import DashboardLayout from '@/components/ui/DashboardLayout';
 import ShowList from '@/components/shows/ShowList';
 import ShowFilters from '@/components/shows/ShowFilters';
@@ -10,7 +11,7 @@ import {
   filterShowsBySeason, 
   filterShowsByLocation 
 } from '@/utils/filterUtils';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 export default function ShowsDirectory() {
   const { shows, clients } = useStore();
@@ -101,9 +102,17 @@ export default function ShowsDirectory() {
           {/* Sticky Header */}
           <div className="sticky top-0 z-10 bg-gradient-to-b from-secondary-50 to-secondary-50/80 backdrop-blur-sm px-4 sm:px-6 py-4 border-b border-secondary-200">
             {/* Header */}
-            <div className="mb-4">
-              <h1 className="text-xl font-bold text-secondary-900">Shows</h1>
-              <p className="text-xs text-secondary-500">{filteredShows.length} shows</p>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-xl font-bold text-secondary-900">Shows</h1>
+                <p className="text-xs text-secondary-500">{filteredShows.length} shows</p>
+              </div>
+              <Link href="/shows/new">
+                <Button variant="primary" size="sm" className="flex items-center gap-1.5">
+                  <PlusIcon className="w-4 h-4" />
+                  <span>Show</span>
+                </Button>
+              </Link>
             </div>
             
             {/* Search */}

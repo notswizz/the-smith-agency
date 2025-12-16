@@ -97,15 +97,13 @@ export default function DashboardLayout({ children, onLogout }) {
       
       {/* Date Card */}
       <div className="px-3 mb-2">
-        <div className="bg-gradient-to-br from-secondary-900 to-secondary-800 rounded-xl p-4 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-3xl font-black">{day}</p>
-              <p className="text-xs text-secondary-400">{month} · {weekday}</p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-              <CalendarIcon className="w-5 h-5 text-white/70" />
-            </div>
+        <div className="bg-secondary-100 rounded-lg px-3 py-2">
+          <div className="flex items-center gap-2">
+            <CalendarIcon className="w-4 h-4 text-secondary-400" />
+            <p className="text-sm text-secondary-600">
+              <span className="font-semibold">{month} {day}</span>
+              <span className="text-secondary-400"> · {weekday}</span>
+            </p>
           </div>
         </div>
       </div>
@@ -185,7 +183,7 @@ export default function DashboardLayout({ children, onLogout }) {
           <div className="ml-3">
             <span className="text-lg font-bold">
               <span className="text-primary-500">The</span>
-              <span className="text-secondary-900"> Smith</span>
+              <span className="text-secondary-900"> Smith Agency</span>
             </span>
           </div>
         </div>

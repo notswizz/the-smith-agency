@@ -380,7 +380,7 @@ export default function Dashboard() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-4 gap-2 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
               {stats.map((stat, i) => {
                 const icons = [UsersIcon, BriefcaseIcon, DocumentDuplicateIcon, SunIcon];
                 const Icon = icons[i];
@@ -388,15 +388,15 @@ export default function Dashboard() {
                   <Link
                     key={stat.label}
                     href={stat.href}
-                    className={`${stat.bg} border ${stat.border} rounded-lg px-4 py-3 transition-all hover:shadow-sm group`}
+                    className={`${stat.bg} border ${stat.border} rounded-lg px-3 py-2.5 sm:px-4 sm:py-3 transition-all hover:shadow-sm group`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 ${stat.iconBg} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                        <Icon className={`w-4 h-4 ${stat.text}`} />
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className={`w-7 h-7 sm:w-8 sm:h-8 ${stat.iconBg} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                        <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${stat.text}`} />
                       </div>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className={`text-2xl font-bold ${stat.text}`}>{stat.value}</span>
-                        <span className="text-sm font-medium text-secondary-500">{stat.label}</span>
+                      <div className="flex items-baseline gap-1 sm:gap-1.5">
+                        <span className={`text-xl sm:text-2xl font-bold ${stat.text}`}>{stat.value}</span>
+                        <span className="text-xs sm:text-sm font-medium text-secondary-500">{stat.label}</span>
                       </div>
                     </div>
                   </Link>
@@ -407,7 +407,7 @@ export default function Dashboard() {
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
               {/* Shows Calendar */}
-              <div className="lg:col-span-3 bg-white rounded-2xl border-2 border-secondary-200 overflow-hidden shadow-sm">
+              <div className="lg:col-span-3 order-2 lg:order-1 bg-white rounded-2xl border-2 border-secondary-200 overflow-hidden shadow-sm">
                 <div className="px-4 py-3 border-b border-secondary-100 bg-gradient-to-r from-primary-500 to-pink-500">
                   <div className="flex items-center justify-between">
                     <h2 className="text-base font-bold text-white flex items-center gap-2">
@@ -455,25 +455,38 @@ export default function Dashboard() {
                       const showsOnDate = getShowDates.get(dateStr);
                       const hasShow = !!showsOnDate;
                       const isToday = dateStr === new Date().toISOString().split('T')[0];
+                      const showCount = showsOnDate?.length || 0;
                       const location = showsOnDate?.[0]?.location;
                       
                       return (
                         <div
                           key={i}
-                          className={`relative h-11 flex flex-col items-center justify-center rounded-md transition-colors group ${
+                          className={`relative h-11 flex flex-col items-center justify-center rounded-md transition-all group ${
                             !day.isCurrentMonth
                               ? 'text-secondary-300'
                               : hasShow
-                                ? 'bg-primary-500 text-white font-bold'
+                                ? 'bg-primary-500 text-white font-bold cursor-pointer hover:bg-primary-600 hover:scale-105 hover:shadow-lg hover:z-10'
                                 : isToday
                                   ? 'bg-secondary-900 text-white font-bold'
                                   : 'text-secondary-700 hover:bg-secondary-100'
                           }`}
-                          title={hasShow && day.isCurrentMonth ? showsOnDate.map(s => `${s.name}${s.location ? ` - ${s.location}` : ''}`).join('\n') : ''}
                         >
                           <span className="text-xs">{day.date.getDate()}</span>
-                          {hasShow && day.isCurrentMonth && location && (
-                            <span className="text-[7px] leading-none truncate max-w-full px-0.5 opacity-80">{location.split(',')[0]}</span>
+                          {hasShow && day.isCurrentMonth && (
+                            <span className="text-[7px] leading-none truncate max-w-full px-0.5 opacity-80">
+                              {showCount > 1 ? `${showCount} shows` : location?.split(',')[0] || ''}
+                            </span>
+                          )}
+                          {/* Tooltip */}
+                          {hasShow && day.isCurrentMonth && (
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50">
+                              <div className="bg-secondary-900 text-white px-3 py-2 rounded-lg shadow-xl min-w-max">
+                                {showsOnDate.map((s, idx) => (
+                                  <p key={idx} className={`text-xs font-semibold ${idx > 0 ? 'mt-1 pt-1 border-t border-secondary-700' : ''}`}>{s.name}</p>
+                                ))}
+                              </div>
+                              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-secondary-900"></div>
+                            </div>
                           )}
                         </div>
                       );
@@ -495,7 +508,7 @@ export default function Dashboard() {
               </div>
 
               {/* Recent Activity */}
-              <div className="lg:col-span-2 bg-white rounded-2xl border-2 border-secondary-200 overflow-hidden shadow-sm">
+              <div className="lg:col-span-2 order-1 lg:order-2 bg-white rounded-2xl border-2 border-secondary-200 overflow-hidden shadow-sm">
                 <div className="px-4 py-3 border-b border-secondary-100 bg-secondary-900">
                   <div className="flex items-center justify-between">
                     <h2 className="text-base font-bold text-white flex items-center gap-2">
