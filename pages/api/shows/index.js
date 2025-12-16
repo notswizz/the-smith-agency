@@ -30,6 +30,7 @@ export default async function handler(req, res) {
         // Format dates to ensure consistency
         const showData = {
           ...req.body,
+          status: req.body.status || 'active',
           startDate: req.body.startDate,
           endDate: req.body.endDate,
           createdAt: serverTimestamp(),

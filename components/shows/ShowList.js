@@ -46,12 +46,16 @@ function ShowCard({ show }) {
   const showStatus = show.status || 'active';
   const isActive = showStatus === 'active';
 
-  const handleStatusToggle = (e) => {
+  const handleStatusToggle = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     const newStatus = isActive ? 'inactive' : 'active';
     if (updateShow) {
-      updateShow(show.id, { ...show, status: newStatus });
+      try {
+        await updateShow(show.id, { status: newStatus });
+      } catch (err) {
+        console.error('Failed to update show status:', err);
+      }
     }
   };
 

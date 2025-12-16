@@ -147,31 +147,6 @@ const BookingCard = ({
         </div>
       )}
 
-      {/* Footer */}
-      <div className="px-3 py-2 bg-secondary-50 border-t border-secondary-100 flex items-center gap-1.5">
-        {isPaid ? (
-          <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
-            <CheckCircleSolid className="w-2.5 h-2.5" />
-            Paid
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">
-            <ClockIcon className="w-2.5 h-2.5" />
-            Deposit
-          </span>
-        )}
-        {isComplete ? (
-          <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
-            <CheckCircleSolid className="w-2.5 h-2.5" />
-            Staffed
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
-            <UserGroupIcon className="w-2.5 h-2.5" />
-            {totalStaffNeeded - totalStaffAssigned} needed
-          </span>
-        )}
-      </div>
     </div>
   );
 };

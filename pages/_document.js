@@ -12,8 +12,8 @@ export default function Document() {
         
         {/* SEO Meta Tags */}
         <meta name="theme-color" content="#FF69B4" />
-        <meta name="description" content="The Smith Agency - Professional booking management platform for entertainment and events. Streamline your bookings, staff management, and client relationships." />
-        <meta name="keywords" content="The Smith Agency, booking management, entertainment agency, staff management, event booking, TSA" />
+        <meta name="description" content="The Smith Agency - Wholesale Boutique Staffing" />
+        <meta name="keywords" content="The Smith Agency" />
         <meta name="author" content="The Smith Agency" />
         <meta name="robots" content="index, follow" />
         
