@@ -84,28 +84,19 @@ export default function DashboardLayout({ children, onLogout }) {
         </div>
       </nav>
       
-      {/* Logo & User */}
+      {/* Logo */}
       <div className="flex-1 flex flex-col items-center justify-center px-3">
-        {/* Logo Image */}
-        <a href="https://www.smithagency.app/" target="_blank" rel="noopener noreferrer" className="mb-3">
+        <a href="https://www.smithagency.app/" target="_blank" rel="noopener noreferrer">
           <img
             src="/tsa.jpeg"
             alt="The Smith Agency"
             className="w-48 h-48 object-cover rounded-full border-4 border-primary-500 shadow-lg hover:scale-105 transition-transform"
           />
         </a>
-        
-        {/* Active User */}
-        {adminName && (
-          <div className="self-start flex items-center gap-2 px-4 py-1.5 bg-emerald-50 rounded-full border border-emerald-200">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-            <span className="text-xs font-semibold text-emerald-700">{adminName}</span>
-          </div>
-        )}
       </div>
       
       {/* Date Card */}
-      <div className="px-3 mb-4">
+      <div className="px-3 mb-2">
         <div className="bg-gradient-to-br from-secondary-900 to-secondary-800 rounded-xl p-4 text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -118,6 +109,16 @@ export default function DashboardLayout({ children, onLogout }) {
           </div>
         </div>
       </div>
+      
+      {/* Active User */}
+      {adminName && (
+        <div className="px-3 mb-4">
+          <div className="flex items-center gap-2 px-3 py-1.5">
+            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+            <span className="text-xs text-secondary-500">{adminName}</span>
+          </div>
+        </div>
+      )}
       
       {/* Footer */}
       <div className="p-3 border-t border-secondary-100">
