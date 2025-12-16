@@ -12,9 +12,14 @@ import {
   CalendarDaysIcon,
   ClipboardDocumentListIcon,
   ChevronRightIcon,
+  ChevronLeftIcon,
   SparklesIcon,
   ClockIcon,
   XMarkIcon,
+  UsersIcon,
+  BriefcaseIcon,
+  DocumentDuplicateIcon,
+  SunIcon,
 } from '@heroicons/react/24/outline';
 
 const ChatInterface = dynamic(() => import('@/components/chat/ChatInterface'), { ssr: false });
@@ -26,6 +31,7 @@ export default function Dashboard() {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [activityFilter, setActivityFilter] = useState('all');
   const [readItems, setReadItems] = useState(new Set());
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
   const searchRef = useRef(null);
   const { staff, clients, bookings, shows } = useStore();
 
@@ -219,11 +225,58 @@ export default function Dashboard() {
   };
 
   const stats = [
-    { label: 'Staff', value: staff?.length || 0, icon: UserGroupIcon, href: '/staff' },
-    { label: 'Clients', value: clients?.length || 0, icon: BuildingOffice2Icon, href: '/clients' },
-    { label: 'Bookings', value: bookingsArray.length, icon: ClipboardDocumentListIcon, href: '/bookings' },
-    { label: 'Days', value: totalStaffDays, icon: CalendarDaysIcon, href: '/bookings' },
+    { label: 'Staff', value: staff?.length || 0, href: '/staff', bg: 'bg-primary-50', border: 'border-primary-200', text: 'text-primary-600', iconBg: 'bg-primary-100' },
+    { label: 'Clients', value: clients?.length || 0, href: '/clients', bg: 'bg-primary-50/70', border: 'border-primary-200', text: 'text-primary-500', iconBg: 'bg-primary-100/70' },
+    { label: 'Bookings', value: bookingsArray.length, href: '/bookings', bg: 'bg-pink-50/70', border: 'border-secondary-300', text: 'text-pink-500', iconBg: 'bg-pink-100/70' },
+    { label: 'Days', value: totalStaffDays, href: '/bookings', bg: 'bg-pink-50/30', border: 'border-secondary-300', text: 'text-pink-500', iconBg: 'bg-pink-100' },
   ];
+
+  // Calendar helpers
+  const getShowDates = useMemo(() => {
+    const dates = new Map();
+    shows?.forEach(show => {
+      if (show.startDate && show.endDate) {
+        const start = new Date(show.startDate + 'T12:00:00');
+        const end = new Date(show.endDate + 'T12:00:00');
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          const dateStr = d.toISOString().split('T')[0];
+          if (!dates.has(dateStr)) {
+            dates.set(dateStr, []);
+          }
+          dates.get(dateStr).push({ name: show.name, location: show.location || '' });
+        }
+      }
+    });
+    return dates;
+  }, [shows]);
+
+  const getCalendarDays = useMemo(() => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startPadding = firstDay.getDay();
+    const days = [];
+
+    // Previous month padding
+    for (let i = startPadding - 1; i >= 0; i--) {
+      const d = new Date(year, month, -i);
+      days.push({ date: d, isCurrentMonth: false });
+    }
+
+    // Current month
+    for (let i = 1; i <= lastDay.getDate(); i++) {
+      days.push({ date: new Date(year, month, i), isCurrentMonth: true });
+    }
+
+    // Next month padding
+    const remaining = 42 - days.length;
+    for (let i = 1; i <= remaining; i++) {
+      days.push({ date: new Date(year, month + 1, i), isCurrentMonth: false });
+    }
+
+    return days;
+  }, [calendarMonth]);
 
   return (
     <>
@@ -327,83 +380,123 @@ export default function Dashboard() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-4 gap-3 mb-8">
-              {stats.map((stat, i) => (
-                <Link
-                  key={stat.label}
-                  href={stat.href}
-                  className={`relative overflow-hidden rounded-2xl p-4 transition-all hover:scale-105 hover:shadow-xl group ${
-                    i === 0 ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white' :
-                    i === 1 ? 'bg-gradient-to-br from-secondary-800 to-secondary-900 text-white' :
-                    i === 2 ? 'bg-gradient-to-br from-pink-400 to-primary-500 text-white' :
-                    'bg-white border-2 border-secondary-200 text-secondary-900'
-                  }`}
-                >
-                  <stat.icon className={`w-6 h-6 mb-2 ${i === 3 ? 'text-primary-500' : 'text-white/80'}`} />
-                  <div className="text-3xl font-black">{stat.value}</div>
-                  <div className={`text-xs font-semibold ${i === 3 ? 'text-secondary-500' : 'text-white/70'}`}>{stat.label}</div>
-                  <div className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full bg-white/10 group-hover:scale-150 transition-transform duration-500"></div>
-                </Link>
-              ))}
+            <div className="grid grid-cols-4 gap-2 mb-6">
+              {stats.map((stat, i) => {
+                const icons = [UsersIcon, BriefcaseIcon, DocumentDuplicateIcon, SunIcon];
+                const Icon = icons[i];
+                return (
+                  <Link
+                    key={stat.label}
+                    href={stat.href}
+                    className={`${stat.bg} border ${stat.border} rounded-lg px-4 py-3 transition-all hover:shadow-sm group`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 ${stat.iconBg} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                        <Icon className={`w-4 h-4 ${stat.text}`} />
+                      </div>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className={`text-2xl font-bold ${stat.text}`}>{stat.value}</span>
+                        <span className="text-sm font-medium text-secondary-500">{stat.label}</span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
 
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-              {/* Upcoming Shows - Wider */}
+              {/* Shows Calendar */}
               <div className="lg:col-span-3 bg-white rounded-2xl border-2 border-secondary-200 overflow-hidden shadow-sm">
-                <div className="px-5 py-4 border-b border-secondary-100 bg-gradient-to-r from-primary-500 to-pink-500">
+                <div className="px-4 py-3 border-b border-secondary-100 bg-gradient-to-r from-primary-500 to-pink-500">
                   <div className="flex items-center justify-between">
                     <h2 className="text-base font-bold text-white flex items-center gap-2">
                       <CalendarDaysIcon className="w-5 h-5" />
-                      Upcoming Shows
+                      Shows Calendar
                     </h2>
                     <Link href="/shows" className="text-xs text-white/80 hover:text-white font-medium">View all →</Link>
                   </div>
                 </div>
-                {upcomingShows.length > 0 ? (
-                  <div className="divide-y divide-secondary-100">
-                    {upcomingShows.map(show => {
-                      const startDate = new Date(show.startDate);
-                      const endDate = show.endDate ? new Date(show.endDate) : null;
-                      const daysUntil = Math.ceil((startDate - new Date()) / (1000 * 60 * 60 * 24));
+                
+                {/* Calendar */}
+                <div className="p-4">
+                  {/* Month Navigation */}
+                  <div className="flex items-center justify-between mb-3">
+                    <button
+                      onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1))}
+                      className="p-1.5 hover:bg-secondary-100 rounded-lg transition-colors"
+                    >
+                      <ChevronLeftIcon className="w-5 h-5 text-secondary-500" />
+                    </button>
+                    <h3 className="text-sm font-bold text-secondary-900">
+                      {calendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    </h3>
+                    <button
+                      onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1))}
+                      className="p-1.5 hover:bg-secondary-100 rounded-lg transition-colors"
+                    >
+                      <ChevronRightIcon className="w-5 h-5 text-secondary-500" />
+                    </button>
+                  </div>
+                  
+                  {/* Day Headers */}
+                  <div className="grid grid-cols-7 gap-1 mb-1">
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                      <div key={i} className="text-center text-[10px] font-semibold text-secondary-400 py-1">
+                        {d}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Calendar Grid */}
+                  <div className="grid grid-cols-7 gap-1">
+                    {getCalendarDays.map((day, i) => {
+                      const dateStr = day.date.toISOString().split('T')[0];
+                      const showsOnDate = getShowDates.get(dateStr);
+                      const hasShow = !!showsOnDate;
+                      const isToday = dateStr === new Date().toISOString().split('T')[0];
+                      const location = showsOnDate?.[0]?.location;
+                      
                       return (
-                        <Link
-                          key={show.id}
-                          href={`/shows/${show.id}`}
-                          className="flex items-center justify-between px-5 py-4 hover:bg-primary-50/50 transition-colors group"
+                        <div
+                          key={i}
+                          className={`relative h-11 flex flex-col items-center justify-center rounded-md transition-colors group ${
+                            !day.isCurrentMonth
+                              ? 'text-secondary-300'
+                              : hasShow
+                                ? 'bg-primary-500 text-white font-bold'
+                                : isToday
+                                  ? 'bg-secondary-900 text-white font-bold'
+                                  : 'text-secondary-700 hover:bg-secondary-100'
+                          }`}
+                          title={hasShow && day.isCurrentMonth ? showsOnDate.map(s => `${s.name}${s.location ? ` - ${s.location}` : ''}`).join('\n') : ''}
                         >
-                          <div className="min-w-0">
-                            <p className="text-sm font-bold text-secondary-900 truncate group-hover:text-primary-600 transition-colors">{show.name}</p>
-                            <p className="text-xs text-secondary-500 font-medium">
-                              {startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                              {endDate && ` – ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className={`text-xs font-bold px-3 py-1 rounded-full ${
-                              daysUntil <= 7 ? 'bg-primary-500 text-white' : 'bg-secondary-100 text-secondary-600'
-                            }`}>
-                              {daysUntil}d
-                            </span>
-                            <ChevronRightIcon className="w-4 h-4 text-secondary-300 group-hover:text-primary-500 group-hover:translate-x-1 transition-all" />
-                          </div>
-                        </Link>
+                          <span className="text-xs">{day.date.getDate()}</span>
+                          {hasShow && day.isCurrentMonth && location && (
+                            <span className="text-[7px] leading-none truncate max-w-full px-0.5 opacity-80">{location.split(',')[0]}</span>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
-                ) : (
-                  <div className="p-12 text-center">
-                    <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center mx-auto mb-3">
-                      <CalendarDaysIcon className="w-8 h-8 text-primary-400" />
+                  
+                  {/* Legend */}
+                  <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-secondary-100">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded bg-primary-500"></div>
+                      <span className="text-[10px] text-secondary-500">Show</span>
                     </div>
-                    <p className="text-sm font-medium text-secondary-500">No upcoming shows</p>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded bg-secondary-900"></div>
+                      <span className="text-[10px] text-secondary-500">Today</span>
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
 
-              {/* Recent Activity - Narrower */}
+              {/* Recent Activity */}
               <div className="lg:col-span-2 bg-white rounded-2xl border-2 border-secondary-200 overflow-hidden shadow-sm">
-                <div className="px-5 py-4 border-b border-secondary-100 bg-secondary-900">
+                <div className="px-4 py-3 border-b border-secondary-100 bg-secondary-900">
                   <div className="flex items-center justify-between">
                     <h2 className="text-base font-bold text-white flex items-center gap-2">
                       <ClockIcon className="w-5 h-5" />

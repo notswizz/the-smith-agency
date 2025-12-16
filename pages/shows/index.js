@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
 import DashboardLayout from '@/components/ui/DashboardLayout';
 import ShowList from '@/components/shows/ShowList';
 import ShowFilters from '@/components/shows/ShowFilters';
@@ -11,7 +10,7 @@ import {
   filterShowsBySeason, 
   filterShowsByLocation 
 } from '@/utils/filterUtils';
-import { PlusIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 export default function ShowsDirectory() {
   const { shows, clients } = useStore();
@@ -98,52 +97,50 @@ export default function ShowsDirectory() {
       </Head>
 
       <DashboardLayout>
-        <div className="space-y-6">
-          {/* Header with title and actions */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="text-2xl font-bold text-secondary-900">Shows Directory</h1>
-            <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row sm:space-x-3 space-y-3 sm:space-y-0">
-              <Link href="/shows/new">
-                <Button variant="primary" size="sm" className="flex items-center">
-                  <PlusIcon className="h-5 w-5 mr-1" />
-                  Add Show
-                </Button>
-              </Link>
+        <div className="flex flex-col h-full">
+          {/* Sticky Header */}
+          <div className="sticky top-0 z-10 bg-gradient-to-b from-secondary-50 to-secondary-50/80 backdrop-blur-sm px-4 sm:px-6 py-4 border-b border-secondary-200">
+            {/* Header */}
+            <div className="mb-4">
+              <h1 className="text-xl font-bold text-secondary-900">Shows</h1>
+              <p className="text-xs text-secondary-500">{filteredShows.length} shows</p>
+            </div>
+            
+            {/* Search */}
+            <div className="relative">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary-400" />
+              <input
+                type="text"
+                value={filters.search}
+                onChange={(e) => setFilters({...filters, search: e.target.value})}
+                placeholder="Search shows..."
+                className="w-full pl-9 pr-4 py-2.5 bg-white border border-secondary-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+              />
             </div>
           </div>
 
-          {/* Filters */}
-          <ShowFilters
-            filters={filters}
-            setFilters={setFilters}
-            showCount={filteredShows.length}
-            totalCount={shows.length}
-            seasons={seasons}
-            locations={locations}
-            types={types}
-            clients={clients}
-          />
-
-          {/* Shows list */}
-          {filteredShows.length > 0 ? (
-            <ShowList shows={filteredShows} />
-          ) : (
-            <div className="bg-white shadow-sm rounded-lg p-6 text-center">
-              <p className="text-secondary-500">No shows found matching your filters.</p>
-              <p className="mt-2">
-                <Button variant="outline" size="sm" onClick={() => setFilters({
-                  search: '',
-                  season: 'all',
-                  location: 'all',
-                  type: 'all',
-                  client: 'all',
-                  dateRange: 'all',
-                })}>
-                  Reset Filters
-                </Button>
-              </p>
-            </div>
-          )}
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-auto p-4 sm:p-6">
+            {filteredShows.length > 0 ? (
+              <ShowList shows={filteredShows} />
+            ) : (
+              <div className="bg-white shadow-sm rounded-lg p-6 text-center">
+                <p className="text-secondary-500">No shows found matching your filters.</p>
+                <p className="mt-2">
+                  <Button variant="outline" size="sm" onClick={() => setFilters({
+                    search: '',
+                    season: 'all',
+                    location: 'all',
+                    type: 'all',
+                    client: 'all',
+                    dateRange: 'all',
+                  })}>
+                    Reset Filters
+                  </Button>
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </DashboardLayout>
     </>

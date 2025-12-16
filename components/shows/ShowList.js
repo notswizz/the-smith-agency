@@ -20,14 +20,22 @@ export default function ShowList({ shows }) {
 function ShowCard({ show }) {
   const { updateShow } = useStore();
   
-  // Parse dates
-  const startDate = new Date(show.startDate);
-  const endDate = new Date(show.endDate);
+  // Parse dates - add T12:00 to avoid timezone issues
+  const parseDate = (dateStr) => {
+    if (!dateStr) return new Date();
+    if (typeof dateStr === 'string' && !dateStr.includes('T')) {
+      return new Date(dateStr + 'T12:00:00');
+    }
+    return new Date(dateStr);
+  };
+  
+  const startDate = parseDate(show.startDate);
+  const endDate = parseDate(show.endDate);
   const durationDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
   
   // Format dates
   const formatDate = (date) => {
-    const d = new Date(date);
+    const d = parseDate(date);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
   

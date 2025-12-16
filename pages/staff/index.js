@@ -1,41 +1,20 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
 import DashboardLayout from '@/components/ui/DashboardLayout';
 import StaffList from '@/components/staff/StaffList';
-import StaffFilters from '@/components/staff/StaffFilters';
 import Button from '@/components/ui/Button';
 import useStore from '@/lib/hooks/useStore';
 import { searchStaff } from '@/utils/filterUtils';
-import { PlusIcon, SparklesIcon } from '@heroicons/react/24/outline';
-import adminLogger from '@/lib/utils/adminLogger';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 export default function StaffDirectory() {
   const { staff, getBookingsForStaff, fetchStaff } = useStore();
-  const [filters, setFilters] = useState({
-    search: ''
-  });
-  const [scrolled, setScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Load staff data on component mount
   useEffect(() => {
     fetchStaff();
   }, [fetchStaff]);
-
-  // Handle scroll event to add shadow to header
-  useEffect(() => {
-    const handleScroll = () => {
-      const isScrolled = window.scrollY > 10;
-      if (isScrolled !== scrolled) {
-        setScrolled(isScrolled);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [scrolled]);
 
   // Calculate days worked for each staff member
   const staffWithDaysWorked = useMemo(() => {
@@ -62,108 +41,63 @@ export default function StaffDirectory() {
     let result = staffWithDaysWorked;
 
     // Apply search filter
-    if (filters.search) {
-      result = searchStaff(result, filters.search);
+    if (searchQuery) {
+      result = searchStaff(result, searchQuery);
     }
 
     // Sort by days worked (descending)
     result = [...result].sort((a, b) => b.totalDaysWorked - a.totalDaysWorked);
 
     return result;
-  }, [staffWithDaysWorked, filters.search]);
+  }, [staffWithDaysWorked, searchQuery]);
 
   return (
     <>
       <Head>
         <title>Staff Directory | The Smith Agency</title>
         <meta name="description" content="Manage your staff at The Smith Agency" />
-        <style jsx global>{`
-          @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          .animate-fadeIn {
-            animation: fadeIn 0.3s ease-out forwards;
-          }
-          
-          @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 15px 5px rgba(219, 39, 119, 0.1); }
-            50% { box-shadow: 0 0 20px 8px rgba(219, 39, 119, 0.2); }
-          }
-          .pulse-glow {
-            animation: pulse-glow 3s infinite ease-in-out;
-          }
-        `}</style>
       </Head>
 
       <DashboardLayout>
-        <div className="flex flex-col h-full relative">
-          {/* Sticky header section - increased z-index to prevent scroll issues */}
-          <div className={`sticky top-0 z-30 bg-gradient-to-r from-secondary-50 to-pink-50 px-3 sm:px-4 py-3 sm:py-4 transition-all duration-300 ${scrolled ? 'shadow-md' : ''}`}>
-            {/* Header with title and actions */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center">
-                <h1 className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-pink-500">
-                  Staff Directory
-                </h1>
-                <div className="ml-2 bg-pink-100 text-pink-600 text-xs font-medium px-2 py-1 rounded-full hidden sm:flex items-center">
-                  <SparklesIcon className="h-3 w-3 mr-1" />
-                  {staff.length} Members
-                </div>
-              </div>
-              
-              <Button 
-                variant="secondary" 
-                size="sm" 
-                onClick={async () => {
-                  await fetchStaff();
-                  window.location.reload();
-                }}
-                className="flex items-center mr-3"
-              >
-                <SparklesIcon className="h-4 w-4 mr-1" />
-                Refresh
-              </Button>
-              <Link href="/staff/new">
-                <Button variant="primary" size="sm" className="flex items-center pulse-glow">
-                  <PlusIcon className="h-4 w-4 mr-1" />
-                  Add Staff
-                </Button>
-              </Link>
+        <div className="flex flex-col h-full">
+          {/* Sticky Header */}
+          <div className="sticky top-0 z-10 bg-gradient-to-b from-secondary-50 to-secondary-50/80 backdrop-blur-sm px-4 sm:px-6 py-4 border-b border-secondary-200">
+            {/* Header */}
+            <div className="mb-4">
+              <h1 className="text-xl font-bold text-secondary-900">Staff</h1>
+              <p className="text-xs text-secondary-500">{filteredStaff.length} members</p>
             </div>
-
-            {/* Search only - removed filters */}
-            <StaffFilters
-              filters={filters}
-              setFilters={setFilters}
-              showCount={filteredStaff.length}
-              totalCount={staff.length}
-            />
+            
+            {/* Search */}
+            <div className="relative">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search staff..."
+                className="w-full pl-9 pr-4 py-2.5 bg-white border border-secondary-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+              />
+            </div>
           </div>
 
-          {/* Scrollable content area with scroll snap behavior - lower z-index than header */}
-          <div className="flex-1 overflow-auto pb-4 pt-3 px-3 sm:px-4 scroll-smooth md:scroll-auto relative z-10">
-            {/* Staff list */}
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-auto p-4 sm:p-6">
             {filteredStaff.length > 0 ? (
               <StaffList staff={filteredStaff} />
             ) : (
-              <div className="bg-white shadow-sm rounded-lg p-6 text-center border border-pink-100 mt-4">
-                <div className="flex flex-col items-center">
-                  <div className="w-16 h-16 bg-pink-50 rounded-full flex items-center justify-center mb-4">
-                    <SparklesIcon className="h-8 w-8 text-pink-400" />
-                  </div>
-                  <p className="text-secondary-600 mb-3">No staff members found matching your search.</p>
-                  {filters.search && (
+              <div className="bg-white shadow-sm rounded-lg p-6 text-center">
+                <p className="text-secondary-500">No staff members found matching your search.</p>
+                {searchQuery && (
+                  <p className="mt-2">
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => setFilters({
-                        search: ''
-                      })}>
+                      onClick={() => setSearchQuery('')}>
                       Clear Search
                     </Button>
-                  )}
-                </div>
+                  </p>
+                )}
               </div>
             )}
           </div>
