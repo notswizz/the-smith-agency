@@ -1,15 +1,12 @@
 import React from 'react';
 import { useRouter } from 'next/router';
-import { formatDate } from '@/utils/dateUtils';
 import { 
   CheckCircleIcon, 
-  ClockIcon, 
-  XCircleIcon,
-  CalendarIcon,
+  ClockIcon,
+  CalendarDaysIcon,
   UserGroupIcon,
-  BuildingOffice2Icon,
-  PencilSquareIcon
 } from '@heroicons/react/24/outline';
+import { CheckCircleIcon as CheckCircleSolid } from '@heroicons/react/24/solid';
 
 const BookingCard = ({ 
   booking, 
@@ -23,32 +20,16 @@ const BookingCard = ({
   
   // Get booking summary information
   const getBookingSummary = (datesNeeded = []) => {
-    if (!Array.isArray(datesNeeded) || datesNeeded.length === 0) return { dates: 0, days: 0, staffNames: [], staffIds: [] };
-    
-    // Only count dates where staffCount > 0
+    if (!Array.isArray(datesNeeded) || datesNeeded.length === 0) return { dates: 0, days: 0 };
     const datesWithStaff = datesNeeded.filter(d => (d.staffCount || 0) > 0);
     const dates = datesWithStaff.length;
-    
-    // Calculate total days (staff assignments)
     const days = datesWithStaff.reduce((total, date) => total + (date.staffCount || 0), 0);
-    
-    const staffIdSet = new Set();
-    datesNeeded.forEach(d => {
-      if (Array.isArray(d.staffIds)) {
-        d.staffIds.filter(Boolean).forEach(id => staffIdSet.add(id));
-      }
-    });
-    const staffNames = Array.from(staffIdSet).map(id => {
-      const s = staff.find(st => st.id === id);
-      return s ? (s.name || `${s.firstName || ''} ${s.lastName || ''}`.trim()) : '[Unknown Staff]';
-    });
-    const staffIds = Array.from(staffIdSet);
-    return { dates, days, staffNames, staffIds };
+    return { dates, days };
   };
 
   const bookingSummary = getBookingSummary(booking.datesNeeded);
   
-  // Get sorted dates for the booking (only dates that need staff)
+  // Get sorted dates for the booking
   const sortedDates = booking.datesNeeded ? 
     [...booking.datesNeeded].filter(d => (d.staffCount || 0) > 0).sort((a, b) => new Date(a.date) - new Date(b.date)) : 
     [];
@@ -60,77 +41,11 @@ const BookingCard = ({
   const totalStaffAssigned = booking.datesNeeded?.reduce((total, date) => 
     total + (date.staffIds?.filter(Boolean).length || 0), 0) || 0;
   
-  // Status information
-  const statusLabels = {
-    'confirmed': 'Confirmed',
-    'pending': 'Pending',
-    'cancelled': 'Cancelled',
-    'paid': 'Paid',
-    'final_paid': 'Paid',
-    'deposit_paid': 'Deposit Paid',
-  };
-  
-  const statusStyles = {
-    'confirmed': {
-      bg: 'bg-emerald-50',
-      text: 'text-emerald-700',
-      border: 'border-emerald-300',
-      icon: <CheckCircleIcon className="h-4 w-4 mr-1.5" />,
-      gradient: 'from-emerald-500 to-green-400',
-      fillColor: 'bg-emerald-500'
-    },
-    'pending': {
-      bg: 'bg-amber-50',
-      text: 'text-amber-700',
-      border: 'border-amber-300',
-      icon: <ClockIcon className="h-4 w-4 mr-1.5" />,
-      gradient: 'from-amber-500 to-yellow-400',
-      fillColor: 'bg-amber-500'
-    },
-    'cancelled': {
-      bg: 'bg-red-50',
-      text: 'text-red-700',
-      border: 'border-red-300',
-      icon: <XCircleIcon className="h-4 w-4 mr-1.5" />,
-      gradient: 'from-red-500 to-rose-400',
-      fillColor: 'bg-red-500'
-    },
-    'paid': {
-      bg: 'bg-emerald-50',
-      text: 'text-emerald-700',
-      border: 'border-emerald-300',
-      icon: <CheckCircleIcon className="h-4 w-4 mr-1.5" />,
-      gradient: 'from-emerald-500 to-green-400',
-      fillColor: 'bg-emerald-500'
-    },
-    'final_paid': {
-      bg: 'bg-emerald-50',
-      text: 'text-emerald-700',
-      border: 'border-emerald-300',
-      icon: <CheckCircleIcon className="h-4 w-4 mr-1.5" />,
-      gradient: 'from-emerald-500 to-green-400',
-      fillColor: 'bg-emerald-500'
-    },
-    'deposit_paid': {
-      bg: 'bg-blue-50',
-      text: 'text-blue-700',
-      border: 'border-blue-300',
-      icon: <CheckCircleIcon className="h-4 w-4 mr-1.5" />,
-      gradient: 'from-blue-500 to-indigo-400',
-      fillColor: 'bg-blue-500'
-    }
-  };
-  
-  const currentStatusStyle = statusStyles[booking.status] || statusStyles['pending'];
-  
   // Format date range
   const formatDateRange = () => {
     if (!firstDate || !lastDate) return 'No dates';
-    
     const start = new Date(firstDate);
     const end = new Date(lastDate);
-    
-    // Adjust for timezone offset
     const adjustedStart = new Date(start.getTime() + start.getTimezoneOffset() * 60000);
     const adjustedEnd = new Date(end.getTime() + end.getTimezoneOffset() * 60000);
     
@@ -139,178 +54,126 @@ const BookingCard = ({
     
     if (startMonth === endMonth && adjustedStart.getFullYear() === adjustedEnd.getFullYear()) {
       if (adjustedStart.getDate() === adjustedEnd.getDate()) {
-        return `${startMonth} ${adjustedStart.getDate()}, ${adjustedEnd.getFullYear()}`;
+        return `${startMonth} ${adjustedStart.getDate()}`;
       }
-      return `${startMonth} ${adjustedStart.getDate()}-${adjustedEnd.getDate()}, ${adjustedEnd.getFullYear()}`;
-    } else {
-      return `${startMonth} ${adjustedStart.getDate()}, ${adjustedStart.getFullYear()} - ${endMonth} ${adjustedEnd.getDate()}, ${adjustedEnd.getFullYear()}`;
+      return `${startMonth} ${adjustedStart.getDate()}-${adjustedEnd.getDate()}`;
     }
+    return `${startMonth} ${adjustedStart.getDate()} - ${endMonth} ${adjustedEnd.getDate()}`;
   };
 
-  const staffCompletionPercentage = Math.max(1, totalStaffNeeded) > 0 ? (totalStaffAssigned / Math.max(1, totalStaffNeeded)) * 100 : 0;
-
-  // Get color based on fill percentage
-  const getFillColorClass = (percentage) => {
-    if (percentage >= 100) return currentStatusStyle.fillColor; // Use status color for complete
-    if (percentage >= 50) return 'bg-yellow-500';
-    return 'bg-red-500';
-  };
-  
-  const getDayBarFillColor = (fullness) => {
-    if (fullness >= 1) return 'bg-emerald-400 group-hover:bg-emerald-500';
-    if (fullness > 0) return 'bg-amber-400 group-hover:bg-amber-500';
-    return 'bg-red-400 group-hover:bg-red-500';
-  }
-
-  // Derived staffing/payment statuses
-  const staffingStatus = totalStaffNeeded > 0 && totalStaffAssigned >= totalStaffNeeded ? 'filled' : 'unfilled';
-  const paymentStatus = booking.paymentStatus || ((booking.status === 'paid' || booking.status === 'final_paid') ? 'paid' : 'deposit_paid');
-
-  const paymentLabel = paymentStatus === 'paid' ? 'Paid' : 'Deposit Paid';
-  const staffingLabel = staffingStatus === 'filled' ? 'Filled' : 'Unfilled';
-
-  const paymentBadge = paymentStatus === 'paid'
-    ? { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-300', dot: 'bg-emerald-500' }
-    : { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-300', dot: 'bg-blue-500' };
-
-  const staffingBadge = staffingStatus === 'filled'
-    ? { bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-300', dot: 'bg-sky-500' }
-    : { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-300', dot: 'bg-rose-500' };
-
-  // Combined trim color logic: green if paid AND filled, yellow if exactly one, red if neither
-  const isPaid = paymentStatus === 'paid';
-  const isFilled = staffingStatus === 'filled';
-  const trimState = isPaid && isFilled ? 'green' : (isPaid || isFilled) ? 'yellow' : 'red';
-  const trimBarColor = trimState === 'green' ? 'bg-emerald-500' : trimState === 'yellow' ? 'bg-amber-500' : 'bg-rose-500';
-  const trimBorderColor = trimState === 'green' ? 'border-emerald-300 hover:border-emerald-400' : trimState === 'yellow' ? 'border-amber-300 hover:border-amber-400' : 'border-rose-300 hover:border-rose-400';
+  const completionPercentage = totalStaffNeeded > 0 ? Math.round((totalStaffAssigned / totalStaffNeeded) * 100) : 0;
+  const isComplete = totalStaffNeeded > 0 && totalStaffAssigned >= totalStaffNeeded;
+  const isPaid = booking.status === 'paid' || booking.status === 'final_paid';
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-lg bg-white transition-all duration-300 hover:shadow-xl border ${trimBorderColor} flex flex-col cursor-pointer transform hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2`}
+      className="group relative bg-white rounded-xl border border-secondary-200 hover:border-primary-300 hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden"
       onClick={() => router.push(`/bookings/${booking.id}`)}
-      tabIndex={0}
-      role="button"
-      aria-label={`View booking for ${client?.name || 'Unknown Client'}`}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') router.push(`/bookings/${booking.id}`); }}
     >
-      {/* Gradient header based on status */}
-      <div className={`h-2 w-full ${trimBarColor}`}></div>
-      
-      <div className="p-4 flex-grow flex flex-col space-y-3">
-        {/* Top section with statuses and edit button */}
-        <div className="flex justify-between items-start">
-          <div className="flex items-center gap-2">
-            <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${paymentBadge.bg} ${paymentBadge.text} border ${paymentBadge.border}`}>
-              <span className={`w-2 h-2 rounded-full mr-1.5 ${paymentBadge.dot}`}></span>
-              {paymentLabel}
-            </div>
-            <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${staffingBadge.bg} ${staffingBadge.text} border ${staffingBadge.border}`}>
-              <span className={`w-2 h-2 rounded-full mr-1.5 ${staffingBadge.dot}`}></span>
-              {staffingLabel}
-            </div>
-          </div>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              router.push(`/bookings/${booking.id}/edit`);
-            }}
-            className="p-1 rounded-md text-secondary-400 hover:text-primary-600 hover:bg-primary-50 transition-colors opacity-50 group-hover:opacity-100 focus:opacity-100"
-            aria-label="Edit staff assignments"
-          >
-            <PencilSquareIcon className="w-4 h-4" />
-          </button>
-        </div>
-        
-        {/* Client and Show Info */}
-        <div>
-          <div className="flex items-start gap-3 mb-0.5">
-            <div className="flex-shrink-0 mt-1 w-7 h-7 rounded-full bg-primary-50 flex items-center justify-center text-primary-500 shadow-sm border border-primary-100">
-              <BuildingOffice2Icon className="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-secondary-800 group-hover:text-primary-600 transition-colors leading-tight">
-                {client?.name || booking?.clientName || '[Unknown Client]'}
-              </h3>
-              <h4 className="text-xs text-secondary-500">
-                {show?.name || booking?.showName || '[Unknown Show]'}
-              </h4>
-            </div>
-          </div>
-          
-          <div className="flex items-center text-xs text-secondary-500 ml-10 mt-0.5">
-            <CalendarIcon className="w-3 h-3 mr-1 flex-shrink-0 text-secondary-400" />
-            <span>{formatDateRange()}</span>
-          </div>
-        </div>
-        
-        {/* Staff/Dates/Days Stats and Progress */}
-        <div className="rounded-lg bg-secondary-50 p-2.5 border border-secondary-100 shadow-sm space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs">
-              <CalendarIcon className="w-3.5 h-3.5 text-indigo-500" />
-              <span className="font-medium text-secondary-700">{bookingSummary.dates} Date{bookingSummary.dates !== 1 ? 's' : ''}</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs">
-              <UserGroupIcon className="w-3.5 h-3.5 text-indigo-500" />
-              <span className="font-medium text-secondary-700">{totalStaffAssigned}/{totalStaffNeeded} Days</span>
-            </div>
-          </div>
-          
-          <div>
-            <div className="flex justify-between items-center text-2xs mb-0.5">
-              <span className="font-medium text-secondary-600">Staff Filled</span>
-              <span className={`font-semibold ${
-                staffCompletionPercentage >= 100 ? 'text-emerald-600' :
-                staffCompletionPercentage >= 50 ? 'text-yellow-600' :
-                'text-red-600'
-              }`}>
-                {Math.round(staffCompletionPercentage)}%
-              </span>
-            </div>
-            <div className="relative h-2 bg-secondary-200 rounded-full overflow-hidden shadow-inner">
-              <div 
-                className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 ease-out ${getFillColorClass(staffCompletionPercentage)}`}
-                style={{ width: `${staffCompletionPercentage}%` }}
-              ></div>
-            </div>
-          </div>
+      {/* Header */}
+      <div className="p-3 pb-2">
+        {/* Client & Show */}
+        <div className="mb-2">
+          <h3 className="font-semibold text-sm text-secondary-900 truncate group-hover:text-primary-600 transition-colors leading-tight">
+            {client?.name || 'Unknown Client'}
+          </h3>
+          <p className="text-xs text-secondary-500 truncate leading-tight">{show?.name || 'Unknown Show'}</p>
         </div>
 
-        {/* Daily Staffing Micro-Bars */}
-        {bookingSummary.dates > 0 && (
-          <div className="flex items-end h-7 gap-0.5 overflow-hidden relative group/microbars">
-            {Array.from({ length: Math.min(bookingSummary.dates, 30) }).map((_, i) => {
-              // Filter to only show days that need staff
-              const daysWithStaff = sortedDates.filter(day => (day.staffCount || 0) > 0);
-              const day = daysWithStaff[i];
-              if (!day) return null;
+        {/* Date Range */}
+        <div className="flex items-center gap-1.5 text-xs text-secondary-400 mb-2">
+          <CalendarDaysIcon className="w-3.5 h-3.5 flex-shrink-0" />
+          <span>{formatDateRange()}</span>
+        </div>
+
+        {/* Stats Row */}
+        <div className="flex items-center gap-3 text-xs">
+          <div className="flex items-center gap-1">
+            <span className="font-semibold text-secondary-900">{bookingSummary.dates}</span>
+            <span className="text-secondary-400">dates</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className={`font-semibold ${isComplete ? 'text-emerald-600' : 'text-secondary-900'}`}>
+              {totalStaffAssigned}/{totalStaffNeeded}
+            </span>
+            <span className="text-secondary-400">staff</span>
+          </div>
+          <div className={`font-semibold ${isComplete ? 'text-emerald-600' : completionPercentage >= 50 ? 'text-amber-600' : 'text-secondary-900'}`}>
+            {completionPercentage}%
+          </div>
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="px-3 pb-2">
+        <div className="h-1 bg-secondary-100 rounded-full overflow-hidden">
+          <div 
+            className={`h-full rounded-full transition-all duration-500 ${
+              isComplete ? 'bg-emerald-500' : completionPercentage >= 50 ? 'bg-amber-500' : 'bg-primary-500'
+            }`}
+            style={{ width: `${completionPercentage}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Day Bars */}
+      {sortedDates.length > 0 && (
+        <div className="px-3 pb-2">
+          <div className="flex gap-0.5">
+            {sortedDates.slice(0, 14).map((day, i) => {
               const dayStaffIds = Array.isArray(day.staffIds) ? day.staffIds.filter(Boolean) : [];
               const dayStaffCount = day.staffCount || 0;
               const filledCount = dayStaffIds.length;
-              const fullness = Math.min(1, filledCount / Math.max(1, dayStaffCount));
+              const isFull = filledCount >= dayStaffCount;
+              const isPartial = filledCount > 0 && filledCount < dayStaffCount;
               
               return (
                 <div 
                   key={i} 
-                  className={`flex-1 rounded-sm cursor-pointer transition-all duration-150 border border-white/50 ${getDayBarFillColor(fullness)}`}
-                  style={{ height: `${30 + fullness * 70}%` }} // Scale from 30% to 100% height
-                  onClick={(e) => (typeof showTooltip === 'function' ? showTooltip(e, i, booking.id) : null)}
-                  onMouseEnter={(e) => (typeof showTooltip === 'function' ? showTooltip(e, i, booking.id) : null)}
-                  onMouseLeave={(e) => (typeof hideTooltip === 'function' ? hideTooltip(e) : null)}
-                  title={`${formatDate(day.date)}: ${filledCount}/${dayStaffCount} staff`}
-                ></div>
+                  className={`flex-1 h-5 rounded-sm transition-colors ${
+                    isFull ? 'bg-emerald-400' : isPartial ? 'bg-amber-400' : 'bg-secondary-200'
+                  }`}
+                  onMouseEnter={(e) => showTooltip?.(e, i, booking.id)}
+                  onMouseLeave={() => hideTooltip?.()}
+                />
               );
             })}
-            {bookingSummary.dates > 30 && (
-              <div className="flex-1 rounded-sm bg-secondary-300 group-hover/microbars:bg-secondary-400 h-1/2 flex items-center justify-center cursor-default transition-colors">
-                <span className="text-2xs text-white font-bold">+{bookingSummary.dates - 30}</span>
+            {sortedDates.length > 14 && (
+              <div className="flex-1 h-5 rounded-sm bg-secondary-200 flex items-center justify-center">
+                <span className="text-[9px] text-secondary-500 font-medium">+{sortedDates.length - 14}</span>
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="px-3 py-2 bg-secondary-50 border-t border-secondary-100 flex items-center gap-1.5">
+        {isPaid ? (
+          <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
+            <CheckCircleSolid className="w-2.5 h-2.5" />
+            Paid
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">
+            <ClockIcon className="w-2.5 h-2.5" />
+            Deposit
+          </span>
+        )}
+        {isComplete ? (
+          <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
+            <CheckCircleSolid className="w-2.5 h-2.5" />
+            Staffed
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
+            <UserGroupIcon className="w-2.5 h-2.5" />
+            {totalStaffNeeded - totalStaffAssigned} needed
+          </span>
         )}
       </div>
     </div>
   );
 };
 
-export default BookingCard; 
+export default BookingCard;

@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import DashboardLayout from '@/components/ui/DashboardLayout';
 import useStore from '@/lib/hooks/useStore';
 import BookingFilters from '@/components/bookings/BookingFilters';
@@ -9,7 +10,34 @@ import StaffTooltip from '@/components/bookings/StaffTooltip';
 import { ClockIcon, CheckCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 export default function BookingsDirectory() {
-  const { bookings, shows, staff, clients } = useStore();
+  const router = useRouter();
+  const { bookings, shows, staff, clients, fetchBookings } = useStore();
+
+  // Auto-refresh bookings when page becomes visible or on navigation
+  useEffect(() => {
+    // Refresh on mount
+    fetchBookings();
+
+    // Refresh when page becomes visible (user returns to tab)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchBookings();
+      }
+    };
+
+    // Refresh on route change complete (coming back from detail page)
+    const handleRouteChange = () => {
+      fetchBookings();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    router.events.on('routeChangeComplete', handleRouteChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      router.events.off('routeChangeComplete', handleRouteChange);
+    };
+  }, [fetchBookings, router.events]);
   
   // Ensure bookings is an array and handle potential nested structure
   const bookingsArray = useMemo(() => {

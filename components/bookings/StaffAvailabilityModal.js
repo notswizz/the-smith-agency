@@ -4,7 +4,8 @@ import {
   CalendarIcon, 
   UserGroupIcon,
   CheckCircleIcon,
-  ExclamationCircleIcon
+  ExclamationCircleIcon,
+  XCircleIcon
 } from '@heroicons/react/24/outline';
 import { CheckIcon } from '@heroicons/react/20/solid';
 
@@ -29,9 +30,9 @@ export default function StaffAvailabilityModal({
     // Filter availability for this show
     const showAvailability = availability.filter(a => a.showId === showId);
     
-    // Get all bookings for this show, except the current one
+    // Get all bookings for this show (INCLUDING current one to show all booked staff)
     const showBookings = Array.isArray(bookings) 
-      ? bookings.filter(b => b.showId === showId && b.id !== currentBookingId)
+      ? bookings.filter(b => b.showId === showId)
       : [];
     
     // Count bookings for the selected client
@@ -72,25 +73,30 @@ export default function StaffAvailabilityModal({
       
       const availableDates = availRecord.availableDates || [];
       
-      // For each available date, check if already booked
+      // For each date in the show range, determine status
       const dateStatusMap = {};
+      let totalUnavailableDates = 0;
       let totalAvailableDates = 0;
       let totalBookedDates = 0;
-      let totalActuallyAvailableDates = 0;
       
-      availableDates.forEach(date => {
+      showDateRange.forEach(date => {
+        const isMarkedAvailable = availableDates.includes(date);
         const isBooked = dateToBookedStaffMap[date]?.includes(member.id);
-        dateStatusMap[date] = isBooked ? 'booked' : 'available';
-        totalAvailableDates++;
-        if (isBooked) {
+        
+        if (!isMarkedAvailable) {
+          dateStatusMap[date] = 'unavailable';
+          totalUnavailableDates++;
+        } else if (isBooked) {
+          dateStatusMap[date] = 'booked';
           totalBookedDates++;
         } else {
-          totalActuallyAvailableDates++;
+          dateStatusMap[date] = 'available';
+          totalAvailableDates++;
         }
       });
       
       // Skip staff with no availability for this show
-      if (totalAvailableDates === 0) return null;
+      if (availableDates.length === 0) return null;
       
       // Count how many times this staff member is booked for the selected client
       const clientBookingCount = clientBookings.reduce((count, booking) => {
@@ -109,26 +115,20 @@ export default function StaffAvailabilityModal({
         id: member.id,
         name: member.name || `${member.firstName || ''} ${member.lastName || ''}`.trim() || '[NO NAME]',
         photoURL: member.photoURL || member.photoUrl || member.profileImage || member.picture,
+        totalUnavailableDates,
         totalAvailableDates,
         totalBookedDates,
-        totalActuallyAvailableDates,
-        availabilityRate: totalAvailableDates / showDateRange.length,
-        bookedRate: totalAvailableDates > 0 ? totalBookedDates / totalAvailableDates : 0,
-        actuallyAvailableRate: totalActuallyAvailableDates / showDateRange.length,
         dateStatusMap,
         clientBookingCount,
-        isBooked: totalBookedDates > 0
+        isFullyBooked: totalAvailableDates === 0 && totalBookedDates > 0
       };
     }).filter(Boolean).sort((a, b) => {
-      // Sort by booked status first (booked staff at bottom), then by actually available dates
-      if (a.isBooked !== b.isBooked) {
-        return a.isBooked ? 1 : -1; // Available staff first, booked staff last
+      // Sort by available dates first (most available at top)
+      if (b.totalAvailableDates !== a.totalAvailableDates) {
+        return b.totalAvailableDates - a.totalAvailableDates;
       }
-      // Within each group, sort by actually available dates (highest first)
-      if (b.totalActuallyAvailableDates !== a.totalActuallyAvailableDates) {
-        return b.totalActuallyAvailableDates - a.totalActuallyAvailableDates;
-      }
-      return b.availabilityRate - a.availabilityRate;
+      // Then by booked dates
+      return a.totalBookedDates - b.totalBookedDates;
     });
   }, [showId, availability, staff, bookings, currentBookingId, showDateRange, clientId]);
   
@@ -138,150 +138,127 @@ export default function StaffAvailabilityModal({
     <div className="fixed z-50 inset-0 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         {/* Background overlay */}
-        <div className="fixed inset-0 bg-secondary-900 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={onClose}></div>
+        <div className="fixed inset-0 bg-secondary-900/70 backdrop-blur-sm transition-opacity" aria-hidden="true" onClick={onClose}></div>
         
         {/* Modal panel */}
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+        <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
           {/* Modal header */}
-          <div className="bg-secondary-50 px-4 py-3 border-b border-secondary-200 flex justify-between items-center">
-            <div className="flex items-center">
-              <CalendarIcon className="h-5 w-5 text-primary-600 mr-2" />
-              <h3 className="text-base font-medium text-secondary-900">
-                Staff Availability Overview: {showName || 'Show'}
+          <div className="px-5 py-4 border-b border-secondary-200 flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-semibold text-secondary-900">
+                Staff Availability
               </h3>
+              <p className="text-sm text-secondary-500">{showName || 'Show'} • {showDateRange.length} days</p>
             </div>
             <button
               type="button"
-              className="bg-secondary-50 rounded-md text-secondary-400 hover:text-secondary-600 focus:outline-none"
+              className="p-2 rounded-lg hover:bg-secondary-100 text-secondary-400 hover:text-secondary-600 transition-colors"
               onClick={onClose}
             >
-              <span className="sr-only">Close</span>
-              <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+              <XMarkIcon className="h-5 w-5" />
             </button>
+          </div>
+
+          {/* Legend */}
+          <div className="px-5 py-3 bg-secondary-50 border-b border-secondary-200 flex flex-wrap gap-4 text-xs">
+            <div className="flex items-center gap-1.5">
+              <div className="w-4 h-4 rounded bg-emerald-100 border border-emerald-300"></div>
+              <span className="text-secondary-600">Available</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-4 h-4 rounded bg-amber-100 border border-amber-300"></div>
+              <span className="text-secondary-600">Booked</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-4 h-4 rounded bg-secondary-100 border border-secondary-300"></div>
+              <span className="text-secondary-600">Unavailable</span>
+            </div>
           </div>
           
           {/* Modal content */}
-          <div className="max-h-[80vh] overflow-y-auto p-4">
+          <div className="max-h-[65vh] overflow-y-auto p-5">
             {staffAvailabilitySummary.length > 0 ? (
-              <div className="space-y-4">
-                {/* Staff list with availability */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {staffAvailabilitySummary.map(staff => (
-                    <div key={staff.id} className={`bg-white border rounded-lg shadow-sm p-4 ${staff.isBooked ? 'border-amber-200 bg-amber-50' : 'border-secondary-200'}`}>
-                      <div className="flex items-start">
-                        {/* Avatar/initials */}
-                        <div className={`flex-shrink-0 h-10 w-10 rounded-full mr-3 border flex items-center justify-center overflow-hidden ${
-                          staff.isBooked 
-                            ? 'bg-amber-100 border-amber-200 text-amber-700' 
-                            : 'bg-primary-100 border-primary-200 text-primary-700'
-                        }`}>
-                          {staff.photoURL ? (
-                            <img src={staff.photoURL} alt={staff.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="text-sm font-medium">{staff.name.charAt(0)}</span>
-                          )}
-                        </div>
-                        
-                        {/* Staff info */}
-                        <div className="flex-1">
-                          <h4 className="font-medium text-secondary-900">{staff.name}</h4>
-                          
-                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
-                            {/* Available & bookable days badge */}
-                            {staff.totalActuallyAvailableDates > 0 && (
-                              <span className="bg-green-50 text-green-700 border border-green-200 rounded-full px-2 py-0.5 flex items-center">
-                                <CalendarIcon className="h-3 w-3 mr-1" />
-                                {staff.totalActuallyAvailableDates} day{staff.totalActuallyAvailableDates !== 1 ? 's' : ''} available
-                                {showDateRange.length > 0 && (
-                                  <span className="ml-1 opacity-75">
-                                    ({Math.round(staff.actuallyAvailableRate * 100)}%)
-                                  </span>
-                                )}
-                              </span>
-                            )}
-                            
-                            {/* Booked days badge */}
-                            {staff.totalBookedDates > 0 && (
-                              <span className="bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5 flex items-center">
-                                <CheckCircleIcon className="h-3 w-3 mr-1" />
-                                {staff.totalBookedDates} day{staff.totalBookedDates !== 1 ? 's' : ''} booked
-                                {staff.totalAvailableDates > 0 && (
-                                  <span className="ml-1 opacity-75">
-                                    ({Math.round(staff.bookedRate * 100)}%)
-                                  </span>
-                                )}
-                              </span>
-                            )}
-                            
-                            {/* Client booking count */}
-                            {staff.clientBookingCount > 0 && (
-                              <span className="bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2 py-0.5 flex items-center">
-                                <UserGroupIcon className="h-3 w-3 mr-1" />
-                                {staff.clientBookingCount} client booking{staff.clientBookingCount !== 1 ? 's' : ''}
-                              </span>
-                            )}
-                            
-                            {/* Fully booked warning */}
-                            {staff.totalBookedDates > 0 && staff.totalActuallyAvailableDates === 0 && (
-                              <span className="bg-red-50 text-red-700 border border-red-200 rounded-full px-2 py-0.5 flex items-center">
-                                <ExclamationCircleIcon className="h-3 w-3 mr-1" />
-                                Fully Booked
-                              </span>
-                            )}
-                          </div>
-                        </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {staffAvailabilitySummary.map(staffMember => (
+                  <div key={staffMember.id} className="bg-white border border-secondary-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-start gap-3 mb-3">
+                      {/* Avatar */}
+                      <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-semibold text-sm overflow-hidden">
+                        {staffMember.photoURL ? (
+                          <img src={staffMember.photoURL} alt={staffMember.name} className="w-full h-full object-cover" />
+                        ) : (
+                          staffMember.name.charAt(0).toUpperCase()
+                        )}
                       </div>
                       
-                      {/* Calendar view */}
-                      {showDateRange.length > 0 && (
-                        <div className="mt-3 border-t border-secondary-100 pt-3">
-                          <div className="text-xs text-secondary-500 mb-2 flex items-center">
-                            <CalendarIcon className="h-3 w-3 mr-1" />
-                            Availability Calendar
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {showDateRange.map(date => {
-                              const status = staff.dateStatusMap[date] || 'unavailable';
-                              let bgColor = 'bg-secondary-100 text-secondary-400'; // unavailable
-                              let icon = null;
-                              
-                              if (status === 'available') {
-                                bgColor = 'bg-green-100 text-green-700';
-                                icon = <CheckIcon className="h-2 w-2" />;
-                              } else if (status === 'booked') {
-                                bgColor = 'bg-amber-100 text-amber-700';
-                                icon = <ExclamationCircleIcon className="h-2 w-2" />;
-                              }
-                              
-                              const dateObj = new Date(date);
-                              const day = dateObj.getDate();
-                              
-                              return (
-                                <div 
-                                  key={date} 
-                                  className={`w-6 h-6 ${bgColor} rounded flex items-center justify-center text-xs relative`}
-                                  title={`${new Date(date).toLocaleDateString()}: ${status}`}
-                                >
-                                  {day}
-                                  {icon && (
-                                    <span className="absolute -top-0.5 -right-0.5">
-                                      {icon}
-                                    </span>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
+                      {/* Name & badges */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-secondary-900 truncate">{staffMember.name}</h4>
+                        <div className="flex flex-wrap gap-1.5 mt-1">
+                          {staffMember.totalAvailableDates > 0 && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">
+                              <CheckCircleIcon className="w-3 h-3" />
+                              {staffMember.totalAvailableDates} available
+                            </span>
+                          )}
+                          {staffMember.totalBookedDates > 0 && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">
+                              <CalendarIcon className="w-3 h-3" />
+                              {staffMember.totalBookedDates} booked
+                            </span>
+                          )}
+                          {staffMember.totalUnavailableDates > 0 && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-secondary-100 text-secondary-600 px-1.5 py-0.5 rounded">
+                              <XCircleIcon className="w-3 h-3" />
+                              {staffMember.totalUnavailableDates} unavailable
+                            </span>
+                          )}
+                          {staffMember.isFullyBooked && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-red-100 text-red-700 px-1.5 py-0.5 rounded">
+                              Fully Booked
+                            </span>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
-                  ))}
-                </div>
+                    
+                    {/* Calendar grid */}
+                    {showDateRange.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {showDateRange.map(date => {
+                          const status = staffMember.dateStatusMap[date] || 'unavailable';
+                          const dateObj = new Date(date);
+                          const adjustedDate = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000);
+                          const day = adjustedDate.getDate();
+                          const dayName = adjustedDate.toLocaleDateString('en-US', { weekday: 'short' });
+                          
+                          let bgColor = 'bg-secondary-100 text-secondary-400 border-secondary-200'; // unavailable
+                          if (status === 'available') {
+                            bgColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+                          } else if (status === 'booked') {
+                            bgColor = 'bg-amber-100 text-amber-700 border-amber-200';
+                          }
+                          
+                          return (
+                            <div 
+                              key={date} 
+                              className={`w-9 h-9 ${bgColor} rounded-lg flex flex-col items-center justify-center text-xs border`}
+                              title={`${adjustedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}: ${status}`}
+                            >
+                              <span className="text-[9px] opacity-70">{dayName.charAt(0)}</span>
+                              <span className="font-semibold -mt-0.5">{day}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             ) : (
-              <div className="text-center py-8">
+              <div className="text-center py-12">
                 <UserGroupIcon className="mx-auto h-12 w-12 text-secondary-300" />
-                <h3 className="mt-2 text-base font-medium text-secondary-900">No staff availability</h3>
+                <h3 className="mt-3 text-base font-medium text-secondary-900">No staff availability</h3>
                 <p className="mt-1 text-sm text-secondary-500">
                   No staff members have signed up for this show yet.
                 </p>
@@ -290,10 +267,10 @@ export default function StaffAvailabilityModal({
           </div>
           
           {/* Modal footer */}
-          <div className="bg-secondary-50 px-4 py-3 border-t border-secondary-200 flex justify-end">
+          <div className="px-5 py-4 border-t border-secondary-200 flex justify-end">
             <button
               type="button"
-              className="bg-white py-2 px-4 border border-secondary-300 rounded-md shadow-sm text-sm font-medium text-secondary-700 hover:bg-secondary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              className="px-4 py-2 bg-secondary-100 hover:bg-secondary-200 rounded-lg text-sm font-medium text-secondary-700 transition-colors"
               onClick={onClose}
             >
               Close
@@ -303,4 +280,4 @@ export default function StaffAvailabilityModal({
       </div>
     </div>
   );
-} 
+}

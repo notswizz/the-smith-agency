@@ -55,7 +55,8 @@ export default function ClientsDirectory() {
       return {
         ...client,
         totalDatesBooked,
-        totalStaffDays
+        totalStaffDays,
+        bookingsCount: clientBookings.length
       };
     });
   }, [clients, getBookingsForClient]);
