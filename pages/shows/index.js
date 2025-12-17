@@ -86,8 +86,8 @@ export default function ShowsDirectory() {
       }
     }
 
-    // Sort shows by date (most recent first)
-    return result.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+    // Sort shows by date (earliest first)
+    return result.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
   }, [shows, filters]);
 
   return (
