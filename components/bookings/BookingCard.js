@@ -63,7 +63,22 @@ const BookingCard = ({
 
   const completionPercentage = totalStaffNeeded > 0 ? Math.round((totalStaffAssigned / totalStaffNeeded) * 100) : 0;
   const isComplete = totalStaffNeeded > 0 && totalStaffAssigned >= totalStaffNeeded;
-  const isPaid = booking.status === 'paid' || booking.status === 'final_paid';
+
+  // Status badge config
+  const statusConfig = {
+    pending: { label: 'Pending', bg: 'bg-amber-100', text: 'text-amber-700' },
+    booked: { label: 'Booked', bg: 'bg-emerald-100', text: 'text-emerald-700' },
+    confirmed: { label: 'Confirmed', bg: 'bg-violet-100', text: 'text-violet-700' },
+    cancelled: { label: 'Cancelled', bg: 'bg-red-100', text: 'text-red-700' },
+  };
+  const bookingStatusBadge = statusConfig[booking.status] || null;
+
+  // Payment status badge config
+  const paymentConfig = {
+    deposit_paid: { label: 'Deposit', bg: 'bg-blue-100', text: 'text-blue-700' },
+    final_paid: { label: 'Paid', bg: 'bg-emerald-100', text: 'text-emerald-700' },
+  };
+  const paymentStatusBadge = paymentConfig[booking.paymentStatus] || null;
 
   return (
     <div
@@ -74,9 +89,21 @@ const BookingCard = ({
       <div className="p-3 pb-2">
         {/* Client & Show */}
         <div className="mb-2">
-          <h3 className="font-semibold text-sm text-secondary-900 truncate group-hover:text-primary-600 transition-colors leading-tight">
-            {client?.name || 'Unknown Client'}
-          </h3>
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <h3 className="font-semibold text-sm text-secondary-900 truncate group-hover:text-primary-600 transition-colors leading-tight flex-1">
+              {client?.name || 'Unknown Client'}
+            </h3>
+            {bookingStatusBadge && (
+              <span className={`${bookingStatusBadge.bg} ${bookingStatusBadge.text} text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0`}>
+                {bookingStatusBadge.label}
+              </span>
+            )}
+            {paymentStatusBadge && (
+              <span className={`${paymentStatusBadge.bg} ${paymentStatusBadge.text} text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0`}>
+                {paymentStatusBadge.label}
+              </span>
+            )}
+          </div>
           <p className="text-xs text-secondary-500 truncate leading-tight">{show?.name || 'Unknown Show'}</p>
         </div>
 

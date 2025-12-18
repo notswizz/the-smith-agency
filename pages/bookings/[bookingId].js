@@ -113,8 +113,23 @@ export default function BookingDetail() {
         }
       }
       if (json?.success === true) {
-        setBooking(prev => (prev ? { ...prev, status: 'paid' } : prev));
+        // Update Firestore directly from admin to ensure persistence
+        // Note: paymentStatus tracks payment state, status tracks booking workflow state
+        try {
+          const docRef = doc(db, 'bookings', bookingId);
+          await updateDoc(docRef, {
+            paymentStatus: 'final_paid',
+            finalChargeCents: editedTotalCents,
+            finalChargePaymentIntentId: json.paymentIntentId || null,
+            updatedAt: new Date().toISOString(),
+          });
+        } catch (updateErr) {
+          console.error('Error updating payment status in Firestore:', updateErr);
+        }
+        setBooking(prev => (prev ? { ...prev, paymentStatus: 'final_paid' } : prev));
         setIsPreviewOpen(false);
+        // Refresh bookings in store
+        if (fetchBookings) fetchBookings();
       }
       setChargeResponse(json);
     } catch (err) {
@@ -233,6 +248,14 @@ export default function BookingDetail() {
     });
   };
 
+  // Helper to check if booking is fully staffed
+  const isBookingFullyStaffed = (datesNeeded) => {
+    if (!Array.isArray(datesNeeded)) return false;
+    const totalNeeded = datesNeeded.reduce((sum, d) => sum + (d.staffCount || 0), 0);
+    const totalAssigned = datesNeeded.reduce((sum, d) => sum + (d.staffIds?.filter(Boolean).length || 0), 0);
+    return totalNeeded > 0 && totalAssigned >= totalNeeded;
+  };
+
   // Handle staff selection from modal
   const handleStaffSelect = async (staffId) => {
     if (!selectedSlot || !booking) return;
@@ -253,12 +276,24 @@ export default function BookingDetail() {
         updatedDatesNeeded[dateIndex].staffIds[selectedSlot.slotIndex] = staffId;
       }
 
+      // Check if booking is now fully staffed
+      const isNowFullyStaffed = isBookingFullyStaffed(updatedDatesNeeded);
+      const newStatus = isNowFullyStaffed ? 'booked' : booking.status;
+
       // Update Firestore
       const docRef = doc(db, 'bookings', bookingId);
-      await updateDoc(docRef, { datesNeeded: updatedDatesNeeded });
+      await updateDoc(docRef, { 
+        datesNeeded: updatedDatesNeeded,
+        ...(isNowFullyStaffed && booking.status === 'pending' ? { status: 'booked' } : {}),
+        updatedAt: new Date().toISOString(),
+      });
       
       // Update local state
-      setBooking(prev => ({ ...prev, datesNeeded: updatedDatesNeeded }));
+      setBooking(prev => ({ 
+        ...prev, 
+        datesNeeded: updatedDatesNeeded,
+        ...(isNowFullyStaffed && prev.status === 'pending' ? { status: 'booked' } : {}),
+      }));
       
       // Refresh bookings in store
       if (fetchBookings) fetchBookings();
@@ -287,12 +322,24 @@ export default function BookingDetail() {
         updatedDatesNeeded[dateIndex].staffIds[staffToRemove.slotIndex] = '';
       }
 
+      // Check if booking is no longer fully staffed
+      const isStillFullyStaffed = isBookingFullyStaffed(updatedDatesNeeded);
+      const shouldRevertToPending = !isStillFullyStaffed && booking.status === 'booked';
+
       // Update Firestore
       const docRef = doc(db, 'bookings', bookingId);
-      await updateDoc(docRef, { datesNeeded: updatedDatesNeeded });
+      await updateDoc(docRef, { 
+        datesNeeded: updatedDatesNeeded,
+        ...(shouldRevertToPending ? { status: 'pending' } : {}),
+        updatedAt: new Date().toISOString(),
+      });
       
       // Update local state
-      setBooking(prev => ({ ...prev, datesNeeded: updatedDatesNeeded }));
+      setBooking(prev => ({ 
+        ...prev, 
+        datesNeeded: updatedDatesNeeded,
+        ...(shouldRevertToPending ? { status: 'pending' } : {}),
+      }));
       
       // Refresh bookings in store
       if (fetchBookings) fetchBookings();
@@ -393,15 +440,21 @@ export default function BookingDetail() {
   }
 
   const statusConfig = {
-    confirmed: { label: 'Confirmed', bg: 'bg-violet-500', text: 'text-white' },
     pending: { label: 'Pending', bg: 'bg-amber-500', text: 'text-white' },
+    booked: { label: 'Booked', bg: 'bg-emerald-500', text: 'text-white' },
+    confirmed: { label: 'Confirmed', bg: 'bg-violet-500', text: 'text-white' },
     cancelled: { label: 'Cancelled', bg: 'bg-red-500', text: 'text-white' },
-    paid: { label: 'Paid', bg: 'bg-emerald-500', text: 'text-white' },
-    final_paid: { label: 'Paid', bg: 'bg-emerald-500', text: 'text-white' },
-    deposit_paid: { label: 'Deposit Paid', bg: 'bg-blue-500', text: 'text-white' }
   };
 
+  // Booking status (workflow state)
   const currentStatus = statusConfig[booking.status] || { label: booking.status, bg: 'bg-secondary-500', text: 'text-white' };
+  
+  // Payment status config
+  const paymentStatusConfig = {
+    deposit_paid: { label: 'Deposit Paid', bg: 'bg-blue-500', text: 'text-white' },
+    final_paid: { label: 'Paid in Full', bg: 'bg-emerald-500', text: 'text-white' },
+  };
+  const currentPaymentStatus = paymentStatusConfig[booking.paymentStatus] || null;
 
   const firstDate = sortedDatesNeeded.length > 0 ? new Date(sortedDatesNeeded[0].date) : null;
   const lastDate = sortedDatesNeeded.length > 0 ? new Date(sortedDatesNeeded[sortedDatesNeeded.length - 1].date) : null;
@@ -433,11 +486,16 @@ export default function BookingDetail() {
               <ArrowLeftIcon className="h-5 w-5 text-secondary-500" />
             </Link>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl font-bold text-secondary-900">{client?.name || 'Unknown Client'}</h1>
                 <span className={`${currentStatus.bg} ${currentStatus.text} text-xs font-semibold px-2 py-0.5 rounded-full`}>
                   {currentStatus.label}
                 </span>
+                {currentPaymentStatus && (
+                  <span className={`${currentPaymentStatus.bg} ${currentPaymentStatus.text} text-xs font-semibold px-2 py-0.5 rounded-full`}>
+                    {currentPaymentStatus.label}
+                  </span>
+                )}
               </div>
               <p className="text-sm text-secondary-500">{show?.name || 'Unknown Show'} • {formatDateRange()}</p>
             </div>
@@ -452,7 +510,7 @@ export default function BookingDetail() {
               <CalendarDaysIcon className="h-4 w-4 mr-1.5" />
               Staff Availability
             </Button>
-            {!(booking.status === 'paid' || booking.status === 'final_paid') && (
+            {booking.paymentStatus !== 'final_paid' && (
               <Button
                 variant="primary"
                 size="sm"
@@ -873,7 +931,7 @@ export default function BookingDetail() {
               <CalendarDaysIcon className="h-5 w-5 mr-1.5" />
               Availability
             </Button>
-            {!(booking.status === 'paid' || booking.status === 'final_paid') && (
+            {booking.paymentStatus !== 'final_paid' && (
               <Button
                 variant="primary"
                 size="lg"

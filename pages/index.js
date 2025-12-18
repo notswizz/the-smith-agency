@@ -162,6 +162,10 @@ export default function Dashboard() {
       if (b?.createdAt) {
         const show = shows?.find(s => s.id === b.showId);
         const client = clients?.find(c => c.id === b.clientId);
+        // Calculate total staff days for this booking
+        const daysCount = Array.isArray(b.datesNeeded) 
+          ? b.datesNeeded.reduce((sum, d) => sum + (d.staffCount || 0), 0) 
+          : 0;
         items.push({
           type: 'booking',
           id: b.id,
@@ -169,6 +173,7 @@ export default function Dashboard() {
           subtitle: client?.name || 'Unknown Client',
           time: b.createdAt,
           href: `/bookings/${b.id}`,
+          daysCount,
         });
       }
     });
@@ -588,13 +593,15 @@ export default function Dashboard() {
                                 alt={item.subtitle}
                                 className="w-9 h-9 rounded-xl object-cover flex-shrink-0"
                               />
+                            ) : item.type === 'booking' ? (
+                              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-pink-400 to-primary-500">
+                                <span className="text-sm font-bold text-white">{item.daysCount || 0}</span>
+                              </div>
                             ) : (
                               <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                                item.type === 'booking' ? 'bg-gradient-to-br from-pink-400 to-primary-500' : 
                                 item.type === 'staff' ? 'bg-gradient-to-br from-primary-500 to-primary-600' : 
                                 'bg-gradient-to-br from-secondary-700 to-secondary-800'
                               }`}>
-                                {item.type === 'booking' && <ClipboardDocumentListIcon className="w-4 h-4 text-white" />}
                                 {item.type === 'staff' && <UserGroupIcon className="w-4 h-4 text-white" />}
                                 {item.type === 'client' && <BuildingOffice2Icon className="w-4 h-4 text-white" />}
                               </div>
