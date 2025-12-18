@@ -48,13 +48,16 @@ export default function ActivityFeed() {
     });
 
     (Array.isArray(clients) ? clients : []).forEach((c) => {
-      if (!c || !c.createdAt) return;
+      if (!c) return;
+      // Use createdAt if available, otherwise use a fallback
+      const timestamp = c.createdAt || c.updatedAt || null;
+      if (!timestamp) return; // Skip if no timestamp at all
       items.push({
         type: 'client',
         id: c.id,
-        createdAt: c.createdAt,
+        createdAt: timestamp,
         title: 'New client signup',
-        subtitle: c.name || 'Client',
+        subtitle: c.name || c.companyName || c.email || 'Client',
         href: `/clients/${c.id}`,
       });
     });

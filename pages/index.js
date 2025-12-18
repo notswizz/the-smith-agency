@@ -190,6 +190,20 @@ export default function Dashboard() {
       }
     });
 
+    clients?.forEach(c => {
+      const timestamp = c?.createdAt || c?.updatedAt;
+      if (timestamp) {
+        items.push({
+          type: 'client',
+          id: c.id,
+          title: 'New client signup',
+          subtitle: c.name || c.companyName || c.email || 'Client',
+          time: timestamp,
+          href: `/clients/${c.id}`,
+        });
+      }
+    });
+
     const toTime = val => {
       if (!val) return 0;
       if (typeof val === 'string') return new Date(val).getTime();
