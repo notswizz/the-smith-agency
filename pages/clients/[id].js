@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { formatDate } from '@/utils/dateUtils';
 import useStore from '@/lib/hooks/useStore';
+import firebaseService from '@/lib/firebase/firebaseService';
 import DashboardLayout from '@/components/ui/DashboardLayout';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -27,7 +28,7 @@ export default function ClientProfile() {
   const router = useRouter();
   const { id } = router.query;
   const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState('details'); // details, contacts, bookings
+  const [activeTab, setActiveTab] = useState('bookings'); // contacts, locations, bookings
   const { 
     getClientById, 
     updateClient, 
@@ -40,6 +41,11 @@ export default function ClientProfile() {
   const [client, setClient] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [formData, setFormData] = useState({});
+  
+  // Subcollection data
+  const [contacts, setContacts] = useState([]);
+  const [showrooms, setShowrooms] = useState([]);
+  const [loadingSubcollections, setLoadingSubcollections] = useState(true);
 
   // Generate a unique gradient based on the first letter of the name
   const getGradient = (letter) => {
@@ -74,6 +80,24 @@ export default function ClientProfile() {
         if (router.query.edit === 'true') {
           setIsEditing(true);
         }
+        
+        // Fetch contacts and showrooms from subcollections
+        const fetchSubcollections = async () => {
+          setLoadingSubcollections(true);
+          try {
+            const [contactsData, showroomsData] = await Promise.all([
+              firebaseService.getClientContacts(id),
+              firebaseService.getClientShowrooms(id)
+            ]);
+            setContacts(contactsData || []);
+            setShowrooms(showroomsData || []);
+          } catch (error) {
+            console.error('Error fetching subcollections:', error);
+          } finally {
+            setLoadingSubcollections(false);
+          }
+        };
+        fetchSubcollections();
       } else {
         router.push('/clients');
       }
@@ -95,60 +119,6 @@ export default function ClientProfile() {
     setFormData({
       ...formData,
       [name]: value,
-    });
-  };
-
-  const handleContactChange = (index, field, value) => {
-    const updatedContacts = [...formData.contacts];
-    updatedContacts[index] = {
-      ...updatedContacts[index],
-      [field]: value,
-    };
-    setFormData({
-      ...formData,
-      contacts: updatedContacts,
-    });
-  };
-
-  const handleSetPrimaryContact = (index) => {
-    const updatedContacts = formData.contacts.map((contact, i) => ({
-      ...contact,
-      isPrimary: i === index,
-    }));
-    setFormData({
-      ...formData,
-      contacts: updatedContacts,
-    });
-  };
-
-  const handleAddContact = () => {
-    const updatedContacts = [...formData.contacts];
-    updatedContacts.push({
-      id: `new-${Date.now()}`,
-      name: '',
-      email: '',
-      phone: '',
-      isPrimary: formData.contacts.length === 0,
-    });
-    setFormData({
-      ...formData,
-      contacts: updatedContacts,
-    });
-  };
-
-  const handleRemoveContact = (index) => {
-    let updatedContacts = [...formData.contacts];
-    const removedContact = updatedContacts[index];
-    updatedContacts.splice(index, 1);
-    
-    // If the removed contact was primary, set a new primary
-    if (removedContact.isPrimary && updatedContacts.length > 0) {
-      updatedContacts[0].isPrimary = true;
-    }
-    
-    setFormData({
-      ...formData,
-      contacts: updatedContacts,
     });
   };
 
@@ -357,26 +327,6 @@ export default function ClientProfile() {
           <div className="bg-white rounded-lg shadow-sm mb-2">
             <nav className="flex space-x-8 p-1">
               <button
-                onClick={() => setActiveTab('details')}
-                className={`${
-                  activeTab === 'details'
-                    ? 'text-primary-600 border-primary-500 bg-primary-50'
-                    : 'text-gray-500 hover:text-gray-700 border-transparent hover:border-gray-300'
-                } flex-1 py-3 px-1 text-center border-b-2 font-medium text-sm rounded-t-md transition-colors`}
-              >
-                Client Details
-              </button>
-              <button
-                onClick={() => setActiveTab('contacts')}
-                className={`${
-                  activeTab === 'contacts'
-                    ? 'text-primary-600 border-primary-500 bg-primary-50'
-                    : 'text-gray-500 hover:text-gray-700 border-transparent hover:border-gray-300'
-                } flex-1 py-3 px-1 text-center border-b-2 font-medium text-sm rounded-t-md transition-colors`}
-              >
-                Contacts
-              </button>
-              <button
                 onClick={() => setActiveTab('bookings')}
                 className={`${
                   activeTab === 'bookings'
@@ -386,277 +336,98 @@ export default function ClientProfile() {
               >
                 Bookings
               </button>
+              <button
+                onClick={() => setActiveTab('contacts')}
+                className={`${
+                  activeTab === 'contacts'
+                    ? 'text-primary-600 border-primary-500 bg-primary-50'
+                    : 'text-gray-500 hover:text-gray-700 border-transparent hover:border-gray-300'
+                } flex-1 py-3 px-1 text-center border-b-2 font-medium text-sm rounded-t-md transition-colors relative`}
+              >
+                Contacts
+                {contacts.length > 0 && (
+                  <span className="ml-1.5 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium bg-primary-100 text-primary-700 rounded-full">
+                    {contacts.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('locations')}
+                className={`${
+                  activeTab === 'locations'
+                    ? 'text-primary-600 border-primary-500 bg-primary-50'
+                    : 'text-gray-500 hover:text-gray-700 border-transparent hover:border-gray-300'
+                } flex-1 py-3 px-1 text-center border-b-2 font-medium text-sm rounded-t-md transition-colors relative`}
+              >
+                Locations
+                {showrooms.length > 0 && (
+                  <span className="ml-1.5 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium bg-primary-100 text-primary-700 rounded-full">
+                    {showrooms.length}
+                  </span>
+                )}
+              </button>
             </nav>
           </div>
 
           {/* Tab content */}
-          {activeTab === 'details' && (
-            <div className="animate-fadeIn">
-              <Card className="overflow-hidden">
-                {isEditing ? (
-                  <form className="space-y-6">
-                    <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                        Client Name
-                      </label>
-                      <div className="mt-1 relative rounded-md shadow-sm">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <BuildingOffice2Icon className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="text"
-                          id="name"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleInputChange}
-                          className="block w-full pl-10 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-                        Category
-                      </label>
-                      <div className="mt-1 relative rounded-md shadow-sm">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M5 3a2 2 0 012-2h6a2 2 0 012 2v1h2a2 2 0 012 2v2.5a1 1 0 01-1 1H2a1 1 0 01-1-1V6a2 2 0 012-2h2V3zm1 1h8V3a1 1 0 00-1-1H7a1 1 0 00-1 1v1zm9 5.5V6a1 1 0 00-1-1H2a1 1 0 00-1 1v2.5h14zm0 1H2v6a1 1 0 001 1h12a1 1 0 001-1v-6z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                        <input
-                          type="text"
-                          id="category"
-                          name="category"
-                          value={formData.category}
-                          onChange={handleInputChange}
-                          className="block w-full pl-10 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="location" className="block text-sm font-medium text-gray-700">
-                        Location
-                      </label>
-                      <div className="mt-1 relative rounded-md shadow-sm">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <MapPinIcon className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="text"
-                          id="location"
-                          name="location"
-                          value={formData.location}
-                          onChange={handleInputChange}
-                          className="block w-full pl-10 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="website" className="block text-sm font-medium text-gray-700">
-                        Website
-                      </label>
-                      <div className="mt-1 relative rounded-md shadow-sm">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <GlobeAltIcon className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="url"
-                          id="website"
-                          name="website"
-                          value={formData.website || ''}
-                          onChange={handleInputChange}
-                          className="block w-full pl-10 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                          placeholder="https://"
-                        />
-                      </div>
-                    </div>
-                  </form>
-                ) : (
-                  <div className="space-y-6 p-1">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-6 pb-6 border-b border-gray-200">
-                      <div className="flex-shrink-0">
-                        <div className="bg-primary-100 p-4 rounded-full">
-                          <BuildingOffice2Icon className="h-8 w-8 text-primary-600" />
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900">{client.name}</h3>
-                        <p className="text-sm text-gray-500">{client.category}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-gray-100 p-2 rounded-md">
-                          <MapPinIcon className="h-6 w-6 text-gray-500" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-700">Location</p>
-                          <p className="text-gray-900">{client.location || "—"}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-3">
-                        <div className="bg-gray-100 p-2 rounded-md">
-                          <GlobeAltIcon className="h-6 w-6 text-gray-500" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-700">Website</p>
-                          {client.website ? (
-                            <a
-                              href={client.website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary-600 hover:text-primary-800 hover:underline"
-                            >
-                              {client.website.replace(/(^\w+:|^)\/\//, '')}
-                            </a>
-                          ) : (
-                            <p className="text-gray-500">—</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </Card>
-            </div>
-          )}
-
           {activeTab === 'contacts' && (
             <div className="animate-fadeIn">
-              <Card
-                title="Contacts"
-                actions={
-                  isEditing && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleAddContact}
-                      className="flex items-center"
-                    >
-                      <PlusIcon className="h-4 w-4 mr-1" />
-                      Add Contact
-                    </Button>
-                  )
-                }
-              >
-                {formData.contacts && formData.contacts.length > 0 ? (
+              <Card title="Contacts">
+                {loadingSubcollections ? (
+                  <div className="py-12 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500"></div>
+                  </div>
+                ) : contacts.length > 0 ? (
                   <div className="divide-y divide-gray-200">
-                    {formData.contacts.map((contact, index) => (
+                    {contacts.map((contact) => (
                       <div key={contact.id} className="py-4 first:pt-0 last:pb-0">
-                        {isEditing ? (
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center">
-                                <button
-                                  type="button"
-                                  onClick={() => handleSetPrimaryContact(index)}
-                                  className={`mr-2 ${
-                                    contact.isPrimary
-                                      ? 'text-yellow-500'
-                                      : 'text-gray-300 hover:text-gray-400'
-                                  }`}
-                                >
-                                  <StarIcon className="h-5 w-5" />
-                                </button>
-                                <input
-                                  type="text"
-                                  value={contact.name}
-                                  onChange={(e) => handleContactChange(index, 'name', e.target.value)}
-                                  placeholder="Contact Name"
-                                  className="block w-full border-0 border-b border-transparent bg-gray-50 focus:border-primary-600 focus:ring-0 sm:text-sm"
-                                />
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveContact(index)}
-                                className="text-gray-400 hover:text-red-500 transition-colors"
-                              >
-                                <TrashIcon className="h-5 w-5" />
-                              </button>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-7">
-                              <div className="flex items-center">
-                                <EnvelopeIcon className="h-4 w-4 text-gray-400 mr-2" />
-                                <input
-                                  type="email"
-                                  value={contact.email}
-                                  onChange={(e) => handleContactChange(index, 'email', e.target.value)}
-                                  placeholder="Email"
-                                  className="block w-full border-0 border-b border-transparent bg-gray-50 focus:border-primary-600 focus:ring-0 sm:text-sm"
-                                />
-                              </div>
-                              <div className="flex items-center">
-                                <PhoneIcon className="h-4 w-4 text-gray-400 mr-2" />
-                                <input
-                                  type="tel"
-                                  value={contact.phone || ''}
-                                  onChange={(e) => handleContactChange(index, 'phone', e.target.value)}
-                                  placeholder="Phone"
-                                  className="block w-full border-0 border-b border-transparent bg-gray-50 focus:border-primary-600 focus:ring-0 sm:text-sm"
-                                />
-                              </div>
+                        <div className="flex items-start p-1">
+                          <div className="flex-shrink-0 mt-1 mr-4">
+                            <div className="bg-primary-100 p-1.5 rounded-full text-primary-600">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
+                              </svg>
                             </div>
                           </div>
-                        ) : (
-                          <div className="flex items-start p-1">
-                            <div className="flex-shrink-0 mt-1 mr-4">
-                              {contact.isPrimary ? (
-                                <div className="text-yellow-500 bg-yellow-50 p-1.5 rounded-full">
-                                  <StarIcon className="h-5 w-5" />
+                          <div className="flex-1">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                              <div>
+                                <p className="text-gray-900 font-medium">
+                                  {contact.name || 'Unnamed Contact'}
+                                </p>
+                                {contact.role && (
+                                  <p className="text-xs text-gray-500">{contact.role}</p>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {contact.email && (
+                                <div className="flex items-center">
+                                  <EnvelopeIcon className="h-4 w-4 text-gray-400 mr-2" />
+                                  <a
+                                    href={`mailto:${contact.email}`}
+                                    className="text-gray-600 hover:text-primary-600 hover:underline text-sm"
+                                  >
+                                    {contact.email}
+                                  </a>
                                 </div>
-                              ) : (
-                                <div className="bg-gray-100 p-1.5 rounded-full text-gray-400">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
-                                  </svg>
+                              )}
+                              
+                              {contact.phone && (
+                                <div className="flex items-center">
+                                  <PhoneIcon className="h-4 w-4 text-gray-400 mr-2" />
+                                  <a
+                                    href={`tel:${contact.phone}`}
+                                    className="text-gray-600 hover:text-primary-600 hover:underline text-sm"
+                                  >
+                                    {contact.phone}
+                                  </a>
                                 </div>
                               )}
                             </div>
-                            <div className="flex-1">
-                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                                <div>
-                                  <p className="text-gray-900 font-medium">
-                                    {contact.name}
-                                    {contact.isPrimary && (
-                                      <span className="ml-2 text-xs font-normal px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full">Primary</span>
-                                    )}
-                                  </p>
-                                </div>
-                              </div>
-                              
-                              <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {contact.email && (
-                                  <div className="flex items-center">
-                                    <EnvelopeIcon className="h-4 w-4 text-gray-400 mr-2" />
-                                    <a
-                                      href={`mailto:${contact.email}`}
-                                      className="text-gray-600 hover:text-primary-600 hover:underline"
-                                    >
-                                      {contact.email}
-                                    </a>
-                                  </div>
-                                )}
-                                
-                                {contact.phone && (
-                                  <div className="flex items-center">
-                                    <PhoneIcon className="h-4 w-4 text-gray-400 mr-2" />
-                                    <a
-                                      href={`tel:${contact.phone}`}
-                                      className="text-gray-600 hover:text-primary-600 hover:underline"
-                                    >
-                                      {contact.phone}
-                                    </a>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
                           </div>
-                        )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -668,17 +439,68 @@ export default function ClientProfile() {
                       </svg>
                     </div>
                     <p className="text-gray-500 text-sm">No contacts added yet.</p>
-                    {isEditing && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="mt-4 flex items-center"
-                        onClick={handleAddContact}
-                      >
-                        <PlusIcon className="h-4 w-4 mr-1" />
-                        Add First Contact
-                      </Button>
-                    )}
+                    <p className="text-gray-400 text-xs mt-1">Contacts are added via the client portal.</p>
+                  </div>
+                )}
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'locations' && (
+            <div className="animate-fadeIn">
+              <Card title="Showroom Locations">
+                {loadingSubcollections ? (
+                  <div className="py-12 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500"></div>
+                  </div>
+                ) : showrooms.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {showrooms.map((showroom) => (
+                      <div key={showroom.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div className="flex items-start">
+                          <div className="flex-shrink-0 mr-3">
+                            <div className="bg-primary-100 p-2 rounded-lg">
+                              <MapPinIcon className="h-5 w-5 text-primary-600" />
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-semibold text-gray-900">
+                              {showroom.city || 'Location'}
+                            </h4>
+                            <div className="mt-1 space-y-1 text-sm text-gray-600">
+                              {showroom.address && (
+                                <p className="truncate">{showroom.address}</p>
+                              )}
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                {showroom.buildingNumber && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded bg-gray-200 text-gray-700">
+                                    Building: {showroom.buildingNumber}
+                                  </span>
+                                )}
+                                {showroom.floorNumber && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded bg-gray-200 text-gray-700">
+                                    Floor: {showroom.floorNumber}
+                                  </span>
+                                )}
+                                {showroom.boothNumber && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded bg-gray-200 text-gray-700">
+                                    Booth: {showroom.boothNumber}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-12 flex flex-col items-center justify-center text-center">
+                    <div className="bg-gray-100 p-3 rounded-full text-gray-400 mb-3">
+                      <MapPinIcon className="h-6 w-6" />
+                    </div>
+                    <p className="text-gray-500 text-sm">No showroom locations added yet.</p>
+                    <p className="text-gray-400 text-xs mt-1">Locations are added via the client portal.</p>
                   </div>
                 )}
               </Card>

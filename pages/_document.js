@@ -52,22 +52,20 @@ export default function Document() {
         {/* Favicon and Icons */}
         <link rel="manifest" href="/manifest.json" />
         
-        {/* Apple Touch Icons - Multiple sizes for better iOS compatibility */}
-        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=2" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=2" />
-        <link rel="apple-touch-icon" sizes="167x167" href="/icons/apple-touch-icon-167x167.png?v=2" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-touch-icon-152x152.png?v=2" />
-        <link rel="apple-touch-icon" sizes="120x120" href="/icons/apple-touch-icon-120x120.png?v=2" />
-        <link rel="apple-touch-icon" sizes="114x114" href="/icons/apple-touch-icon-114x114.png?v=2" />
-        <link rel="apple-touch-icon" sizes="76x76" href="/icons/apple-touch-icon-76x76.png?v=2" />
-        <link rel="apple-touch-icon" sizes="60x60" href="/icons/apple-touch-icon-60x60.png?v=2" />
-        <link rel="apple-touch-icon" sizes="40x40" href="/icons/apple-touch-icon-40x40.png?v=2" />
-        <link rel="apple-touch-icon" sizes="29x29" href="/icons/apple-touch-icon-29x29.png?v=2" />
+        {/* Apple Touch Icons - Using tsaicon.png */}
+        <link rel="apple-touch-icon" href="/tsaicon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/tsaicon.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/tsaicon.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/tsaicon.png" />
+        <link rel="apple-touch-icon" sizes="120x120" href="/tsaicon.png" />
+        <link rel="apple-touch-icon" sizes="76x76" href="/tsaicon.png" />
         
         {/* Standard Icons */}
-        <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png" />
-        <link rel="shortcut icon" href="/favicon.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/tsaicon.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/tsaicon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/tsaicon.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/tsaicon.png" />
+        <link rel="shortcut icon" href="/tsaicon.png" />
         
         {/* Apple Splash Screen Images */}
         <link rel="apple-touch-startup-image" href="/splash/apple-splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" />
